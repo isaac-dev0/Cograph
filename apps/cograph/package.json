@@ -1,4 +1,8 @@
 {
+  "dependencies": {
+    "@as-integrations/express5": "^1.1.2",
+    "@nestjs/mapped-types": "*"
+  },
   "name": "@cograph/cograph",
   "version": "0.0.1",
   "private": true,
@@ -90,6 +94,7 @@
   },
   "devDependencies": {
     "@apollo/server": "^5.0.0",
+    "@nestjs/apollo": "^13.2.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/graphql": "^13.2.0",
     "@nestjs/typeorm": "^11.0.0",

@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { GraphqlModule } from './shared/graphql/graphql.module';
 import { Neo4jModule } from './shared/neo4j/neo4j.module';
+import { RepositoryModule } from './modules/repositories/repository.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -17,11 +20,13 @@ import { Neo4jModule } from './shared/neo4j/neo4j.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    GraphqlModule,
-    Neo4jModule
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: join(process.cwd(), 'schema.gql'),
+      playground: true,
+    }),
+    Neo4jModule,
+    RepositoryModule,
   ],
-  controllers: [],
-  providers: [],
 })
-
 export class AppModule {}
