@@ -1,0 +1,50 @@
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+enum ProjectRole {
+    OWNER
+    MEMBER
+    GUEST
+}
+
+model Profile {
+    id          String   @id @default(uuid())
+    userId      String   @unique @map("user_id")
+    email       String   @unique
+    displayName String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    projects ProjectUser[]
+
+    @@map("users")
+}
+
+model Project {
+    id          String        @id @default(uuid())
+    name        String
+    description String
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    members     ProjectUser[]
+
+    @@map("projects")
+}
+
+model ProjectUser {
+    profileId String      @map("profile_id")
+    projectId String      @map("project_id")
+    role      ProjectRole @default(GUEST)
+    user      Profile     @relation(fields: [profileId], references: [id])
+    project   Project     @relation(fields: [projectId], references: [id])
+
+    @@id([profileId, projectId])
+    @@map("project_users")
+}

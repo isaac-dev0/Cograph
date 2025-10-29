@@ -1,82 +1,112 @@
-# Cograph
+# turborepo monorepo with Next.js 15 + NestJS 11 + shadcn
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+This template is for creating a comprehensive Enterprise level app using Next.js 15 (frontend) and NestJS 11 (backend).
+Use database of your choice (MySQL, PostgreSQL, etc.) and configure it in the app.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+## Usage
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-
-## Finish your CI setup
-
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/BO3yrGuxal)
-
-
-## Run tasks
-
-To run the dev server for your app, use:
-
-```sh
-npx nx serve cograph
+You can use or follow the step 1 to clone.
+```bash
+pnpm dlx superepo@latest init
 ```
 
-To create a production bundle:
+1. Clone the repository
 
-```sh
-npx nx build cograph
+```bash
+git clone https://github.com/mohitarora/superepo.git
+
+cd superepo
 ```
 
-To see all available targets to run for a project, run:
+2. Setup Environment Variables
 
-```sh
-npx nx show project cograph
+Copy .env.example to .env in both apps/api and apps/web
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+3. Install dependencies
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/node:app demo
+```bash
+pnpm install
 ```
 
-To generate a new library, use:
+4. Start the database (optional)
 
-```sh
-npx nx g @nx/node:lib mylib
+example for Postgres:
+```bash
+docker pull postgres
+docker run -d --name <container_name> -p 5432:5432 -e POSTGRES_PASSWORD=<new_password> postgres
+```
+then update the .env file with the new password (default **DB_USERNAME**=postgres, **DB_DATABASE**=postgres) 
+
+5. Start the app
+
+```bash
+pnpm dev
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+6. Visit http://localhost:3000
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+7. Visit http://localhost:4000/api/docs
+
+If you need to install new packages, you can add to the respective app folder:
+
+```bash
+pnpm add <package-name>
+```
+
+## Adding shadcn components
+
+To add shadcn components to your app, run the following command at the root of your `web` app:
+
+```bash
+pnpm dlx shadcn@latest add button -c apps/web
+```
+
+This will place the ui components in the `packages/ui/src/components` directory.
+
+## Using components
+
+To use the components in your app, import them from the `ui` package.
+
+```tsx
+import { Button } from "@workspace/ui/components/ui/button"
+```
+
+## Functionality
+
+- Create New user from Register page
+- Login to app using credentials from Login page
+- Go to Settings page and invite a new user
+- Copy the invitation URL and register the user (either in another browser or in incognito mode)
+- Login using new user credentials from Login page
+
+- NOTE: Now you have successfully created an admin user as well as a regular user.
+
+## Features
+
+**Core Architecture**
+- Next.js 15 with Turbopack
+- Monorepo setup using Turborepo
+- Shared ESLint/TypeScript configs
+
+**Functionality**
+- Authentication (NextAuth.js)
+- Form validation with Zod + react-hook-form
+- Data visualization with Recharts
 
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Packages 
 
-## Install Nx Console
+- Next.js 15
+- NestJS 11
+- shadcn/ui
+- next-auth
+- passport
+- TypeORM
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## License
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Superepo is released under the [MIT License](https://opensource.org/licenses/MIT).

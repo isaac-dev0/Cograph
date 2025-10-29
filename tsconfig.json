@@ -1,19 +1,4 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compileOnSave": false,
-  "files": [],
-  "references": [
-    {
-      "path": "./apps/cograph-e2e"
-    },
-    {
-      "path": "./apps/cograph"
-    },
-    {
-      "path": "./apps/cograph-frontend-e2e"
-    },
-    {
-      "path": "./apps/cograph-frontend"
-    }
-  ]
+  "extends": "@workspace/typescript-config/base.json"
 }
+
