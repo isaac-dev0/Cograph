@@ -4,7 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ProfilesModule } from 'src/profiles/profiles.module';
 import { SupabaseJwtStrategy } from './supabase-jwt.strategy';
 import { ProfileService } from 'src/profiles/profiles.service';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from 'src/common/prisma/prisma.service';
 
 @Module({
   imports: [

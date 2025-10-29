@@ -7,6 +7,9 @@ type Profile {
   userId: String!
   email: String!
   displayName: String!
+  job: String!
+  location: String!
+  avatarUrl: String!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -17,13 +20,22 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Query {
+  """Finds a profile based on Profile ID"""
+  findProfileById(id: String!): Profile!
+
   """Finds a profile based on a Supabase Auth ID"""
   findProfileByUserId(userId: String!): Profile!
+
+  """Returns the authenticated user's own profile."""
+  me: Profile!
 }
 
 type Mutation {
   """Finds or creates a user profile based on Supabase Auth Data (Upsert)."""
   syncProfile(data: SyncProfileInput!): Profile!
+
+  """Updates the authenticated user's profile"""
+  updateProfile(updateProfileInput: UpdateProfileInput!): Profile!
 }
 
 input SyncProfileInput {
@@ -35,4 +47,19 @@ input SyncProfileInput {
 
   """The user's public display name."""
   displayName: String!
+}
+
+input UpdateProfileInput {
+  """The unique Supabase Auth User ID (UID)."""
+  userId: String
+
+  """The user's email address."""
+  email: String
+
+  """The user's public display name."""
+  displayName: String
+  id: String!
+  job: String!
+  location: String!
+  avatarUrl: String!
 }
