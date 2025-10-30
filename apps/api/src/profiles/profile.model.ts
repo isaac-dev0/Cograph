@@ -14,6 +14,15 @@ export class Profile {
   @Field(() => String)
   displayName: string;
 
+  @Field(() => String, { nullable: true })
+  job?: string;
+
+  @Field(() => String, { nullable: true })
+  location?: string;
+
+  @Field(() => String, { nullable: true })
+  avatarUrl?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

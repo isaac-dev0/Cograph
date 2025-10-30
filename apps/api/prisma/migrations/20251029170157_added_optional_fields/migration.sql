@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "profiles" ALTER COLUMN "job" DROP NOT NULL,
+ALTER COLUMN "location" DROP NOT NULL,
+ALTER COLUMN "avatarUrl" DROP NOT NULL;

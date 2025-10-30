@@ -19,12 +19,15 @@ model Profile {
     userId      String   @unique @map("user_id")
     email       String   @unique
     displayName String
+    job         String?
+    location    String?
+    avatarUrl   String?
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
     projects ProjectUser[]
 
-    @@map("users")
+    @@map("profiles")
 }
 
 model Project {
