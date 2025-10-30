@@ -1,5 +1,4 @@
 import {
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,11 +18,19 @@ export class ProfileService {
 
   /**
    * Finds a Profile record by their Supabase Auth UID, or creates it if it doesn't exist.
-   * This synchronises the external identity with the internal application data.
-   * @param data Data extracted from the validated Supabase JWT.
+   * This handles the critical synchronisation between the external identity (Supabase)
+   * and the internal application data (Prisma Profile table).
+   *
+   * @param data Data extracted from the validated Supabase JWT (userId, email, displayName).
    * @returns The synchronised Prisma Profile object.
    */
   async syncProfile(data: SupabaseAuthData): Promise<Profile> {
+    if (!data.userId) {
+      throw new Error(
+        'Cannot syncronise profile: Supabase Auth ID is missing.',
+      );
+    }
+
     return this.prisma.profile.upsert({
       where: {
         userId: data.userId,
@@ -43,11 +50,13 @@ export class ProfileService {
   }
 
   /**
-   * Retrieves a profile using the profile's ID.
-   * @param profileId The internal profile ID.
-   * @returns A profile or null.
+   * Retrieves a profile using the internal Prisma profile ID.
+   *
+   * @param id The internal Profile ID (UUID).
+   * @returns The found Profile object.
+   * @throws NotFoundException if the profile ID does not exist.
    */
-  async findById(id: string): Promise<Profile | null> {
+  async findById(id: string): Promise<Profile> {
     const profile = await this.prisma.profile.findUnique({ where: { id: id } });
     if (!profile) {
       throw new NotFoundException(`Profile with ID "${id}" not found.`);
@@ -55,7 +64,14 @@ export class ProfileService {
     return profile;
   }
 
-  async findByUserId(userId: string): Promise<Profile | null> {
+  /**
+   * Retrieves a profile using the external Supabase Auth UID.
+   *
+   * @param userId The external Supabase Auth UID.
+   * @returns The found Profile object.
+   * @throws NotFoundException if the profile ID does not exist.
+   */
+  async findByUserId(userId: string): Promise<Profile> {
     const profile = await this.prisma.profile.findUnique({
       where: { userId: userId },
     });
@@ -67,30 +83,28 @@ export class ProfileService {
     return profile;
   }
 
+  /**
+   * Updates the profile details for the authenticated user.
+   *
+   * @param authId The ID of the authenticated user (derived from the JWT).
+   * @param updateProfileInput The data to update (job, location, avatarUrl).
+   * @returns The updated Profile object.
+   * @throws NotFoundException if the profile record does not exist in the database.
+   */
   async update(
-    id: string,
+    authId: string,
     updateProfileInput: UpdateProfileInput,
   ): Promise<Profile> {
-    if (id !== updateProfileInput.id) {
-      throw new ForbiddenException(
-        'You are only authorised to update your own profile.',
-      );
-    }
-
     try {
       return await this.prisma.profile.update({
         where: {
-          id: id,
+          id: authId,
         },
-        data: {
-          job: updateProfileInput.job,
-          location: updateProfileInput.location,
-          avatarUrl: updateProfileInput.avatarUrl,
-        },
+        data: { ...updateProfileInput },
       });
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new NotFoundException(`Profile with ID "${id}" not found.`);
+        throw new NotFoundException(`Profile with ID "${authId}" not found.`);
       }
       throw error;
     }

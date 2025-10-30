@@ -14,13 +14,13 @@ export class Profile {
   @Field(() => String)
   displayName: string;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   job?: string;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   location?: string;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   avatarUrl?: string;
 
   @Field(() => Date)

@@ -41,6 +41,7 @@
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "dataloader": "^2.2.3",
     "graphql": "^16.11.0",
     "neo4j-driver": "^6.0.0",
     "nest-neo4j": "^0.3.1",
