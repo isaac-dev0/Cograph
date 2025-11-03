@@ -3,7 +3,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { ProfileService } from 'src/profiles/profiles.service';
-import { Profile as ProfileModel } from 'src/profiles/profile.model';
+import { Profile as ProfileModel } from 'src/profiles/models/profile.model';
 
 interface SupabaseJwtPayload {
   sub: string;

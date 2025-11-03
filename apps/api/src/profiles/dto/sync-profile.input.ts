@@ -1,9 +1,9 @@
-import { Field, InputType } from "@nestjs/graphql";
+import { Field, ID, InputType } from "@nestjs/graphql";
 import { IsEmail, Length } from "class-validator";
 
 @InputType()
 export class SyncProfileInput {
-  @Field(() => String, { description: 'The unique Supabase Auth User ID (UID).' })
+  @Field(() => ID, { description: 'The unique Supabase Auth User ID (UID).' })
   userId: string;
 
   @Field(() => String, { description: 'The user\'s email address.' })
