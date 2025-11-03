@@ -10,6 +10,7 @@ generator client {
 
 enum ProjectRole {
     OWNER
+    MANAGER
     MEMBER
     GUEST
 }
@@ -25,29 +26,36 @@ model Profile {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
-    projects ProjectUser[]
+    projectsOwned Project[]       @relation("ProjectsOwned")
+    projects      ProjectMember[] @relation("UserMemberships")
 
     @@map("profiles")
 }
 
 model Project {
-    id          String        @id @default(uuid())
+    id          String   @id @default(uuid())
     name        String
-    description String
-    createdAt   DateTime      @default(now())
-    updatedAt   DateTime      @updatedAt
-    members     ProjectUser[]
+    description String?
+    ownerId     String   @map("owner_profile_id")
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    owner   Profile         @relation("ProjectsOwned", fields: [ownerId], references: [id])
+    members ProjectMember[] @relation("ProjectMemberships")
 
     @@map("projects")
 }
 
-model ProjectUser {
-    profileId String      @map("profile_id")
+model ProjectMember {
+    memberId  String      @map("profile_id")
     projectId String      @map("project_id")
     role      ProjectRole @default(GUEST)
-    user      Profile     @relation(fields: [profileId], references: [id])
-    project   Project     @relation(fields: [projectId], references: [id])
+    createdAt DateTime    @default(now())
+    updatedAt DateTime    @updatedAt
 
-    @@id([profileId, projectId])
-    @@map("project_users")
+    member  Profile @relation("UserMemberships", fields: [memberId], references: [id])
+    project Project @relation("ProjectMemberships", fields: [projectId], references: [id])
+
+    @@id([memberId, projectId])
+    @@map("project_members")
 }

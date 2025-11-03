@@ -7,6 +7,7 @@ import { join } from 'path';
 import { ProfilesModule } from './profiles/profiles.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
     AuthModule,
     ProfilesModule,
     PrismaModule,
+    ProjectsModule,
   ],
 })
 export class AppModule {}

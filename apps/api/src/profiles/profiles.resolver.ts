@@ -1,6 +1,6 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ProfileService } from './profiles.service';
-import { Profile as ProfileModel } from './profile.model';
+import { Profile as ProfileModel } from './models/profile.model';
 import { SyncProfileInput } from './dto/sync-profile.input';
 import { UseGuards } from '@nestjs/common';
 import { UpdateProfileInput } from './dto/update-profile.input';
