@@ -1,0 +1,2 @@
+export const DEFAULT_AVATAR_URL: string =
+  'https://notion-avatar.app/api/svg/eyJmYWNlIjowLCJub3NlIjoxMCwibW91dGgiOjgsImV5ZXMiOjgsImV5ZWJyb3dzIjo2LCJnbGFzc2VzIjo4LCJoYWlyIjo0LCJhY2Nlc3NvcmllcyI6MCwiZGV0YWlscyI6MCwiYmVhcmQiOjAsImhhbGxvd2VlbiI6MywiZmxpcCI6MCwiY29sb3IiOiJyZ2JhKDI1NSwgMCwgMCwgMCkiLCJzaGFwZSI6Im5vbmUifQ==';

@@ -4,7 +4,7 @@ import { ProjectRole } from '@prisma/client';
 @ObjectType()
 export class ProjectMember {
   @Field(() => ID)
-  memberId: string;
+  profileId: string;
 
   @Field(() => ID)
   projectId: string;

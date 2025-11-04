@@ -4,7 +4,7 @@ import { ProjectRole } from '@prisma/client';
 @InputType()
 export class AddProjectMemberInput {
   @Field(() => String, { description: 'Profile ID of the User' })
-  memberId: string;
+  profileId: string;
 
   @Field(() => String, { description: 'Project ID of the Project' })
   projectId: string;
