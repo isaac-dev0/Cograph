@@ -154,7 +154,7 @@ export class ProjectsService {
    * @throws {UnauthorisedProjectAccessException} If requester is not the owner.
    * @throws {InvalidOwnershipTransferException} If the new owner is not a member.
    */
-  async updateOwner(
+  async transferOwnership(
     projectId: string,
     ownerId: string,
     newOwnerId: string,
