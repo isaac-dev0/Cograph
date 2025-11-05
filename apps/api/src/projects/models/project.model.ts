@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { ProjectStatus } from '@prisma/client';
+import { ProjectMember as ProjectMemberModel } from './project-member.model';
 
 registerEnumType(ProjectStatus, {
   name: 'ProjectStatus',
@@ -35,6 +36,11 @@ export class Project {
     description: 'Status of the project, e.g., ACTIVE, ARCHIVED',
   })
   status: ProjectStatus;
+
+  @Field(() => [ProjectMemberModel], {
+    description: 'Members of the project',
+  })
+  members: ProjectMemberModel[];
 
   @Field(() => Date, {
     description: 'Timestamp of when the project was created.',

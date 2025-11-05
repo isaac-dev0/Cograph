@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { ProjectRole } from '@prisma/client';
+import { Profile, ProjectRole } from '@prisma/client';
+import { Profile as ProfileModel } from 'src/profiles/models/profile.model';
 
 registerEnumType(ProjectRole, {
   name: 'ProjectRole',
@@ -25,6 +26,11 @@ export class ProjectMember {
       'Role of the user within the project, e.g., OWNER, ADMIN, or MEMBER.',
   })
   role: ProjectRole;
+
+  @Field(() => ProfileModel, {
+    description: 'Profile of the user.'
+  })
+  profile: Profile;
 
   @Field(() => Date, {
     description: 'Timestamp of when this member was added to the project.',
