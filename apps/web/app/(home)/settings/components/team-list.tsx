@@ -112,19 +112,19 @@ export function TeamList() {
     loadData()
   }, [])
 
-  const handleAction = async (action: string, memberId: string, data?: any) => {
-    setActionInProgress(memberId);
+  const handleAction = async (action: string, profileId: string, data?: any) => {
+    setActionInProgress(profileId);
     try {
       switch (action) {
         case 'remove':
           if (data?.type === 'invitation') {
-            await settingsApi.cancelInvitation(memberId);
+            await settingsApi.cancelInvitation(profileId);
             toast({
               title: "Success",
               description: "Invitation cancelled successfully.",
             });
           } else {
-            await settingsApi.removeTeamMember(memberId);
+            await settingsApi.removeTeamMember(profileId);
             toast({
               title: "Success",
               description: "Team member removed successfully.",
@@ -132,14 +132,14 @@ export function TeamList() {
           }
           break;
         case 'changeRole':
-          await settingsApi.changeUserRole(memberId, data);
+          await settingsApi.changeUserRole(profileId, data);
           toast({
             title: "Success",
             description: "User role updated successfully.",
           });
           break;
         case 'resend':
-          await settingsApi.resendInvitation(memberId);
+          await settingsApi.resendInvitation(profileId);
           toast({
             title: "Success",
             description: "Invitation resent successfully.",

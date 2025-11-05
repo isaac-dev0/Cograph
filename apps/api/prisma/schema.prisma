@@ -10,9 +10,14 @@ generator client {
 
 enum ProjectRole {
     OWNER
-    MANAGER
+    ADMIN
     MEMBER
     GUEST
+}
+
+enum ProjectStatus {
+    ACTIVE
+    ARCHIVED
 }
 
 model Profile {
@@ -33,12 +38,13 @@ model Profile {
 }
 
 model Project {
-    id          String   @id @default(uuid())
+    id          String        @id @default(uuid())
     name        String
     description String?
-    ownerId     String   @map("owner_profile_id")
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    ownerId     String        @map("owner_profile_id")
+    status      ProjectStatus @default(ACTIVE)
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
 
     owner   Profile         @relation("ProjectsOwned", fields: [ownerId], references: [id])
     members ProjectMember[] @relation("ProjectMemberships")
@@ -47,15 +53,15 @@ model Project {
 }
 
 model ProjectMember {
-    memberId  String      @map("profile_id")
+    profileId String      @map("profile_id")
     projectId String      @map("project_id")
     role      ProjectRole @default(GUEST)
     createdAt DateTime    @default(now())
     updatedAt DateTime    @updatedAt
 
-    member  Profile @relation("UserMemberships", fields: [memberId], references: [id])
+    member  Profile @relation("UserMemberships", fields: [profileId], references: [id])
     project Project @relation("ProjectMemberships", fields: [projectId], references: [id])
 
-    @@id([memberId, projectId])
+    @@id([profileId, projectId])
     @@map("project_members")
 }

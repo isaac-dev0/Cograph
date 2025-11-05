@@ -5,6 +5,7 @@ import {
 import { Profile } from '@prisma/client';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { UpdateProfileInput } from './dto/update-profile.input';
+import { DEFAULT_AVATAR_URL } from 'src/common/constants';
 
 interface SupabaseAuthData {
   userId: string;
@@ -43,8 +44,7 @@ export class ProfileService {
         userId: data.userId,
         email: data.email,
         displayName: data.displayName,
-        avatarUrl:
-          'https://notion-avatar.app/api/svg/eyJmYWNlIjowLCJub3NlIjoxMCwibW91dGgiOjgsImV5ZXMiOjgsImV5ZWJyb3dzIjo2LCJnbGFzc2VzIjo4LCJoYWlyIjo0LCJhY2Nlc3NvcmllcyI6MCwiZGV0YWlscyI6MCwiYmVhcmQiOjAsImhhbGxvd2VlbiI6MywiZmxpcCI6MCwiY29sb3IiOiJyZ2JhKDI1NSwgMCwgMCwgMCkiLCJzaGFwZSI6Im5vbmUifQ==',
+        avatarUrl: DEFAULT_AVATAR_URL,
       },
     });
   }
