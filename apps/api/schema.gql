@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 
 type Profile {
-  id: String!
+  id: ID!
   userId: String!
   email: String!
   displayName: String!
@@ -19,9 +19,70 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+"""Represents a user who is part of a project."""
+type ProjectMember {
+  """
+  Unique identifier of the user (profile) associated with this membership.
+  """
+  profileId: ID!
+
+  """Unique identifier of the project this member belongs to."""
+  projectId: ID!
+
+  """Role of the user within the project, e.g., OWNER, ADMIN, or MEMBER."""
+  role: ProjectRole!
+
+  """Profile of the user."""
+  profile: Profile!
+
+  """Timestamp of when this member was added to the project."""
+  createdAt: DateTime!
+
+  """Timestamp of the last update to this project member record."""
+  updatedAt: DateTime!
+}
+
+"""Specifies the level of permissions a member has within a project."""
+enum ProjectRole {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+"""
+A project that contains members, an owner, and metadata such as name and description.
+"""
 type Project {
-  """Example field (placeholder)"""
-  exampleField: Int!
+  """Unique identifier of the project."""
+  id: ID!
+
+  """The human-readable name of the project."""
+  name: String!
+
+  """Optional text description of the project’s purpose or details."""
+  description: String
+
+  """Unique identifier of the user who owns this project."""
+  ownerId: ID!
+
+  """Status of the project, e.g., ACTIVE, ARCHIVED"""
+  status: ProjectStatus!
+
+  """Members of the project"""
+  members: [ProjectMember!]!
+
+  """Timestamp of when the project was created."""
+  createdAt: DateTime!
+
+  """Timestamp of the last update to the project."""
+  updatedAt: DateTime!
+}
+
+"""Specifies the status of a project."""
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
 }
 
 type Query {
@@ -30,8 +91,12 @@ type Query {
 
   """Finds a profile based on a Supabase Auth ID"""
   findProfileByUserId(userId: String!): Profile!
-  projects: [Project!]!
-  project(id: Int!): Project!
+
+  """Finds a project by its unique ID"""
+  findProjectById(projectId: ID!): Project!
+
+  """Finds projects that the specified profile is a member of."""
+  findProjectsByProfileId(profileId: ID!): [Project!]!
 }
 
 type Mutation {
@@ -40,14 +105,32 @@ type Mutation {
 
   """Updates the authenticated user's profile"""
   updateProfile(updateProfileInput: UpdateProfileInput!): Profile!
+
+  """Creates a project given the specified parameters."""
   createProject(createProjectInput: CreateProjectInput!): Project!
-  updateProject(updateProjectInput: UpdateProjectInput!): Project!
-  removeProject(id: Int!): Project!
+
+  """Updates an existing project."""
+  updateProject(projectId: ID!, updateProjectInput: UpdateProjectInput!): Project!
+
+  """Updates a project member's role."""
+  updateProjectMemberRole(projectId: ID!, memberId: ID!, role: ProjectRole!): ProjectMember!
+
+  """Transfers ownership of a project to another member."""
+  transferProjectOwnership(projectId: ID!, newOwnerId: ID!): Project!
+
+  """Adds one or more members to a project."""
+  addProjectMembers(projectId: ID!, profileIds: [ID!]!): [ProjectMember!]!
+
+  """Removes a member from a project."""
+  removeProjectMember(projectId: ID!, profileId: ID!): ProjectMember!
+
+  """Archives a project (soft delete)."""
+  archiveProject(projectId: ID!): Project!
 }
 
 input SyncProfileInput {
   """The unique Supabase Auth User ID (UID)."""
-  userId: String!
+  userId: ID!
 
   """The user's email address."""
   email: String!
@@ -63,12 +146,23 @@ input UpdateProfileInput {
 }
 
 input CreateProjectInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
+  """Name of the project"""
+  name: String!
+
+  """Description of the project"""
+  description: String
+
+  """Supabase User ID of the project owner"""
+  ownerId: ID!
 }
 
 input UpdateProjectInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
+  """Name of the project"""
+  name: String
+
+  """Description of the project"""
+  description: String
+
+  """Supabase User ID of the project owner"""
+  ownerId: ID
 }
