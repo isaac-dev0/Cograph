@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateProjectInput } from './dto/create-project.input';
 import { UpdateProjectInput } from './dto/update-project.input';
 import { PrismaService } from 'src/common/prisma/prisma.service';
@@ -47,7 +47,7 @@ export class ProjectsService {
         },
       });
 
-      this.logger.log(`Project created (${project.id}) by ${project.ownerId}`);
+      this.logger.log({ operation: 'Created' }, ProjectsService.name);
 
       return project;
     });
@@ -106,7 +106,7 @@ export class ProjectsService {
       data: updateProjectInput,
     });
 
-    this.logger.log(`User ${userId} updated project ${projectId}.`);
+    this.logger.log({ operation: "Updated" }, ProjectsService.name);
 
     return updatedProject;
   }
