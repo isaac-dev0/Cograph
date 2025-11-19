@@ -45,6 +45,7 @@ model Project {
     status      ProjectStatus @default(ACTIVE)
     createdAt   DateTime      @default(now())
     updatedAt   DateTime      @updatedAt
+    archviedAt  DateTime?
 
     owner   Profile         @relation("ProjectsOwned", fields: [ownerId], references: [id])
     members ProjectMember[] @relation("ProjectMemberships")

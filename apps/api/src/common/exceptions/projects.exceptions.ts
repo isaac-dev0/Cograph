@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 export class ProjectNotFoundException extends NotFoundException {
   constructor(projectId: string) {
@@ -8,9 +12,10 @@ export class ProjectNotFoundException extends NotFoundException {
 
 export class MemberNotFoundException extends NotFoundException {
   constructor(profileId?: string) {
-    super(profileId
-      ? `Member with profile ID "${profileId}" not found in this project.`
-      : 'Member not found in this project.'
+    super(
+      profileId
+        ? `Member with profile ID "${profileId}" not found in this project.`
+        : 'Member not found in this project.',
     );
   }
 }
@@ -30,5 +35,11 @@ export class CannotRemoveOwnerException extends ForbiddenException {
 export class InvalidOwnershipTransferException extends BadRequestException {
   constructor() {
     super('New owner must already be a member of the project.');
+  }
+}
+
+export class DuplicateProjectNameException extends ForbiddenException {
+  constructor(name: string) {
+    super(`You cannot create a project named ${name}.`);
   }
 }
