@@ -8,6 +8,7 @@ import { ProfilesModule } from './profiles/profiles.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { ProjectsModule } from './projects/projects.module';
+import { LoggerModule } from 'pino-nestjs';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ProjectsModule } from './projects/projects.module';
       autoSchemaFile: join(process.cwd(), 'schema.gql'),
       playground: true,
     }),
+    LoggerModule.forRoot(),
     AuthModule,
     ProfilesModule,
     PrismaModule,
