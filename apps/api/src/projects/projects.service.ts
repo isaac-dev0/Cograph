@@ -85,6 +85,21 @@ export class ProjectsService {
   }
 
   /**
+   * Retrieves all project members given a project ID.
+   * 
+   * @param {string} projectId - The ID of the project.
+   * @returns {Promise<{profileId}[]>} Array of profileIds.
+   */
+  async findProjectMembers(
+    projectId: string,
+  ): Promise<{ profileId: string }[]> {
+    return this.prisma.projectMember.findMany({
+      where: { projectId },
+      select: { profileId: true },
+    });
+  }
+
+  /**
    * Updates an existing project.
    * Only the project owner or members with the `ADMIN` role can update a project.
    *
@@ -106,7 +121,7 @@ export class ProjectsService {
       data: updateProjectInput,
     });
 
-    this.logger.log({ operation: "Updated" }, ProjectsService.name);
+    this.logger.log({ operation: 'Updated' }, ProjectsService.name);
 
     return updatedProject;
   }

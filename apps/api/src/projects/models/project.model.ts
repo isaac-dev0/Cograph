@@ -54,6 +54,7 @@ export class Project {
 
   @Field(() => Date, {
     description: 'Timestamp of when the project was archived.',
+    nullable: true,
   })
   archivedAt?: Date;
 }
