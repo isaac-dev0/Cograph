@@ -1,10 +1,4 @@
-import {
-  Resolver,
-  Query,
-  Mutation,
-  Args,
-  ID,
-} from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 import { ProjectsService } from './projects.service';
 import { Project as ProjectModel } from './models/project.model';
 import { ProjectMember as ProjectMemberModel } from './models/project-member.model';
@@ -31,7 +25,7 @@ export class ProjectsResolver {
   ) {
     return this.projectsService.create({
       ...createProjectInput,
-      ownerId: profile.userId,
+      ownerId: profile.id,
     });
   }
 
@@ -49,6 +43,14 @@ export class ProjectsResolver {
   })
   findByProfileId(@Args('profileId', { type: () => ID }) profileId: string) {
     return this.projectsService.findByProfileId(profileId);
+  }
+
+  @Query(() => [ProjectMemberModel], {
+    name: 'findProjectMembers',
+    description: 'Finds all project members',
+  })
+  findProjectMembers(@Args('projectId', { type: () => ID }) projectId: string) {
+    return this.projectsService.findProjectMembers(projectId);
   }
 
   @Mutation(() => ProjectModel, {

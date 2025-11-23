@@ -79,7 +79,7 @@ type Project {
   updatedAt: DateTime!
 
   """Timestamp of when the project was archived."""
-  archivedAt: DateTime!
+  archivedAt: DateTime
 }
 
 """Specifies the status of a project."""
@@ -100,6 +100,9 @@ type Query {
 
   """Finds projects that the specified profile is a member of."""
   findProjectsByProfileId(profileId: ID!): [Project!]!
+
+  """Finds all project members"""
+  findProjectMembers(projectId: ID!): [ProjectMember!]!
 }
 
 type Mutation {
