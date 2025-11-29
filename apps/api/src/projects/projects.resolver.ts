@@ -1,4 +1,12 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  ID,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { ProjectsService } from './projects.service';
 import { Project as ProjectModel } from './models/project.model';
 import { ProjectMember as ProjectMemberModel } from './models/project-member.model';
@@ -9,11 +17,15 @@ import { UseGuards } from '@nestjs/common';
 import { SupabaseJwtGuard } from 'src/auth/supabase-jwt.guard';
 import { ProjectRole } from '@prisma/client';
 import { CurrentUser } from 'src/auth/current-user.decorator';
+import { PrismaService } from 'src/common/prisma/prisma.service';
 
 @UseGuards(SupabaseJwtGuard)
 @Resolver(() => ProjectModel)
 export class ProjectsResolver {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly projectsService: ProjectsService,
+  ) {}
 
   @Mutation(() => ProjectModel, {
     name: 'createProject',
@@ -135,5 +147,24 @@ export class ProjectsResolver {
   })
   archive(@Args('projectId', { type: () => ID }) projectId: string) {
     return this.projectsService.archive(projectId);
+  }
+
+  /*
+   *   +---   FIELD RESOLVERS   ---+
+   */
+
+  @ResolveField(() => ProfileModel)
+  async owner(@Parent() project: ProjectModel) {
+    return this.prisma.profile.findUnique({
+      where: { id: project.ownerId },
+    });
+  }
+
+  @ResolveField(() => [ProjectMemberModel])
+  async members(@Parent() project: ProjectModel) {
+    return this.prisma.projectMember.findMany({
+      where: { projectId: project.id },
+      include: { profile: true },
+    });
   }
 }

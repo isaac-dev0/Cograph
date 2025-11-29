@@ -24,31 +24,31 @@ model Profile {
     id          String   @id @default(uuid())
     userId      String   @unique @map("user_id")
     email       String   @unique
-    displayName String
+    displayName String   @map("display_name")
     job         String?
     location    String?
-    avatarUrl   String?
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    avatarUrl   String?  @map("avatar_url")
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
 
-    projectsOwned Project[]       @relation("ProjectsOwned")
-    projects      ProjectMember[] @relation("UserMemberships")
+    projectsOwned           Project[]            @relation("ProjectsOwned")
+    projectMemberships      ProjectMember[]
 
     @@map("profiles")
 }
 
 model Project {
-    id          String        @id @default(uuid())
-    name        String
-    description String?
-    ownerId     String        @map("owner_profile_id")
-    status      ProjectStatus @default(ACTIVE)
-    createdAt   DateTime      @default(now())
-    updatedAt   DateTime      @updatedAt
-    archviedAt  DateTime?
+    id             String        @id @default(uuid())
+    name           String
+    description    String?
+    ownerId        String        @map("owner_profile_id")
+    status         ProjectStatus @default(ACTIVE)
+    createdAt      DateTime      @default(now()) @map("created_at")
+    updatedAt      DateTime      @updatedAt @map("updated_at")
+    archviedAt     DateTime?     @map("archived_at")
 
-    owner   Profile         @relation("ProjectsOwned", fields: [ownerId], references: [id])
-    members ProjectMember[] @relation("ProjectMemberships")
+    owner        Profile         @relation("ProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+    members      ProjectMember[]
 
     @@map("projects")
 }
@@ -56,12 +56,12 @@ model Project {
 model ProjectMember {
     profileId String      @map("profile_id")
     projectId String      @map("project_id")
-    role      ProjectRole @default(GUEST)
-    createdAt DateTime    @default(now())
-    updatedAt DateTime    @updatedAt
+    role      ProjectRole @default(MEMBER)
+    createdAt DateTime    @default(now()) @map("created_at")
+    updatedAt DateTime    @updatedAt @map("updated_at")
 
-    member  Profile @relation("UserMemberships", fields: [profileId], references: [id])
-    project Project @relation("ProjectMemberships", fields: [projectId], references: [id])
+    profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
     @@id([profileId, projectId])
     @@map("project_members")
