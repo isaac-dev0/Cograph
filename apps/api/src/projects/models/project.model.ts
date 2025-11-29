@@ -1,6 +1,7 @@
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { ProjectStatus } from '@prisma/client';
 import { ProjectMember as ProjectMemberModel } from './project-member.model';
+import { Profile as ProfileModel } from '../../profiles/models/profile.model';
 
 registerEnumType(ProjectStatus, {
   name: 'ProjectStatus',
@@ -23,7 +24,7 @@ export class Project {
   @Field(() => String, {
     nullable: true,
     description:
-      'Optional text description of the project’s purpose or details.',
+      "Optional text description of the project's purpose or details.",
   })
   description?: string;
 
@@ -32,15 +33,16 @@ export class Project {
   })
   ownerId: string;
 
+  @Field(() => ID, {
+    nullable: true,
+    description: 'Unique identifier of the organisation who owns this project.',
+  })
+  organisationId: string;
+
   @Field(() => ProjectStatus, {
     description: 'Status of the project, e.g., ACTIVE, ARCHIVED',
   })
   status: ProjectStatus;
-
-  @Field(() => [ProjectMemberModel], {
-    description: 'Members of the project',
-  })
-  members: ProjectMemberModel[];
 
   @Field(() => Date, {
     description: 'Timestamp of when the project was created.',
@@ -57,4 +59,16 @@ export class Project {
     nullable: true,
   })
   archivedAt?: Date;
+
+  @Field(() => ProfileModel, {
+    description: 'Owner object of the project',
+    nullable: true,
+  })
+  owner?: ProfileModel;
+
+  @Field(() => [ProjectMemberModel], {
+    description: 'Members of the project',
+    nullable: true,
+  })
+  members?: ProjectMemberModel[];
 }
