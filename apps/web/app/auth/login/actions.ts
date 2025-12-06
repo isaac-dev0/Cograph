@@ -17,20 +17,18 @@ export async function loginWithGithub() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "github",
     options: {
-      redirectTo: getCallbackUrl(),
+      redirectTo: `${getCallbackUrl()}?next=/app`,
     },
   });
 
   if (error) {
+    console.error("GitHub OAuth error:", error);
     redirect("/auth/error");
   }
 
   if (data.url) {
     redirect(data.url);
   }
-
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
 }
 
 export async function loginWithGitlab() {
@@ -44,15 +42,13 @@ export async function loginWithGitlab() {
   });
 
   if (error) {
+    console.error("GitLab OAuth error:", error);
     redirect("/auth/error");
   }
 
   if (data.url) {
     redirect(data.url);
   }
-
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
 }
 
 export async function loginWithBitbucket() {
@@ -66,15 +62,13 @@ export async function loginWithBitbucket() {
   });
 
   if (error) {
+    console.error("Bitbucket OAuth error:", error);
     redirect("/auth/error");
   }
 
   if (data.url) {
     redirect(data.url);
   }
-
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
 }
 
 export async function signOut() {

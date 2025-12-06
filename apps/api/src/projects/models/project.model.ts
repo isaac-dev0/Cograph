@@ -28,16 +28,16 @@ export class Project {
   })
   description?: string;
 
+  @Field(() => String, {
+    nullable: true,
+    description: 'URL to the project logo image.',
+  })
+  icon?: string;
+
   @Field(() => ID, {
     description: 'Unique identifier of the user who owns this project.',
   })
   ownerId: string;
-
-  @Field(() => ID, {
-    nullable: true,
-    description: 'Unique identifier of the organisation who owns this project.',
-  })
-  organisationId: string;
 
   @Field(() => ProjectStatus, {
     description: 'Status of the project, e.g., ACTIVE, ARCHIVED',

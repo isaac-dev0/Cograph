@@ -1,17 +1,31 @@
 "use client";
 
+import { Profile } from "@/lib/shared/Profile";
 import { User } from "@supabase/supabase-js";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
-const UserContext = createContext<User | null>(null);
+interface UserContextType {
+  user: User | null;
+  profile: Profile | null;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({
-  value,
+  user,
+  profile,
   children,
 }: {
-  value: User | null;
+  user: User | null;
+  profile: Profile | null;
   children: React.ReactNode;
-}) => <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+}) => {
+  return (
+    <UserContext.Provider value={{ user: user, profile: profile }}>
+      {children}
+    </UserContext.Provider>
+  );
+};
 
 export const useUser = () => {
   const context = useContext(UserContext);
