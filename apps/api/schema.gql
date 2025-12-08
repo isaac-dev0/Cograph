@@ -60,17 +60,17 @@ type Project {
   """The human-readable name of the project."""
   name: String!
 
-  """Optional text description of the project’s purpose or details."""
+  """Optional text description of the project's purpose or details."""
   description: String
+
+  """URL to the project logo image."""
+  icon: String
 
   """Unique identifier of the user who owns this project."""
   ownerId: ID!
 
   """Status of the project, e.g., ACTIVE, ARCHIVED"""
   status: ProjectStatus!
-
-  """Members of the project"""
-  members: [ProjectMember!]!
 
   """Timestamp of when the project was created."""
   createdAt: DateTime!
@@ -80,6 +80,12 @@ type Project {
 
   """Timestamp of when the project was archived."""
   archivedAt: DateTime
+
+  """Owner object of the project"""
+  owner: Profile
+
+  """Members of the project"""
+  members: [ProjectMember!]
 }
 
 """Specifies the status of a project."""

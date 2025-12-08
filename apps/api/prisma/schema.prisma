@@ -1,11 +1,11 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
 datasource db {
     provider  = "postgresql"
     url       = env("DATABASE_URL")
     directUrl = env("DIRECT_URL")
-}
-
-generator client {
-    provider = "prisma-client-js"
 }
 
 enum ProjectRole {
@@ -21,44 +21,45 @@ enum ProjectStatus {
 }
 
 model Profile {
-    id          String   @id @default(uuid())
-    userId      String   @unique @map("user_id")
+    id          String   @id @default(uuid()) @db.Uuid
+    userId      String   @unique @map("user_id") @db.Uuid
     email       String   @unique
     displayName String   @map("display_name")
     job         String?
     location    String?
     avatarUrl   String?  @map("avatar_url")
     createdAt   DateTime @default(now()) @map("created_at")
-    updatedAt   DateTime @updatedAt @map("updated_at")
+    updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
-    projectsOwned           Project[]            @relation("ProjectsOwned")
-    projectMemberships      ProjectMember[]
+    projectsOwned      Project[]       @relation("ProjectsOwned")
+    projectMemberships ProjectMember[]
 
     @@map("profiles")
 }
 
 model Project {
-    id             String        @id @default(uuid())
-    name           String
-    description    String?
-    ownerId        String        @map("owner_profile_id")
-    status         ProjectStatus @default(ACTIVE)
-    createdAt      DateTime      @default(now()) @map("created_at")
-    updatedAt      DateTime      @updatedAt @map("updated_at")
-    archviedAt     DateTime?     @map("archived_at")
+    id          String        @id @default(uuid()) @db.Uuid
+    name        String
+    description String?
+    icon     String?       @map("logo_url")
+    ownerId     String        @map("owner_profile_id") @db.Uuid
+    status      ProjectStatus @default(ACTIVE)
+    createdAt   DateTime      @default(now()) @map("created_at")
+    updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at")
+    archivedAt  DateTime?     @map("archived_at")
 
-    owner        Profile         @relation("ProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
-    members      ProjectMember[]
+    owner   Profile         @relation("ProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+    members ProjectMember[]
 
     @@map("projects")
 }
 
 model ProjectMember {
-    profileId String      @map("profile_id")
-    projectId String      @map("project_id")
+    profileId String      @map("profile_id") @db.Uuid
+    projectId String      @map("project_id") @db.Uuid
     role      ProjectRole @default(MEMBER)
     createdAt DateTime    @default(now()) @map("created_at")
-    updatedAt DateTime    @updatedAt @map("updated_at")
+    updatedAt DateTime    @default(now()) @updatedAt @map("updated_at")
 
     profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
     project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)

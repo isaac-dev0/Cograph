@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import "./globals.css";
 import { UserProvider } from "@/hooks/providers/UserProvider";
 import { createClient } from "@/lib/supabase/server";
-import { AppHeader } from "@/components/app/AppHeader";
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+import { ProjectProvider } from "@/hooks/providers/ProjectProvider";
+import "./globals.css";
+import { RepositoryProvider } from "@/hooks/providers/RepositoryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,20 +13,33 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
   title: "Cograph | Graph Repository for Software Teams",
   description: "The best way to view Git repositories for Software Teams.",
 };
 
 export default async function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  let profile = null;
+
+  if (user) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Failed to load profile:", error);
+    } else {
+      profile = data;
+    }
+  }
 
   return (
     <html className={geistSans.className} lang="en" suppressHydrationWarning>
@@ -40,8 +50,10 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <UserProvider value={user}>
-            {children}
+          <UserProvider user={user} profile={profile}>
+            <ProjectProvider>
+              <RepositoryProvider>{children}</RepositoryProvider>
+            </ProjectProvider>
           </UserProvider>
         </ThemeProvider>
       </body>
