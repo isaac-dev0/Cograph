@@ -20,6 +20,13 @@ enum ProjectStatus {
     ARCHIVED
 }
 
+enum SyncStatus {
+    PENDING
+    SYNCING
+    SYNCED
+    FAILED
+}
+
 model Profile {
     id          String   @id @default(uuid()) @db.Uuid
     userId      String   @unique @map("user_id") @db.Uuid
@@ -28,6 +35,7 @@ model Profile {
     job         String?
     location    String?
     avatarUrl   String?  @map("avatar_url")
+    githubToken String?  @map("github_token")
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
@@ -41,15 +49,16 @@ model Project {
     id          String        @id @default(uuid()) @db.Uuid
     name        String
     description String?
-    icon     String?       @map("logo_url")
+    icon        String?       @map("logo_url")
     ownerId     String        @map("owner_profile_id") @db.Uuid
     status      ProjectStatus @default(ACTIVE)
     createdAt   DateTime      @default(now()) @map("created_at")
     updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at")
     archivedAt  DateTime?     @map("archived_at")
 
-    owner   Profile         @relation("ProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
-    members ProjectMember[]
+    owner        Profile            @relation("ProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+    members      ProjectMember[]
+    repositories ProjectRepository[]
 
     @@map("projects")
 }
@@ -66,4 +75,87 @@ model ProjectMember {
 
     @@id([profileId, projectId])
     @@map("project_members")
+}
+
+model Repository {
+    id              String     @id @default(uuid()) @db.Uuid
+    githubId        Int        @unique @map("github_id")
+    nodeId          String     @unique @map("node_id")
+    name            String
+    fullName        String     @map("full_name")
+    description     String?
+    visibility      String     @default("public")
+    repositoryUrl   String     @map("repository_url")
+    icon            String?    @map("icon_url")
+    /**
+     * Owner Info
+     */
+    ownerLogin      String     @map("owner_login")
+    ownerType       String     @map("owner_type")
+    ownerAvatarUrl  String     @map("owner_avatar_url")
+    /**
+     * Sync
+     */
+    lastSyncedAt    DateTime?  @map("last_synced_at")
+    syncStatus      SyncStatus @default(PENDING) @map("sync_status")
+    syncError       String?    @map("sync_error")
+    /**
+     * Flags
+     */
+    isArchived      Boolean    @default(false) @map("is_archived")
+    isDisabled      Boolean    @default(false) @map("is_disabled")
+    isPrivate       Boolean    @map("is_private")
+    /**
+     * Timestamps
+     */
+    githubCreatedAt DateTime   @map("github_created_at")
+    githubUpdatedAt DateTime   @map("github_updated_at")
+    githubPushedAt  DateTime   @map("github_pushed_at")
+    createdAt       DateTime   @default(now()) @map("created_at")
+    updatedAt       DateTime   @default(now()) @updatedAt @map("updated_at")
+    archivedAt      DateTime?  @map("archived_at")
+
+    syncHistory     RepositorySyncHistory[]
+    projects        ProjectRepository[]
+
+    @@index([isPrivate])
+    @@index([isArchived])
+    @@index([isDisabled])
+    @@index([lastSyncedAt])
+    @@index([syncStatus])
+    @@index([githubUpdatedAt])
+    @@index([ownerLogin])
+    @@map("repositories")
+}
+
+model RepositorySyncHistory {
+    id              String     @id @default(uuid()) @db.Uuid
+    repositoryId    String     @map("repository_id") @db.Uuid
+    repository      Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+    syncStartedAt   DateTime   @map("sync_started_at")
+    syncCompletedAt DateTime?  @map("sync_completed_at")
+    status          String
+    error           String?
+    filesProcessed  Int        @default(0) @map("files_processed")
+    duration        Int?
+    createdAt       DateTime   @default(now()) @map("created_at")
+
+    @@index([repositoryId])
+    @@index([syncStartedAt])
+    @@map("repository_sync_history")
+}
+
+model ProjectRepository {
+    projectId    String   @map("project_id") @db.Uuid
+    repositoryId String   @map("repository_id") @db.Uuid
+    createdAt    DateTime @default(now()) @map("created_at")
+    updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+    project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+    @@id([projectId, repositoryId])
+    @@index([projectId])
+    @@index([repositoryId])
+    @@map("project_repositories")
 }

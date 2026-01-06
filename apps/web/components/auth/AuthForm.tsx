@@ -9,13 +9,7 @@ import {
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { GithubIcon } from "@/components/ui/icons/github-icon";
-import { BitbucketIcon } from "@/components/ui/icons/bitbucket-icon";
-import { GitlabIcon } from "@/components/ui/icons/gitlab-icon";
-import {
-  loginWithBitbucket,
-  loginWithGithub,
-  loginWithGitlab,
-} from "@/app/auth/login/actions";
+import { loginWithGithub } from "@/app/auth/login/actions";
 
 export function LoginForm({
   className,
@@ -39,22 +33,6 @@ export function LoginForm({
                 >
                   <GithubIcon />
                   Login with Github
-                </Button>
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={loginWithGitlab}
-                >
-                  <GitlabIcon />
-                  Login with Gitlab
-                </Button>
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={loginWithBitbucket}
-                >
-                  <BitbucketIcon />
-                  Login with Bitbucket
                 </Button>
               </Field>
             </FieldGroup>

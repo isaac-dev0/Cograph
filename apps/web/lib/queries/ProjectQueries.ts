@@ -6,6 +6,7 @@ export const FIND_PROJECTS_BY_PROFILE_QUERY = `
       description
       status
       icon
+      ownerId
     }
   }
 `;
@@ -13,11 +14,74 @@ export const FIND_PROJECTS_BY_PROFILE_QUERY = `
 export const CREATE_PROJECT = `
   mutation CreateProject($createProjectInput: CreateProjectInput!) {
     createProject(createProjectInput: $createProjectInput) {
-      id  
+      id
       name
       description
       status
       icon
+    }
+  }
+`;
+
+export const FIND_PROJECT_MEMBERS = `
+  query FindProjectMembers($projectId: ID!) {
+    findProjectMembers(projectId: $projectId) {
+      profileId
+      projectId
+      role
+      createdAt
+      updatedAt
+      profile {
+        id
+        email
+        displayName
+        avatarUrl
+      }
+    }
+  }
+`;
+
+export const ADD_PROJECT_MEMBERS = `
+  mutation AddProjectMembers($projectId: ID!, $profileIds: [ID!]!) {
+    addProjectMembers(projectId: $projectId, profileIds: $profileIds) {
+      profileId
+      projectId
+      role
+      profile {
+        id
+        email
+        displayName
+        avatarUrl
+      }
+    }
+  }
+`;
+
+export const REMOVE_PROJECT_MEMBER = `
+  mutation RemoveProjectMember($projectId: ID!, $profileId: ID!) {
+    removeProjectMember(projectId: $projectId, profileId: $profileId) {
+      profileId
+    }
+  }
+`;
+
+export const FIND_ALL_PROFILES = `
+  query FindAllProfiles {
+    findAllProfiles {
+      id
+      email
+      displayName
+      avatarUrl
+    }
+  }
+`;
+
+export const TRANSFER_PROJECT_OWNERSHIP = `
+  mutation TransferProjectOwnership($projectId: ID!, $newOwnerId: ID!) {
+    transferProjectOwnership(projectId: $projectId, newOwnerId: $newOwnerId) {
+      id
+      name
+      ownerId
     }
   }
 `;

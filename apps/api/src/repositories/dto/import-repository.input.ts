@@ -1,5 +1,8 @@
-export interface Repository {
-  id: string;
+import { InputType } from '@nestjs/graphql';
+import { SyncStatus } from '@prisma/client';
+
+@InputType()
+export class ImportRepositoryInput {
   githubId: number;
   nodeId: string;
   name: string;
@@ -12,7 +15,7 @@ export interface Repository {
   ownerType: string;
   ownerAvatarUrl: string;
   lastSyncedAt?: Date | null;
-  syncStatus: string;
+  syncStatus?: SyncStatus;
   syncError?: string | null;
   isArchived: boolean;
   isDisabled: boolean;
@@ -20,7 +23,5 @@ export interface Repository {
   githubCreatedAt: Date;
   githubUpdatedAt: Date;
   githubPushedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
   archivedAt?: Date | null;
 }

@@ -18,51 +18,12 @@ export async function loginWithGithub() {
     provider: "github",
     options: {
       redirectTo: `${getCallbackUrl()}?next=/app`,
+      scopes: "repo read:user user:email",
     },
   });
 
   if (error) {
     console.error("GitHub OAuth error:", error);
-    redirect("/auth/error");
-  }
-
-  if (data.url) {
-    redirect(data.url);
-  }
-}
-
-export async function loginWithGitlab() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "gitlab",
-    options: {
-      redirectTo: getCallbackUrl(),
-    },
-  });
-
-  if (error) {
-    console.error("GitLab OAuth error:", error);
-    redirect("/auth/error");
-  }
-
-  if (data.url) {
-    redirect(data.url);
-  }
-}
-
-export async function loginWithBitbucket() {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "bitbucket",
-    options: {
-      redirectTo: getCallbackUrl(),
-    },
-  });
-
-  if (error) {
-    console.error("Bitbucket OAuth error:", error);
     redirect("/auth/error");
   }
 

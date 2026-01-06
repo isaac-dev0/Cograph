@@ -36,6 +36,11 @@ export class ProfilesResolver {
     return this.profilesService.findByUserId(userId);
   }
 
+  @Query(() => [ProfileModel], { name: 'findAllProfiles' })
+  findAll() {
+    return this.profilesService.findAll();
+  }
+
   @Mutation(() => ProfileModel, {
     name: 'updateProfile',
     description: "Updates the authenticated user's profile",

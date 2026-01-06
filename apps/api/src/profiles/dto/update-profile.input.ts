@@ -17,4 +17,8 @@ export class UpdateProfileInput {
   @IsOptional()
   @IsUrl()
   avatarUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  githubToken?: string;
 }

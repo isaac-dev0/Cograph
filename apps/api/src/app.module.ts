@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { ProjectsModule } from './projects/projects.module';
 import { LoggerModule } from 'pino-nestjs';
+import { RepositoriesModule } from './repositories/repositories.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { LoggerModule } from 'pino-nestjs';
     ProfilesModule,
     PrismaModule,
     ProjectsModule,
+    RepositoriesModule,
   ],
 })
 export class AppModule {}

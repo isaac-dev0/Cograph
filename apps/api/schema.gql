@@ -10,6 +10,7 @@ type Profile {
   job: String
   location: String
   avatarUrl: String
+  githubToken: String
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -57,7 +58,7 @@ type Project {
   """Unique identifier of the project."""
   id: ID!
 
-  """The human-readable name of the project."""
+  """The name of the project."""
   name: String!
 
   """Optional text description of the project's purpose or details."""
@@ -94,12 +95,130 @@ enum ProjectStatus {
   ARCHIVED
 }
 
+"""History of sync operations performed on a repository."""
+type RepositorySyncHistory {
+  """Unique identifier of the sync history record."""
+  id: ID!
+
+  """ID of the repository this sync history entry belongs to."""
+  repositoryId: String!
+
+  """The repository associated with this sync event."""
+  repository: Repository!
+
+  """Timestamp when the sync process started."""
+  syncStartedAt: DateTime!
+
+  """Timestamp when the sync process finished."""
+  syncCompletedAt: DateTime
+
+  """Status of the sync process (e.g., PENDING, SUCCESS, FAILED)."""
+  status: String!
+
+  """Error message from the sync process, if any."""
+  error: String
+
+  """Number of files processed during the sync."""
+  filesProcessed: Int!
+
+  """Duration of the sync in milliseconds."""
+  duration: Int
+
+  """Timestamp when this sync history record was created."""
+  createdAt: DateTime!
+}
+
+"""A repository that contains files from Github."""
+type Repository {
+  """Unique identifier of the repository."""
+  id: ID!
+
+  """Unique identifier of the Github repository."""
+  githubId: Int!
+
+  """Unique identifier of the node."""
+  nodeId: String!
+
+  """Name of the repository."""
+  name: String!
+
+  """Full name of the repository with organisation or user slug."""
+  fullName: String!
+
+  """Description of the repository"""
+  description: String
+
+  """Visibility of the Github repository"""
+  visibility: String!
+
+  """URL of the Github repository"""
+  repositoryUrl: String!
+
+  """Icon/logo URL for the repository."""
+  icon: String
+
+  """Login of the repository owner."""
+  ownerLogin: String!
+
+  """Type of the owner such as organisation or user."""
+  ownerType: String!
+
+  """Avatar URL for the owner of the repository."""
+  ownerAvatarUrl: String!
+
+  """Date when the repository was last synced."""
+  lastSyncedAt: DateTime
+
+  """Status of the repository sync, e.g., PENDING, SYNCING, SYNCED, FAILED"""
+  syncStatus: SyncStatus!
+
+  """Error encountered from syncing."""
+  syncError: String
+
+  """Is the repository currently archived?"""
+  isArchived: Boolean!
+
+  """Is the repository currently disabled?"""
+  isDisabled: Boolean!
+
+  """Is the repository public or private?"""
+  isPrivate: Boolean!
+
+  """Github timestamp of when the repository was created."""
+  githubCreatedAt: DateTime!
+
+  """Github timestamp of the last update to the repository."""
+  githubUpdatedAt: DateTime!
+
+  """Timestamp of when the repository was previously pushed to."""
+  githubPushedAt: DateTime!
+
+  """Timestamp of when the repository was created."""
+  createdAt: DateTime!
+
+  """Timestamp of the last update to the repository."""
+  updatedAt: DateTime!
+
+  """Timestamp of when the repository was archived."""
+  archivedAt: DateTime
+  syncHistory: [RepositorySyncHistory!]
+}
+
+"""Specifies the status of a sync operation"""
+enum SyncStatus {
+  PENDING
+  SYNCING
+  SYNCED
+  FAILED
+}
+
 type Query {
   """Finds a profile based on Profile ID"""
   findProfileById(id: String!): Profile!
 
   """Finds a profile based on a Supabase Auth ID"""
   findProfileByUserId(userId: String!): Profile!
+  findAllProfiles: [Profile!]!
 
   """Finds a project by its unique ID"""
   findProjectById(projectId: ID!): Project!
@@ -109,6 +228,24 @@ type Query {
 
   """Finds all project members"""
   findProjectMembers(projectId: ID!): [ProjectMember!]!
+
+  """Finds repositories associated with a specific project."""
+  findRepositoriesByProjectId(projectId: ID!): [Repository!]!
+
+  """Finds all repositories with optional filters."""
+  findAllRepositories(options: FindRepositoriesInput): [Repository!]!
+
+  """Finds a repository by its GitHub ID."""
+  findRepositoryByGithubId(githubId: Int!): Repository
+
+  """Finds a repository by its full name (e.g., "owner/repo")."""
+  findRepositoryByFullName(fullName: String!): Repository
+}
+
+input FindRepositoriesInput {
+  includeArchived: Boolean
+  includePrivate: Boolean
+  owner: String
 }
 
 type Mutation {
@@ -138,6 +275,20 @@ type Mutation {
 
   """Archives a project (soft delete)."""
   archiveProject(projectId: ID!): Project!
+
+  """
+  Fetches repositories from GitHub API and imports them into the database.
+  """
+  syncRepositoriesFromGitHub(input: SyncRepositoriesInput!): Boolean!
+
+  """Archives a repository (soft delete)."""
+  archiveRepository(repositoryId: ID!): Repository!
+
+  """Adds one or more repositories to a project."""
+  addRepositoriesToProject(projectId: ID!, repositoryIds: [ID!]!): Boolean!
+
+  """Removes a repository from a project."""
+  removeRepositoryFromProject(projectId: ID!, repositoryId: ID!): Boolean!
 }
 
 input SyncProfileInput {
@@ -155,6 +306,7 @@ input UpdateProfileInput {
   job: String
   location: String
   avatarUrl: String
+  githubToken: String
 }
 
 input CreateProjectInput {
@@ -177,4 +329,9 @@ input UpdateProjectInput {
 
   """Supabase User ID of the project owner"""
   ownerId: ID
+}
+
+input SyncRepositoriesInput {
+  """GitHub access token for authenticating with GitHub API"""
+  githubToken: String!
 }

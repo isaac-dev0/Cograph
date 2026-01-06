@@ -17,7 +17,7 @@ export class Project {
   id: string;
 
   @Field(() => String, {
-    description: 'The human-readable name of the project.',
+    description: 'The name of the project.',
   })
   name: string;
 

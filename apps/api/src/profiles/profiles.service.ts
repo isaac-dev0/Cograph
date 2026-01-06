@@ -83,14 +83,12 @@ export class ProfileService {
     return profile;
   }
 
-  /**
-   * Updates the profile details for the authenticated user.
-   *
-   * @param authId The ID of the authenticated user (derived from the JWT).
-   * @param updateProfileInput The data to update (job, location, avatarUrl).
-   * @returns The updated Profile object.
-   * @throws NotFoundException if the profile record does not exist in the database.
-   */
+  async findAll(): Promise<Profile[]> {
+    return this.prisma.profile.findMany({
+      orderBy: { displayName: 'asc' },
+    });
+  }
+
   async update(
     authId: string,
     updateProfileInput: UpdateProfileInput,
