@@ -6,4 +6,5 @@ export interface Project {
   description?: string;
   status: ProjectStatus;
   icon?: string;
+  ownerId?: string;
 }

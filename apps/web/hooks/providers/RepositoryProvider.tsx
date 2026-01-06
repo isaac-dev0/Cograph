@@ -4,15 +4,25 @@ import { Repository } from "@/lib/shared/Repository";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useProject } from "./ProjectProvider";
 import { createClient } from "@/lib/supabase/client";
-import { FIND_REPOSITORIES_BY_PROJECT_QUERY } from "@/lib/queries/RepositoryQueries";
+import {
+  FIND_REPOSITORIES_BY_PROJECT_QUERY,
+  FIND_ALL_USER_REPOSITORIES,
+  SYNC_REPOSITORIES_FROM_GITHUB,
+  REMOVE_REPOSITORY_FROM_PROJECT,
+} from "@/lib/queries/RepositoryQueries";
+import { useUser } from "./UserProvider";
 
 interface RepositoryContextType {
   currentRepository: Repository | null;
   repositories: Repository[];
+  accountRepositories: Repository[];
   setCurrentRepository: (repository: Repository | null) => void;
   isLoading: boolean;
   error: string | null;
   refreshRepositories: () => Promise<void>;
+  refreshAccountRepositories: () => Promise<void>;
+  syncRepositoriesFromGitHub: () => Promise<void>;
+  removeRepositoryFromProject: (repositoryId: string) => Promise<void>;
 }
 
 const RepositoryContext = createContext<RepositoryContextType | undefined>(
@@ -25,6 +35,9 @@ export function RepositoryProvider({
   children: React.ReactNode;
 }) {
   const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [accountRepositories, setAccountRepositories] = useState<Repository[]>(
+    []
+  );
   const [currentRepository, setCurrentRepository] = useState<Repository | null>(
     null
   );
@@ -32,6 +45,7 @@ export function RepositoryProvider({
   const [error, setError] = useState<string | null>(null);
 
   const { currentProject } = useProject();
+  const { user } = useUser();
 
   const loadRepositories = async () => {
     if (!currentProject) {
@@ -102,6 +116,126 @@ export function RepositoryProvider({
     setCurrentRepository(null);
   }, [currentProject?.id]);
 
+  const loadAccountRepositories = async () => {
+    if (!user) {
+      setAccountRepositories([]);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("No active session");
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            query: FIND_ALL_USER_REPOSITORIES,
+            variables: {},
+          }),
+        }
+      );
+
+      const { data, errors } = await response.json();
+
+      if (errors) {
+        throw new Error(
+          "Failed to load account repositories:",
+          errors[0]?.message
+        );
+      }
+
+      const fetchedRepositories = data.findAllRepositories || [];
+      setAccountRepositories(fetchedRepositories);
+    } catch (error) {
+      console.error("Failed to load account repositories:", error);
+      setError("Failed to load account repositories, please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const syncRepositoriesFromGitHub = async () => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("No active session");
+      }
+
+      const githubIdentity = user.identities?.find(
+        (identity) => identity.provider === "github"
+      );
+
+      if (!githubIdentity) {
+        throw new Error("GitHub account not connected");
+      }
+
+      const githubToken = session.provider_token;
+
+      if (!githubToken) {
+        throw new Error(
+          "GitHub token not found in session. Please log out and log back in."
+        );
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            query: SYNC_REPOSITORIES_FROM_GITHUB,
+            variables: { githubToken },
+          }),
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (responseData.errors) {
+        const errorMessage = responseData.errors[0]?.message || "Unknown error";
+        throw new Error(`Failed to sync repositories: ${errorMessage}`);
+      }
+
+      await loadAccountRepositories();
+    } catch (error) {
+      console.error("Failed to sync repositories:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to sync repositories"
+      );
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSetCurrentRepository = (repository: Repository | null) => {
     setCurrentRepository(repository);
 
@@ -115,15 +249,79 @@ export function RepositoryProvider({
     }
   };
 
+  const removeRepositoryFromProject = async (repositoryId: string) => {
+    if (!currentProject) {
+      throw new Error("No project selected");
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("No active session");
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            query: REMOVE_REPOSITORY_FROM_PROJECT,
+            variables: {
+              projectId: currentProject.id,
+              repositoryId,
+            },
+          }),
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (responseData.errors) {
+        const errorMessage = responseData.errors[0]?.message || "Unknown error";
+        throw new Error(`Failed to remove repository: ${errorMessage}`);
+      }
+
+      if (currentRepository?.id === repositoryId) {
+        setCurrentRepository(null);
+        localStorage.removeItem(`currentRepositoryId-${currentProject.id}`);
+      }
+
+      await loadRepositories();
+    } catch (error) {
+      console.error("Failed to remove repository from project:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to remove repository"
+      );
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <RepositoryContext.Provider
       value={{
         currentRepository,
         repositories,
+        accountRepositories,
         setCurrentRepository: handleSetCurrentRepository,
         isLoading,
         error,
         refreshRepositories: loadRepositories,
+        refreshAccountRepositories: loadAccountRepositories,
+        syncRepositoriesFromGitHub,
+        removeRepositoryFromProject,
       }}
     >
       {children}

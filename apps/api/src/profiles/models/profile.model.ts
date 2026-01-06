@@ -23,6 +23,9 @@ export class Profile {
   @Field(() => String, { nullable: true })
   avatarUrl?: string;
 
+  @Field(() => String, { nullable: true })
+  githubToken?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

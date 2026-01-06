@@ -68,10 +68,19 @@ export class SyncRepositoriesService {
    * @throws {Error} If GitHub API request fails or token is invalid
    */
   async fetchRepositories(token: string): Promise<ImportRepositoryInput[]> {
+    if (!token) {
+      this.logger.error('Token is undefined or null!');
+      throw new Error('GitHub token is required but was not provided');
+    }
+
+    this.logger.log(`Token received - type: ${typeof token}, length: ${token?.length}`);
+
     const octokit = this.createOctokitClient(token);
     const repositories: ImportRepositoryInput[] = [];
 
     try {
+      this.logger.log(`Fetching repositories with token: ${token.substring(0, 20)}...`);
+
       const { data: userRepos } = await octokit.rest.repos.listForAuthenticatedUser({
         per_page: 100,
         sort: 'updated',
@@ -84,7 +93,11 @@ export class SyncRepositoriesService {
       this.logger.log(`Fetched ${repositories.length} repositories from GitHub.`);
       return repositories;
     } catch (error) {
-      this.logger.error(`Failed to fetch repositories: ${error}`);
+      this.logger.error(`Failed to fetch repositories from GitHub`);
+      this.logger.error(`Error type: ${error.constructor.name}`);
+      this.logger.error(`Error message: ${error.message}`);
+      this.logger.error(`Error status: ${error.status}`);
+      this.logger.error(`Full error: ${JSON.stringify(error, null, 2)}`);
       throw error;
     }
   }

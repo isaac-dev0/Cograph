@@ -10,6 +10,7 @@ type Profile {
   job: String
   location: String
   avatarUrl: String
+  githubToken: String
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -217,6 +218,7 @@ type Query {
 
   """Finds a profile based on a Supabase Auth ID"""
   findProfileByUserId(userId: String!): Profile!
+  findAllProfiles: [Profile!]!
 
   """Finds a project by its unique ID"""
   findProjectById(projectId: ID!): Project!
@@ -304,6 +306,7 @@ input UpdateProfileInput {
   job: String
   location: String
   avatarUrl: String
+  githubToken: String
 }
 
 input CreateProjectInput {

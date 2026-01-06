@@ -74,6 +74,11 @@ export class RepositoriesResolver {
     @Args('input', { type: () => SyncRepositoriesInput })
     input: SyncRepositoriesInput,
   ) {
+    console.log('Resolver received input:', input);
+    console.log('Token from input:', input?.githubToken);
+    console.log('Token type:', typeof input?.githubToken);
+    console.log('Token length:', input?.githubToken?.length);
+
     await this.syncRepositoriesService.syncRepository(input.githubToken);
     return true;
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { ProjectCreateDialog } from "@/components/project/dialog/ProjectCreateDialog";
+import { ProjectSettingsDialog } from "@/components/project/dialog/ProjectSettingsDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useProject } from "@/hooks/providers/ProjectProvider";
 import { getProjectIcon } from "@/lib/icons";
-import { ChevronsUpDown, Loader2, Plus } from "lucide-react";
+import { ChevronsUpDown, Loader2, Plus, Settings } from "lucide-react";
 
 export function ProjectSwitcher() {
   const { isMobile } = useSidebar();
@@ -92,6 +93,21 @@ export function ProjectSwitcher() {
               );
             })}
             <DropdownMenuSeparator />
+            <ProjectSettingsDialog
+              trigger={
+                <DropdownMenuItem
+                  className="gap-2 p-2"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                    <Settings className="size-4" />
+                  </div>
+                  <div className="text-muted-foreground font-medium">
+                    Project Settings
+                  </div>
+                </DropdownMenuItem>
+              }
+            />
             <ProjectCreateDialog
               trigger={
                 <DropdownMenuItem
