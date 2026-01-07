@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "description": "MCP Server for Cograph - Code analysis using Claude API",
   "main": "build/index.js",
-  "keywords": ["mcp", "code-analysis", "claude", "anthropic"],
+  "keywords": [
+    "mcp",
+    "code-analysis",
+    "claude",
+    "anthropic"
+  ],
   "author": "",
   "license": "ISC",
   "type": "module",
@@ -12,7 +17,8 @@
     "build": "tsc",
     "start": "node build/index.js",
     "typecheck": "tsc --noEmit",
-    "test:claude": "tsx src/test-claude.ts"
+    "test:claude": "tsx src/test-claude.ts",
+    "test:git": "tsx src/test-git.ts"
   },
   "bin": {
     "cograph": "./build/index.js"
@@ -29,6 +35,7 @@
     "@anthropic-ai/sdk": "^0.32.1",
     "@modelcontextprotocol/sdk": "^1.25.2",
     "dotenv": "^16.4.7",
+    "simple-git": "^3.30.0",
     "zod": "^3.25.76"
   },
   "engines": {

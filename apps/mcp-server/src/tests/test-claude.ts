@@ -3,7 +3,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { ClaudeService } from './claude.service.js';
+import { ClaudeService } from '../services/claude.service.js';
 
 const claudeService = new ClaudeService();
 
