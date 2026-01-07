@@ -27,6 +27,14 @@ enum SyncStatus {
     FAILED
 }
 
+enum AnalysisStatus {
+    PENDING
+    CLONING
+    ANALYSING
+    COMPLETED
+    FAILED
+}
+
 model Profile {
     id          String   @id @default(uuid()) @db.Uuid
     userId      String   @unique @map("user_id") @db.Uuid
@@ -56,7 +64,7 @@ model Project {
     updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at")
     archivedAt  DateTime?     @map("archived_at")
 
-    owner        Profile            @relation("ProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+    owner        Profile             @relation("ProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
     members      ProjectMember[]
     repositories ProjectRepository[]
 
@@ -87,36 +95,25 @@ model Repository {
     visibility      String     @default("public")
     repositoryUrl   String     @map("repository_url")
     icon            String?    @map("icon_url")
-    /**
-     * Owner Info
-     */
     ownerLogin      String     @map("owner_login")
     ownerType       String     @map("owner_type")
     ownerAvatarUrl  String     @map("owner_avatar_url")
-    /**
-     * Sync
-     */
     lastSyncedAt    DateTime?  @map("last_synced_at")
     syncStatus      SyncStatus @default(PENDING) @map("sync_status")
     syncError       String?    @map("sync_error")
-    /**
-     * Flags
-     */
     isArchived      Boolean    @default(false) @map("is_archived")
     isDisabled      Boolean    @default(false) @map("is_disabled")
     isPrivate       Boolean    @map("is_private")
-    /**
-     * Timestamps
-     */
     githubCreatedAt DateTime   @map("github_created_at")
     githubUpdatedAt DateTime   @map("github_updated_at")
     githubPushedAt  DateTime   @map("github_pushed_at")
     createdAt       DateTime   @default(now()) @map("created_at")
     updatedAt       DateTime   @default(now()) @updatedAt @map("updated_at")
     archivedAt      DateTime?  @map("archived_at")
-
     syncHistory     RepositorySyncHistory[]
     projects        ProjectRepository[]
+    repositoryFiles RepositoryFile[]
+    analysisJobs    AnalysisJob[]
 
     @@index([isPrivate])
     @@index([isArchived])
@@ -159,3 +156,64 @@ model ProjectRepository {
     @@index([repositoryId])
     @@map("project_repositories")
 }
+
+model RepositoryFile {
+    id            String   @id @default(uuid()) @db.Uuid
+    repositoryId  String   @map("repository_id") @db.Uuid
+    filePath      String   @map("file_path")
+    fileName      String   @map("file_name")
+    fileType      String   @map("file_type")
+    linesOfCode   Int      @default(0) @map("lines_of_code")
+    neo4jNodeId   String?  @map("neo4j_node_id")
+    annotations   String?  @db.Text
+    claudeSummary String?  @map("claude_summary") @db.Text
+    createdAt     DateTime @default(now()) @map("created_at")
+    updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+    repository   Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+    codeEntities CodeEntity[]
+
+    @@unique([repositoryId, filePath])
+    @@index([repositoryId])
+    @@index([fileType])
+    @@map("repository_files")
+}
+
+model CodeEntity {
+    id               String   @id @default(uuid()) @db.Uuid
+    repositoryFileId String   @map("repository_file_id") @db.Uuid
+    name             String
+    type             String
+    startLine        Int      @map("start_line")
+    endLine          Int      @map("end_line")
+    annotations      String?  @db.Text
+    createdAt        DateTime @default(now()) @map("created_at")
+    updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+
+    repositoryFile RepositoryFile @relation(fields: [repositoryFileId], references: [id], onDelete: Cascade)
+
+    @@index([repositoryFileId])
+    @@map("code_entities")
+}
+
+model AnalysisJob {
+    id             String         @id @default(uuid()) @db.Uuid
+    repositoryId   String         @map("repository_id") @db.Uuid
+    status         AnalysisStatus @default(PENDING)
+    progress       Float          @default(0)
+    filesAnalysed  Int            @default(0) @map("files_analysed")
+    totalFiles     Int?           @map("total_files")
+    errorMessage   String?        @map("error_message") @db.Text
+    errorDetails   String?        @map("error_details") @db.Text
+    startedAt      DateTime?      @map("started_at")
+    completedAt    DateTime?      @map("completed_at")
+    createdAt      DateTime       @default(now()) @map("created_at")
+    updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at")
+
+    repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+    @@index([repositoryId])
+    @@index([status])
+    @@map("analysis_jobs")
+}
+
