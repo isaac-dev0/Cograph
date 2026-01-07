@@ -1,3 +1,5 @@
+// FILE IS AI GENERATED FOR THE SAKE OF TESTING.
+
 import dotenv from 'dotenv';
 dotenv.config();
 
