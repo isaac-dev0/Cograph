@@ -17,8 +17,9 @@
     "build": "tsc",
     "start": "node build/index.js",
     "typecheck": "tsc --noEmit",
-    "test:claude": "tsx src/test-claude.ts",
-    "test:git": "tsx src/test-git.ts"
+    "test:claude": "tsx src/tests/test-claude.ts",
+    "test:git": "tsx src/tests/test-git.ts",
+    "test:analyse-repository": "tsx src/tests/test-analyse-repository.ts"
   },
   "bin": {
     "cograph": "./build/index.js"
@@ -35,6 +36,7 @@
     "@anthropic-ai/sdk": "^0.32.1",
     "@modelcontextprotocol/sdk": "^1.25.2",
     "dotenv": "^16.4.7",
+    "fast-glob": "^3.3.3",
     "simple-git": "^3.30.0",
     "zod": "^3.25.76"
   },
