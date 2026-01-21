@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import dotenv from "dotenv";
+import { registerAnalyseRepositoryTool } from "./tools/analyse-repository.tool.js";
 
 dotenv.config();
 
@@ -8,6 +9,8 @@ export const server = new McpServer({
   name: "cograph-mcp-server",
   version: "1.0.0",
 });
+
+registerAnalyseRepositoryTool(server);
 
 async function main() {
   const transport = new StdioServerTransport();

@@ -46,3 +46,39 @@ export interface GraphEdge {
   type: "imports" | "exports" | "contains";
   data?: any;
 }
+
+export interface FileAnalysisResult {
+  filePath: string;
+  relativePath: string;
+  analysis: FileAnalysis | null;
+  error?: string;
+}
+
+export interface RepositoryAnalysis {
+  repositoryUrl: string;
+  branch?: string;
+  analysedAt: string;
+  summary: {
+    totalFiles: number;
+    totalLines: number;
+    successfulAnalyses: number;
+    failedAnalyses: number;
+    filesByType: Record<string, number>;
+  };
+  files: FileAnalysisResult[];
+}
+
+export interface ScannedFile {
+  filePath: string;
+  relativePath: string;
+  fileName: string;
+  content: string;
+  lines: number;
+}
+
+export interface ScanOptions {
+  rootPath: string;
+  extensions?: string[];
+  ignorePatterns?: string[];
+  onProgress?: (current: number, total: number, filePath: string) => void;
+}

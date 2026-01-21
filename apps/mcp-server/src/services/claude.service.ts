@@ -11,8 +11,7 @@ export class ClaudeService {
     this.client = new Anthropic({ apiKey: key });
   }
 
-  // Provide prompt and code and produce an analysis on the code structure.
-
+  /* Provide prompt and code and produce an analysis on the code structure. */
   async analyseCode(prompt: string, code: string): Promise<string> {
     try {
       const response = await this.client.messages.create({
@@ -39,8 +38,7 @@ export class ClaudeService {
     }
   }
 
-  // Use a Generic<T> to ensure the response is interpretable in any type.
-
+  /* Use a Generic<T> to ensure the response is interpretable in any type. */
   async analyseCodeStructured<T>(
     prompt: string,
     code: string,
