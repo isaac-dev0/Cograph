@@ -10,6 +10,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
 import { ProjectsModule } from './projects/projects.module';
 import { LoggerModule } from 'pino-nestjs';
 import { RepositoriesModule } from './repositories/repositories.module';
+import { MCPModule } from './mcp/mcp.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { RepositoriesModule } from './repositories/repositories.module';
     PrismaModule,
     ProjectsModule,
     RepositoriesModule,
+    MCPModule,
   ],
 })
 export class AppModule {}
