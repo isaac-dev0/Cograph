@@ -19,7 +19,8 @@
     "typecheck": "tsc --noEmit",
     "test:claude": "tsx src/tests/test-claude.ts",
     "test:git": "tsx src/tests/test-git.ts",
-    "test:analyse-repository": "tsx src/tests/test-analyse-repository.ts"
+    "test:analyse-repository": "tsx src/tests/test-analyse-repository.ts",
+    "test:dependency-graph": "tsx src/tests/test-dependency-graph.ts"
   },
   "bin": {
     "cograph": "./build/index.js"
