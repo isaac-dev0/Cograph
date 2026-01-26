@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "AnalysisStatus" AS ENUM ('PENDING', 'CLONING', 'ANALYZING', 'COMPLETED', 'FAILED');
+CREATE TYPE "AnalysisStatus" AS ENUM ('PENDING', 'CLONING', 'ANALYSING', 'COMPLETED', 'FAILED');
 
 -- CreateTable
 CREATE TABLE "repository_files" (
