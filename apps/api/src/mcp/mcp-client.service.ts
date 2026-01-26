@@ -3,12 +3,10 @@ import { join } from 'path';
 
 const MCP_SERVER_PATH = join(__dirname, '../../../mcp-server/build/index.js');
 
-// Helper to import ESM modules from CommonJS (prevents TypeScript from transforming to require)
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
 const importEsm = (specifier: string): Promise<any> =>
   new Function('specifier', 'return import(specifier)')(specifier);
 
-// Minimal type definitions for MCP client (avoids ESM module resolution issues)
 interface MCPClient {
   connect(transport: unknown): Promise<void>;
   close(): Promise<void>;
@@ -23,7 +21,6 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
   private client: MCPClient | null = null;
 
   async onModuleInit(): Promise<void> {
-    // Dynamic import required because @modelcontextprotocol/sdk is ESM-only
     const { Client } = await importEsm('@modelcontextprotocol/sdk/client');
     const { StdioClientTransport } = await importEsm(
       '@modelcontextprotocol/sdk/client/stdio.js',
