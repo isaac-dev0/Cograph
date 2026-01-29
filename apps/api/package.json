@@ -17,7 +17,12 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e:analysis": "jest --config ./test/jest-e2e.json --testPathPattern=analysis/analysis.e2e",
+    "test:e2e:analysis:error": "jest --config ./test/jest-e2e.json --testPathPattern=analysis-error",
+    "test:e2e:analysis:concurrent": "jest --config ./test/jest-e2e.json --testPathPattern=analysis-concurrent",
+    "test:e2e:analysis:large": "jest --config ./test/jest-e2e.json --testPathPattern=analysis-large",
+    "test:e2e:analysis:all": "jest --config ./test/jest-e2e.json --testPathPattern=analysis"
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
@@ -70,6 +75,8 @@
     "@types/express": "^5.0.0",
     "@types/graphql": "^14.5.0",
     "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.7",
+    "jsonwebtoken": "^9.0.2",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
