@@ -57,7 +57,7 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
     });
 
     const content = result.content as Array<{ type: string; text?: string }>;
-    const textContent = content?.find((c) => c.type === 'text');
+    const textContent = content?.find((ctx) => ctx.type === 'text');
 
     if (!textContent?.text) {
       throw new Error('No text content in MCP response');
