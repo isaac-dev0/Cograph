@@ -37,7 +37,7 @@ export class Neo4jGraphService implements OnModuleInit {
 
   /**
    * Creates indexes on repositoryId and id properties for performance.
-   * This is called automatically when the module initializes.
+   * This is called automatically when the module initialises.
    */
   private async ensureIndexes(): Promise<void> {
     try {
@@ -63,7 +63,7 @@ export class Neo4jGraphService implements OnModuleInit {
 
   /**
    * Creates a File node in Neo4j with the specified properties.
-   * Uses parameterized queries to prevent Cypher injection.
+   * Uses parameterised queries to prevent Cypher injection.
    *
    * @param data - File node data including id, repositoryId, path, name, type, and linesOfCode
    * @returns The created file node

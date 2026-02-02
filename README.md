@@ -95,7 +95,7 @@ import { Button } from "@workspace/ui/components/ui/button"
 **Functionality**
 - Authentication (NextAuth.js)
 - Form validation with Zod + react-hook-form
-- Data visualization with Recharts
+- Data visualisation with Recharts
 
 
 ## Packages 

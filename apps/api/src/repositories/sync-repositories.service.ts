@@ -4,7 +4,7 @@ import { Octokit } from '@octokit/rest';
 import { ImportRepositoryInput } from './dto/import-repository.input';
 
 /**
- * Service responsible for synchronizing repositories from GitHub.
+ * Service responsible for synchronising repositories from GitHub.
  * Handles fetching repository data from GitHub API and transforming it for database import.
  *
  * @class SyncRepositoriesService
@@ -30,7 +30,7 @@ export class SyncRepositoriesService {
 
   /**
    * Transforms a GitHub API repository response into ImportRepositoryInput format.
-   * Maps GitHub API field names to database field names and handles data normalization.
+   * Maps GitHub API field names to database field names and handles data normalisation.
    *
    * @private
    * @param {any} repository - Raw repository object from GitHub API
@@ -103,7 +103,7 @@ export class SyncRepositoriesService {
   }
 
   /**
-   * Synchronizes repositories from GitHub to the database.
+   * Synchronises repositories from GitHub to the database.
    * Fetches repositories from GitHub API and imports them using bulk import.
    * This is the main entry point for syncing repositories.
    *

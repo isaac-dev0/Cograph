@@ -41,7 +41,7 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
   });
 
   describe('Large Repository (100+ files)', () => {
-    it('should analyze large repository within time limit', async () => {
+    it('should analyse large repository within time limit', async () => {
       testRepositoryId = await db.createTestRepository({
         name: LARGE_REPO.name,
         repositoryUrl: LARGE_REPO.url,
