@@ -1,5 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Neo4jService } from 'nest-neo4j';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import { MCPClientService } from '../mcp-client.service';
 
 export interface FileNodeData {
   id: string;
@@ -29,7 +31,11 @@ export interface ImportRelationshipData {
 export class Neo4jGraphService implements OnModuleInit {
   private readonly logger = new Logger(Neo4jGraphService.name);
 
-  constructor(private readonly neo4jService: Neo4jService) {}
+  constructor(
+    private readonly neo4jService: Neo4jService,
+    private readonly prisma: PrismaService,
+    private readonly mcpClient: MCPClientService,
+  ) {}
 
   async onModuleInit() {
     await this.ensureIndexes();
@@ -386,5 +392,187 @@ export class Neo4jGraphService implements OnModuleInit {
       this.logger.error('Failed to bulk create import relationships', error);
       throw error;
     }
+  }
+
+  /**
+   * Synchronizes a repository's analysis results from PostgreSQL to Neo4j.
+   * Creates the complete dependency graph including files, entities, and import relationships.
+   *
+   * @param repositoryId - The repository ID to sync
+   * @returns Summary of sync operation with counts and any errors
+   */
+  async syncRepositoryToNeo4j(repositoryId: string): Promise<{
+    filesCreated: number;
+    entitiesCreated: number;
+    importsCreated: number;
+    externalLibrariesCreated: number;
+    unresolvedImports: Array<{ filePath: string; source: string }>;
+    errors: string[];
+  }> {
+    this.logger.log(`Starting sync for repository: ${repositoryId}`);
+    const errors: string[] = [];
+
+    const deletedCount = await this.deleteRepositoryGraph(repositoryId);
+    this.logger.log(`Deleted ${deletedCount} existing nodes`);
+
+    const files = await this.prisma.repositoryFile.findMany({
+      where: { repositoryId },
+      include: { codeEntities: true },
+      orderBy: { filePath: 'asc' },
+    });
+    this.logger.log(`Found ${files.length} files to sync`);
+
+    if (files.length === 0) {
+      return {
+        filesCreated: 0,
+        entitiesCreated: 0,
+        importsCreated: 0,
+        externalLibrariesCreated: 0,
+        unresolvedImports: [],
+        errors: [],
+      };
+    }
+
+    const fileNodes: FileNodeData[] = files.map((file) => ({
+      id: file.neo4jNodeId || file.id,
+      repositoryId: file.repositoryId,
+      path: file.filePath,
+      name: file.fileName,
+      type: file.fileType,
+      linesOfCode: file.linesOfCode,
+    }));
+
+    const filesCreated = await this.bulkCreateFileNodes(fileNodes);
+    this.logger.log(`Created ${filesCreated} file nodes`);
+
+    let entitiesCreated = 0;
+    const totalEntities = files.reduce((sum, f) => sum + f.codeEntities.length, 0);
+
+    for (const file of files) {
+      for (const entity of file.codeEntities) {
+        try {
+          const annotations = entity.annotations ? JSON.parse(entity.annotations) : {};
+          await this.createEntityNode({
+            id: annotations.neo4jNodeId || entity.id,
+            fileId: file.neo4jNodeId || file.id,
+            name: entity.name,
+            type: entity.type as 'Function' | 'Class' | 'Interface',
+            startLine: entity.startLine,
+            endLine: entity.endLine,
+          });
+          entitiesCreated++;
+
+          if (entitiesCreated % 10 === 0 || entitiesCreated === totalEntities) {
+            this.logger.log(`Created ${entitiesCreated} of ${totalEntities} entities`);
+          }
+        } catch (error) {
+          const errorMsg = `Failed to create entity ${entity.name}: ${error.message}`;
+          this.logger.error(errorMsg);
+          errors.push(errorMsg);
+        }
+      }
+    }
+
+    const dependencyInput = {
+      files: files.map((file) => {
+        const annotations = file.annotations ? JSON.parse(file.annotations) : {};
+        return {
+          id: file.neo4jNodeId || file.id,
+          filePath: file.filePath,
+          imports: annotations.imports || [],
+        };
+      }),
+    };
+
+    this.logger.log('Extracting dependencies via MCP...');
+    let dependencies: any;
+    try {
+      dependencies = await this.mcpClient.callTool<any>(
+        'extractDependencies',
+        dependencyInput,
+      );
+    } catch (error) {
+      const errorMsg = `Failed to extract dependencies: ${error.message}`;
+      this.logger.error(errorMsg);
+      errors.push(errorMsg);
+      return {
+        filesCreated,
+        entitiesCreated,
+        importsCreated: 0,
+        externalLibrariesCreated: 0,
+        unresolvedImports: [],
+        errors,
+      };
+    }
+
+    this.logger.log(
+      `Extracted ${dependencies.internalImports.length} internal + ${dependencies.externalImports.length} external dependencies`,
+    );
+
+    let externalCreated = 0;
+    if (dependencies.externalLibraries.length > 0) {
+      const externalLibraryNodes: FileNodeData[] = dependencies.externalLibraries.map(
+        (lib: any) => ({
+          id: lib.id,
+          repositoryId: 'external',
+          path: lib.name,
+          name: lib.name,
+          type: 'external',
+          linesOfCode: 0,
+        }),
+      );
+
+      try {
+        externalCreated = await this.bulkCreateFileNodes(externalLibraryNodes);
+        this.logger.log(`Created ${externalCreated} external library nodes`);
+      } catch (error) {
+        const errorMsg = `Failed to create external library nodes: ${error.message}`;
+        this.logger.error(errorMsg);
+        errors.push(errorMsg);
+      }
+    }
+
+    const allImports = [
+      ...dependencies.internalImports,
+      ...dependencies.externalImports.map((imp: any) => ({
+        fromFileId: imp.fromFileId,
+        toFileId: imp.toLibraryId,
+        specifiers: imp.specifiers,
+      })),
+    ];
+
+    let importsCreated = 0;
+    if (allImports.length > 0) {
+      try {
+        importsCreated = await this.bulkCreateImportRelationships(allImports);
+        this.logger.log(`Created ${importsCreated} import relationships`);
+      } catch (error) {
+        const errorMsg = `Failed to create import relationships: ${error.message}`;
+        this.logger.error(errorMsg);
+        errors.push(errorMsg);
+      }
+    }
+
+    const unresolvedImports = dependencies.unresolvedImports.map((unresolved: any) => ({
+      filePath: unresolved.fromFile,
+      source: unresolved.importSource,
+    }));
+
+    if (unresolvedImports.length > 0) {
+      this.logger.warn(`${unresolvedImports.length} unresolved imports:`);
+      unresolvedImports.slice(0, 10).forEach((unresolved: any) => {
+        this.logger.warn(`  ${unresolved.filePath}: ${unresolved.source}`);
+      });
+    }
+
+    this.logger.log(`Sync completed for repository: ${repositoryId}`);
+    return {
+      filesCreated,
+      entitiesCreated,
+      importsCreated,
+      externalLibrariesCreated: externalCreated,
+      unresolvedImports,
+      errors,
+    };
   }
 }

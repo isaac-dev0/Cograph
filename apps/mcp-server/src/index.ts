@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { registerAnalyseRepositoryTool } from "./tools/analyse-repository.tool.js";
 import { registerGenerateDependencyGraphTool } from "./tools/generate-dependency-graph.tool.js";
 import { registerGenerateSummaryTool } from "./tools/generate-summary.tool.js";
+import { registerExtractDependenciesTool } from "./tools/extract-dependencies.tool.js";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ export const server = new McpServer({
 registerAnalyseRepositoryTool(server);
 registerGenerateDependencyGraphTool(server);
 registerGenerateSummaryTool(server);
+registerExtractDependenciesTool(server);
 
 async function main() {
   const transport = new StdioServerTransport();
