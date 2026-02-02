@@ -40,7 +40,7 @@ describe('Concurrency Analysis Flow E2E', () => {
   });
 
   describe('Concurrent Analysis: Two Different Repositories', () => {
-    it('should analyze two repositories simultaneously without conflicts', async () => {
+    it('should analyse two repositories simultaneously without conflicts', async () => {
       const repo1Id = await db.createTestRepository({
         name: `${SMALL_TS_REPO.name}-1`,
         repositoryUrl: SMALL_TS_REPO.url,

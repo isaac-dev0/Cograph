@@ -1,4 +1,4 @@
-import { ExtractJwt, JwtFromRequestFunction, Strategy } from 'passport-jwt';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
@@ -62,7 +62,7 @@ export class SupabaseJwtStrategy extends PassportStrategy(
       displayName,
     });
     if (!profile) {
-      throw new UnauthorizedException('Could not synchronize user profile.');
+      throw new UnauthorizedException('Could not synchronise user profile.');
     }
 
     return profile as ProfileModel;

@@ -427,7 +427,7 @@ export class RepositoriesService {
   }
 
   /**
-   * Retrieves synchronization statistics for all repositories.
+   * Retrieves synchronisation statistics for all repositories.
    * Returns counts of repositories by their sync status.
    *
    * @returns {Promise<Object>} Object containing sync statistics
