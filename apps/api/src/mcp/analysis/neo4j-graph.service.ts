@@ -74,7 +74,7 @@ export class Neo4jGraphService implements OnModuleInit {
    * @param data - File node data including id, repositoryId, path, name, type, and linesOfCode
    * @returns The created file node
    */
-  async createFileNode(data: FileNodeData): Promise<any> {
+  async createFileNode(data: FileNodeData) {
     const query = `
       CREATE (f:File {
         id: $id,
@@ -118,7 +118,7 @@ export class Neo4jGraphService implements OnModuleInit {
    * @param data - Entity node data including id, fileId, name, type, startLine, and endLine
    * @returns The created entity node
    */
-  async createEntityNode(data: EntityNodeData): Promise<any> {
+  async createEntityNode(data: EntityNodeData) {
     const query = `
       MATCH (f:File {id: $fileId})
       CREATE (e:${data.type} {
@@ -145,10 +145,14 @@ export class Neo4jGraphService implements OnModuleInit {
 
       const record = result.records[0];
       if (!record) {
-        throw new Error(`Failed to create entity node or file not found: ${data.fileId}`);
+        throw new Error(
+          `Failed to create entity node or file not found: ${data.fileId}`,
+        );
       }
 
-      this.logger.log(`Created ${data.type} node: ${data.name} in file ${data.fileId}`);
+      this.logger.log(
+        `Created ${data.type} node: ${data.name} in file ${data.fileId}`,
+      );
       return record.get('e').properties;
     } catch (error) {
       this.logger.error(`Failed to create entity node: ${data.name}`, error);
@@ -162,7 +166,7 @@ export class Neo4jGraphService implements OnModuleInit {
    * @param data - Import relationship data including fromFileId, toFileId, and specifiers
    * @returns The created relationship
    */
-  async createImportRelationship(data: ImportRelationshipData): Promise<any> {
+  async createImportRelationship(data: ImportRelationshipData) {
     const query = `
       MATCH (from:File {id: $fromFileId})
       MATCH (to:File {id: $toFileId})
@@ -182,13 +186,20 @@ export class Neo4jGraphService implements OnModuleInit {
 
       const record = result.records[0];
       if (!record) {
-        throw new Error(`Failed to create import relationship: ${data.fromFileId} -> ${data.toFileId}`);
+        throw new Error(
+          `Failed to create import relationship: ${data.fromFileId} -> ${data.toFileId}`,
+        );
       }
 
-      this.logger.log(`Created IMPORTS relationship: ${data.fromFileId} -> ${data.toFileId}`);
+      this.logger.log(
+        `Created IMPORTS relationship: ${data.fromFileId} -> ${data.toFileId}`,
+      );
       return record.get('r').properties;
     } catch (error) {
-      this.logger.error(`Failed to create import relationship: ${data.fromFileId} -> ${data.toFileId}`, error);
+      this.logger.error(
+        `Failed to create import relationship: ${data.fromFileId} -> ${data.toFileId}`,
+        error,
+      );
       throw error;
     }
   }
@@ -213,10 +224,15 @@ export class Neo4jGraphService implements OnModuleInit {
       const record = result.records[0];
       const deletedCount = record ? record.get('deletedCount').toNumber() : 0;
 
-      this.logger.log(`Deleted ${deletedCount} nodes for repository: ${repositoryId}`);
+      this.logger.log(
+        `Deleted ${deletedCount} nodes for repository: ${repositoryId}`,
+      );
       return deletedCount;
     } catch (error) {
-      this.logger.error(`Failed to delete repository graph: ${repositoryId}`, error);
+      this.logger.error(
+        `Failed to delete repository graph: ${repositoryId}`,
+        error,
+      );
       throw error;
     }
   }
@@ -227,7 +243,7 @@ export class Neo4jGraphService implements OnModuleInit {
    * @param fileId - The file ID to retrieve
    * @returns The file node with its entities, or null if not found
    */
-  async getFileNode(fileId: string): Promise<any | null> {
+  async getFileNode(fileId: string): Promise<FileNodeData | null> {
     const query = `
       MATCH (f:File {id: $fileId})
       OPTIONAL MATCH (f)-[:CONTAINS]->(e)
@@ -248,7 +264,7 @@ export class Neo4jGraphService implements OnModuleInit {
 
       return {
         ...fileNode.properties,
-        entities: entities.map((entity: any) => entity?.properties).filter(Boolean),
+        entities: entities.map((entity) => entity?.properties).filter(Boolean),
       };
     } catch (error) {
       this.logger.error(`Failed to get file node: ${fileId}`, error);
@@ -262,7 +278,7 @@ export class Neo4jGraphService implements OnModuleInit {
    * @param repositoryId - The repository ID
    * @returns Array of file nodes
    */
-  async getRepositoryGraph(repositoryId: string): Promise<any[]> {
+  async getRepositoryGraph(repositoryId: string): Promise<FileNodeData[]> {
     const query = `
       MATCH (f:File {repositoryId: $repositoryId})
       OPTIONAL MATCH (f)-[:CONTAINS]->(e)
@@ -281,17 +297,22 @@ export class Neo4jGraphService implements OnModuleInit {
 
         return {
           ...fileNode.properties,
-          entities: entities.map((entity: any) => entity?.properties).filter(Boolean),
+          entities: entities
+            .map((entity) => entity?.properties)
+            .filter(Boolean),
           imports: imports
-            .filter((imp: any) => imp.file)
-            .map((imp: any) => ({
-              file: imp.file.properties,
-              specifiers: imp.specifiers,
+            .filter((importData) => importData.file)
+            .map((importData) => ({
+              file: importData.file.properties,
+              specifiers: importData.specifiers,
             })),
         };
       });
     } catch (error) {
-      this.logger.error(`Failed to get repository graph: ${repositoryId}`, error);
+      this.logger.error(
+        `Failed to get repository graph: ${repositoryId}`,
+        error,
+      );
       throw error;
     }
   }
@@ -303,7 +324,7 @@ export class Neo4jGraphService implements OnModuleInit {
    * @param entityId - The entity ID being exported
    * @returns The created relationship
    */
-  async createExportRelationship(fileId: string, entityId: string): Promise<any> {
+  async createExportRelationship(fileId: string, entityId: string) {
     const query = `
       MATCH (f:File {id: $fileId})
       MATCH (e {id: $entityId})
@@ -318,13 +339,18 @@ export class Neo4jGraphService implements OnModuleInit {
 
       const record = result.records[0];
       if (!record) {
-        throw new Error(`Failed to create export relationship: ${fileId} -> ${entityId}`);
+        throw new Error(
+          `Failed to create export relationship: ${fileId} -> ${entityId}`,
+        );
       }
 
       this.logger.log(`Created EXPORTS relationship: ${fileId} -> ${entityId}`);
       return record.get('r').properties;
     } catch (error) {
-      this.logger.error(`Failed to create export relationship: ${fileId} -> ${entityId}`, error);
+      this.logger.error(
+        `Failed to create export relationship: ${fileId} -> ${entityId}`,
+        error,
+      );
       throw error;
     }
   }
@@ -369,7 +395,9 @@ export class Neo4jGraphService implements OnModuleInit {
    * @param imports - Array of import relationship data
    * @returns Number of relationships created
    */
-  async bulkCreateImportRelationships(imports: ImportRelationshipData[]): Promise<number> {
+  async bulkCreateImportRelationships(
+    imports: ImportRelationshipData[],
+  ): Promise<number> {
     const query = `
       UNWIND $imports AS imp
       MATCH (from:File {id: imp.fromFileId})
@@ -446,12 +474,17 @@ export class Neo4jGraphService implements OnModuleInit {
     this.logger.log(`Created ${filesCreated} file nodes`);
 
     let entitiesCreated = 0;
-    const totalEntities = files.reduce((sum, f) => sum + f.codeEntities.length, 0);
+    const totalEntities = files.reduce(
+      (sum, file) => sum + file.codeEntities.length,
+      0,
+    );
 
     for (const file of files) {
       for (const entity of file.codeEntities) {
         try {
-          const annotations = entity.annotations ? JSON.parse(entity.annotations) : {};
+          const annotations = entity.annotations
+            ? JSON.parse(entity.annotations)
+            : {};
           await this.createEntityNode({
             id: annotations.neo4jNodeId || entity.id,
             fileId: file.neo4jNodeId || file.id,
@@ -463,7 +496,9 @@ export class Neo4jGraphService implements OnModuleInit {
           entitiesCreated++;
 
           if (entitiesCreated % 10 === 0 || entitiesCreated === totalEntities) {
-            this.logger.log(`Created ${entitiesCreated} of ${totalEntities} entities`);
+            this.logger.log(
+              `Created ${entitiesCreated} of ${totalEntities} entities`,
+            );
           }
         } catch (error) {
           const errorMsg = `Failed to create entity ${entity.name}: ${error.message}`;
@@ -475,7 +510,9 @@ export class Neo4jGraphService implements OnModuleInit {
 
     const dependencyInput = {
       files: files.map((file) => {
-        const annotations = file.annotations ? JSON.parse(file.annotations) : {};
+        const annotations = file.annotations
+          ? JSON.parse(file.annotations)
+          : {};
         return {
           id: file.neo4jNodeId || file.id,
           filePath: file.filePath,
@@ -485,9 +522,9 @@ export class Neo4jGraphService implements OnModuleInit {
     };
 
     this.logger.log('Extracting dependencies via MCP...');
-    let dependencies: any;
+    let dependencies;
     try {
-      dependencies = await this.mcpClient.callTool<any>(
+      dependencies = await this.mcpClient.callTool(
         'extractDependencies',
         dependencyInput,
       );
@@ -511,16 +548,15 @@ export class Neo4jGraphService implements OnModuleInit {
 
     let externalCreated = 0;
     if (dependencies.externalLibraries.length > 0) {
-      const externalLibraryNodes: FileNodeData[] = dependencies.externalLibraries.map(
-        (lib: any) => ({
+      const externalLibraryNodes: FileNodeData[] =
+        dependencies.externalLibraries.map((lib) => ({
           id: lib.id,
           repositoryId: 'external',
           path: lib.name,
           name: lib.name,
           type: 'external',
           linesOfCode: 0,
-        }),
-      );
+        }));
 
       try {
         externalCreated = await this.bulkCreateFileNodes(externalLibraryNodes);
@@ -534,10 +570,10 @@ export class Neo4jGraphService implements OnModuleInit {
 
     const allImports = [
       ...dependencies.internalImports,
-      ...dependencies.externalImports.map((imp: any) => ({
-        fromFileId: imp.fromFileId,
-        toFileId: imp.toLibraryId,
-        specifiers: imp.specifiers,
+      ...dependencies.externalImports.map((importData) => ({
+        fromFileId: importData.fromFileId,
+        toFileId: importData.toLibraryId,
+        specifiers: importData.specifiers,
       })),
     ];
 
@@ -553,14 +589,16 @@ export class Neo4jGraphService implements OnModuleInit {
       }
     }
 
-    const unresolvedImports = dependencies.unresolvedImports.map((unresolved: any) => ({
-      filePath: unresolved.fromFile,
-      source: unresolved.importSource,
-    }));
+    const unresolvedImports = dependencies.unresolvedImports.map(
+      (unresolved) => ({
+        filePath: unresolved.fromFile,
+        source: unresolved.importSource,
+      }),
+    );
 
     if (unresolvedImports.length > 0) {
       this.logger.warn(`${unresolvedImports.length} unresolved imports:`);
-      unresolvedImports.slice(0, 10).forEach((unresolved: any) => {
+      unresolvedImports.slice(0, 10).forEach((unresolved) => {
         this.logger.warn(`  ${unresolved.filePath}: ${unresolved.source}`);
       });
     }
