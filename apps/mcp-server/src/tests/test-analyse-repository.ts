@@ -101,7 +101,6 @@ async function testFullRepositoryAnalysis() {
   const claudeService = new ClaudeService();
   const fileScannerService = new FileScannerService();
 
-  // Use a small TypeScript repo for testing
   const repoUrl = "https://github.com/sindresorhus/is-odd.git";
   const repoId = "test-analysis-" + Date.now();
 
@@ -132,7 +131,6 @@ async function testFullRepositoryAnalysis() {
     let successfulAnalyses = 0;
     let failedAnalyses = 0;
 
-    // Limit to first 3 files to keep test quick
     const filesToAnalyse = scannedFiles.slice(0, 3);
 
     for (let i = 0; i < filesToAnalyse.length; i++) {
@@ -215,7 +213,6 @@ async function testErrorHandling() {
 
   const claudeService = new ClaudeService();
 
-  // Test with malformed/edge case content
   const problematicContent = `
 // Empty file with just a comment
 `;
