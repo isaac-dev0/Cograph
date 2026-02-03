@@ -6,7 +6,6 @@
 
 import { FileAnalysisResult, DependencyGraph } from "../types.js";
 
-// Mock file analysis results for testing
 const mockFiles: FileAnalysisResult[] = [
   {
     filePath: "/repo/src/index.ts",
@@ -81,7 +80,6 @@ const mockFiles: FileAnalysisResult[] = [
       ],
     },
   },
-  // File with analysis error (should be skipped)
   {
     filePath: "/repo/src/broken.ts",
     relativePath: "src/broken.ts",
@@ -90,7 +88,6 @@ const mockFiles: FileAnalysisResult[] = [
   },
 ];
 
-// Simple implementation of the graph builder for testing
 function normalizePath(filePath: string): string {
   return filePath.replace(/\\/g, "/").replace(/^\.\//, "");
 }
@@ -194,27 +191,24 @@ function testEdgeCreation() {
   console.log("  Expected: 3 (internal imports only)");
   console.log("  Actual:", graph.edges.length === 3 ? "PASS" : "FAIL");
 
-  // index.ts -> utils.ts
   const indexToUtils = graph.edges.find(
-    (e) => e.source === "src/index.ts" && e.target === "src/utils.ts"
+    (edge) => edge.source === "src/index.ts" && edge.target === "src/utils.ts"
   );
   console.log("\n✓ index.ts -> utils.ts:", indexToUtils ? "PASS" : "FAIL");
   if (indexToUtils) {
     console.log("  Specifiers:", indexToUtils.data?.specifiers);
   }
 
-  // index.ts -> services/api.ts
   const indexToApi = graph.edges.find(
-    (e) => e.source === "src/index.ts" && e.target === "src/services/api.ts"
+    (edge) => edge.source === "src/index.ts" && edge.target === "src/services/api.ts"
   );
   console.log("\n✓ index.ts -> services/api.ts:", indexToApi ? "PASS" : "FAIL");
   if (indexToApi) {
     console.log("  Specifiers:", indexToApi.data?.specifiers);
   }
 
-  // services/api.ts -> utils.ts
   const apiToUtils = graph.edges.find(
-    (e) => e.source === "src/services/api.ts" && e.target === "src/utils.ts"
+    (edge) => edge.source === "src/services/api.ts" && edge.target === "src/utils.ts"
   );
   console.log("\n✓ services/api.ts -> utils.ts:", apiToUtils ? "PASS" : "FAIL");
   if (apiToUtils) {
@@ -230,10 +224,10 @@ function testExternalImportsIgnored() {
   const graph = buildDependencyGraph(mockFiles);
 
   const externalEdges = graph.edges.filter(
-    (e) =>
-      e.target.includes("express") ||
-      e.target.includes("axios") ||
-      e.target.includes("date-fns")
+    (edge) =>
+      edge.target.includes("express") ||
+      edge.target.includes("axios") ||
+      edge.target.includes("date-fns")
   );
 
   console.log("✓ External import edges:", externalEdges.length);
@@ -264,7 +258,7 @@ function testEdgesOnlyBetweenExistingNodes() {
   const nodeIds = new Set(graph.nodes.map((n) => n.id));
 
   const invalidEdges = graph.edges.filter(
-    (e) => !nodeIds.has(e.source) || !nodeIds.has(e.target)
+    (edge) => !nodeIds.has(edge.source) || !nodeIds.has(edge.target)
   );
 
   console.log("✓ Invalid edges (referencing non-existent nodes):", invalidEdges.length);

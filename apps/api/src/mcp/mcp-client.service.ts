@@ -4,7 +4,7 @@ import { join } from 'path';
 const MCP_SERVER_PATH = join(__dirname, '../../../mcp-server/build/index.js');
 
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
-const importEsm = (specifier: string): Promise<any> =>
+const importEsm = (specifier: string) =>
   new Function('specifier', 'return import(specifier)')(specifier);
 
 interface MCPClient {

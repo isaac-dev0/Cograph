@@ -11,6 +11,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { LoggerModule } from 'pino-nestjs';
 import { RepositoriesModule } from './repositories/repositories.module';
 import { MCPModule } from './mcp/mcp.module';
+import { GraphModule } from './graph/graph.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { MCPModule } from './mcp/mcp.module';
     ProjectsModule,
     RepositoriesModule,
     MCPModule,
+    GraphModule,
   ],
 })
 export class AppModule {}
