@@ -15,6 +15,8 @@ import {
   type ForceGraphLink,
 } from "./utils/graphDataTransform";
 import { createNodeRenderer, clearRenderCache } from "./utils/renderNode";
+import { filterGraphData } from "./utils/graphDataTransform";
+import { GraphControls } from "./controls/GraphControls";
 import { Spinner } from "@/components/ui/spinner";
 
 interface GraphCanvasProps {
@@ -25,6 +27,7 @@ interface GraphCanvasProps {
   width?: number;
   height?: number;
   className?: string;
+  showControls?: boolean;
 }
 
 export function GraphCanvas({
@@ -35,13 +38,16 @@ export function GraphCanvas({
   width,
   height = 600,
   className = "",
+  showControls = true,
 }: GraphCanvasProps) {
   const [graphData, setGraphData] = useState<ForceGraphData | null>(null);
+  const [filteredGraphData, setFilteredGraphData] = useState<ForceGraphData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height });
   const [hoveredNode, setHoveredNode] = useState<ForceGraphNode | null>(null);
   const [selectedNode, setSelectedNode] = useState<ForceGraphNode | null>(null);
+  const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>([]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
@@ -101,6 +107,25 @@ export function GraphCanvas({
   }, [fetchGraphData]);
 
   useEffect(() => {
+    if (!graphData) {
+      setFilteredGraphData(null);
+      return;
+    }
+
+    if (selectedFileTypes.length === 0) {
+      setFilteredGraphData(graphData);
+      return;
+    }
+
+    const filtered = filterGraphData(graphData, {
+      fileTypes: selectedFileTypes,
+      includeExternal: true,
+    });
+
+    setFilteredGraphData(filtered);
+  }, [graphData, selectedFileTypes]);
+
+  useEffect(() => {
     if (!containerRef.current) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
@@ -133,7 +158,6 @@ export function GraphCanvas({
     [onNodeHover]
   );
 
-  // Create node renderer with current hover/selected state
   const paintNode = useCallback(
     createNodeRenderer(hoveredNode?.id, selectedNode?.id),
     [hoveredNode?.id, selectedNode?.id]
@@ -185,6 +209,50 @@ export function GraphCanvas({
     },
     []
   );
+
+  const handleSearch = useCallback(
+    (nodeId: string | null) => {
+      if (!nodeId || !graphRef.current) return;
+
+      const node = filteredGraphData?.nodes.find((n) => n.id === nodeId);
+      if (node && node.x !== undefined && node.y !== undefined) {
+        graphRef.current.centerAt(node.x, node.y, 1000);
+        graphRef.current.zoom(3, 1000);
+        setSelectedNode(node);
+      }
+    },
+    [filteredGraphData]
+  );
+
+  const handleFilterChange = useCallback((fileTypes: string[]) => {
+    setSelectedFileTypes(fileTypes);
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    if (!graphRef.current) return;
+    const currentZoom = graphRef.current.zoom();
+    graphRef.current.zoom(currentZoom * 1.5, 300);
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    if (!graphRef.current) return;
+    const currentZoom = graphRef.current.zoom();
+    graphRef.current.zoom(currentZoom / 1.5, 300);
+  }, []);
+
+  const handleRecenter = useCallback(() => {
+    if (!graphRef.current) return;
+    graphRef.current.zoomToFit(1000, 50);
+  }, []);
+
+  const handlePauseToggle = useCallback((paused: boolean) => {
+    if (!graphRef.current) return;
+    if (paused) {
+      graphRef.current.pauseAnimation();
+    } else {
+      graphRef.current.resumeAnimation();
+    }
+  }, []);
 
   if (isLoading) {
     return (
@@ -257,11 +325,26 @@ export function GraphCanvas({
     );
   }
 
+  const displayData = filteredGraphData || graphData;
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
+      {showControls && (
+        <GraphControls
+          nodes={graphData.nodes}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onRecenter={handleRecenter}
+          onPauseToggle={handlePauseToggle}
+          className="absolute top-4 right-4 w-80 max-w-full z-10"
+        />
+      )}
+
       <ForceGraph2D
         ref={graphRef}
-        graphData={graphData}
+        graphData={displayData}
         width={width || dimensions.width}
         height={dimensions.height}
         nodeCanvasObject={paintNode}
