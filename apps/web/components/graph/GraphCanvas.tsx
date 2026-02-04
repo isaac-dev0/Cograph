@@ -14,6 +14,7 @@ import {
   type ForceGraphNode,
   type ForceGraphLink,
 } from "./utils/graphDataTransform";
+import { createNodeRenderer, clearRenderCache } from "./utils/renderNode";
 import { Spinner } from "@/components/ui/spinner";
 
 interface GraphCanvasProps {
@@ -40,6 +41,7 @@ export function GraphCanvas({
   const [error, setError] = useState<string | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height });
   const [hoveredNode, setHoveredNode] = useState<ForceGraphNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<ForceGraphNode | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
@@ -82,6 +84,7 @@ export function GraphCanvas({
       const dependencyGraph: DependencyGraph = data.repositoryGraph;
       const transformedData = transformGraphData(dependencyGraph);
 
+      clearRenderCache();
       setGraphData(transformedData);
     } catch (err) {
       const errorMessage =
@@ -116,6 +119,7 @@ export function GraphCanvas({
 
   const handleNodeClick = useCallback(
     (node: ForceGraphNode) => {
+      setSelectedNode(node);
       onNodeClick?.(node);
     },
     [onNodeClick]
@@ -129,34 +133,10 @@ export function GraphCanvas({
     [onNodeHover]
   );
 
+  // Create node renderer with current hover/selected state
   const paintNode = useCallback(
-    (
-      node: ForceGraphNode,
-      ctx: CanvasRenderingContext2D,
-      globalScale: number
-    ) => {
-      const label = node.name;
-      const fontSize = 12 / globalScale;
-      const nodeSize = node.size || 5;
-
-      ctx.beginPath();
-      ctx.arc(node.x || 0, node.y || 0, nodeSize, 0, 2 * Math.PI);
-      ctx.fillStyle = node.color || "#6366f1";
-      ctx.fill();
-
-      if (hoveredNode?.id === node.id) {
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2 / globalScale;
-        ctx.stroke();
-      }
-
-      ctx.font = `${fontSize}px Sans-Serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(label, node.x || 0, (node.y || 0) + nodeSize + fontSize);
-    },
-    [hoveredNode]
+    createNodeRenderer(hoveredNode?.id, selectedNode?.id),
+    [hoveredNode?.id, selectedNode?.id]
   );
 
   const paintLink = useCallback(
