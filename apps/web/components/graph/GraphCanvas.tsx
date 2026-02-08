@@ -1,23 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ForceGraph2D } from "react-force-graph";
-import { createClient } from "@/lib/supabase/client";
-import {
-  REPOSITORY_GRAPH_QUERY,
-  type DependencyGraph,
-  type GraphOptionsInput,
-} from "@/lib/queries/GraphQueries";
-import {
-  transformGraphData,
-  type ForceGraphData,
-  type ForceGraphNode,
-  type ForceGraphLink,
-} from "./utils/graphDataTransform";
-import { createNodeRenderer, clearRenderCache } from "./utils/renderNode";
-import { filterGraphData } from "./utils/graphDataTransform";
+import dynamic from "next/dynamic";
+import { useGraphData } from "@/hooks/useGraphData";
 import { GraphControls } from "./controls/GraphControls";
-import { Spinner } from "@/components/ui/spinner";
+import { Loader2, PlayCircle, RefreshCw, Terminal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { GraphOptionsInput } from "@/lib/types/graph";
+import type { ForceGraphNode } from "./utils/graphDataTransform";
+import { getFileTypeColor } from "./utils/graphDataTransform";
+
+const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center w-full h-full">
+      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+    </div>
+  ),
+});
 
 interface GraphCanvasProps {
   repositoryId: string;
@@ -30,6 +30,118 @@ interface GraphCanvasProps {
   showControls?: boolean;
 }
 
+interface AnalysisState {
+  isAnalyzing: boolean;
+  analysisError: string | null;
+  elapsedSeconds: number;
+}
+
+const DOT_SPACING = 24;
+const DOT_RADIUS = 0.6;
+const NODE_HEIGHT = 22;
+const NODE_PADDING_X = 10;
+const FONT_SIZE = 10;
+const FONT_FAMILY = "'Geist Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace";
+const LINK_COLOR = "rgba(59, 130, 246, 0.35)";
+const LINK_ARROW_COLOR = "rgba(59, 130, 246, 0.5)";
+
+/** Draws a subtle dot-grid background across the visible canvas area. */
+function drawDotGrid(ctx: CanvasRenderingContext2D, globalScale: number) {
+  const { width, height } = ctx.canvas;
+
+  const transform = ctx.getTransform();
+  const offsetX = transform.e;
+  const offsetY = transform.f;
+  const scale = transform.a;
+
+  const spacing = DOT_SPACING;
+  const startX = Math.floor(-offsetX / scale / spacing) * spacing - spacing;
+  const startY = Math.floor(-offsetY / scale / spacing) * spacing - spacing;
+  const endX = startX + width / scale + spacing * 2;
+  const endY = startY + height / scale + spacing * 2;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(128, 128, 128, 0.15)";
+
+  for (let x = startX; x < endX; x += spacing) {
+    for (let y = startY; y < endY; y += spacing) {
+      ctx.beginPath();
+      ctx.arc(x, y, DOT_RADIUS / scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+/** Draws a rounded rectangle (badge shape) for a file node. */
+function drawBadgeNode(
+  node: ForceGraphNode,
+  ctx: CanvasRenderingContext2D,
+  globalScale: number,
+  isHovered: boolean,
+) {
+  const x = node.x ?? 0;
+  const y = node.y ?? 0;
+  const ext = node.fileType?.toUpperCase() || "FILE";
+  const label = node.name;
+  const color = node.color || getFileTypeColor(node.fileType || "");
+
+  ctx.save();
+  ctx.font = `500 ${FONT_SIZE}px ${FONT_FAMILY}`;
+
+  const extWidth = ctx.measureText(ext).width;
+  const labelWidth = ctx.measureText(label).width;
+  const totalWidth = extWidth + labelWidth + NODE_PADDING_X * 3 + 2;
+  const halfWidth = totalWidth / 2;
+  const halfHeight = NODE_HEIGHT / 2;
+  const radius = halfHeight;
+
+  if (isHovered) {
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+  }
+
+  ctx.beginPath();
+  ctx.roundRect(x - halfWidth, y - halfHeight, totalWidth, NODE_HEIGHT, radius);
+  ctx.fillStyle = isHovered ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.06)";
+  ctx.fill();
+  ctx.strokeStyle = isHovered ? `${color}88` : "rgba(255, 255, 255, 0.08)";
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  const extBadgeWidth = extWidth + NODE_PADDING_X;
+  ctx.beginPath();
+  ctx.roundRect(x - halfWidth + 2, y - halfHeight + 2, extBadgeWidth, NODE_HEIGHT - 4, radius - 2);
+  ctx.fillStyle = `${color}22`;
+  ctx.fill();
+
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(ext, x - halfWidth + 2 + extBadgeWidth / 2, y + 0.5);
+
+  // File name text
+  ctx.fillStyle = isHovered ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.7)";
+  ctx.textAlign = "left";
+  ctx.fillText(label, x - halfWidth + extBadgeWidth + NODE_PADDING_X, y + 0.5);
+
+  ctx.restore();
+}
+
+/** Estimates badge width from character count (avoids measureText in hit-test canvas). */
+function estimateBadgeWidth(node: ForceGraphNode): number {
+  const ext = node.fileType?.toUpperCase() || "FILE";
+  const charWidth = FONT_SIZE * 0.65;
+  return (ext.length + node.name.length) * charWidth + NODE_PADDING_X * 3 + 16;
+}
+
+/**
+ * Full-featured graph visualisation canvas with controls, analysis trigger,
+ * and progressive loading. Wraps react-force-graph-2d with project-specific
+ * data fetching via the useGraphData hook.
+ */
 export function GraphCanvas({
   repositoryId,
   options,
@@ -40,234 +152,131 @@ export function GraphCanvas({
   className = "",
   showControls = true,
 }: GraphCanvasProps) {
-  const [graphData, setGraphData] = useState<ForceGraphData | null>(null);
-  const [filteredGraphData, setFilteredGraphData] = useState<ForceGraphData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height });
-  const [hoveredNode, setHoveredNode] = useState<ForceGraphNode | null>(null);
-  const [selectedNode, setSelectedNode] = useState<ForceGraphNode | null>(null);
-  const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>([]);
+  const {
+    graphData,
+    displayData,
+    isLoading,
+    error,
+    analysis,
+    setFileTypeFilter,
+    startAnalysis,
+    refresh,
+  } = useGraphData(repositoryId, options);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
-
-  const fetchGraphData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: REPOSITORY_GRAPH_QUERY,
-            variables: { repositoryId, options },
-          }),
-        }
-      );
-
-      const { data, errors } = await response.json();
-
-      if (errors) {
-        throw new Error(errors[0]?.message || "Failed to fetch graph data");
-      }
-
-      const dependencyGraph: DependencyGraph = data.repositoryGraph;
-      const transformedData = transformGraphData(dependencyGraph);
-
-      clearRenderCache();
-      setGraphData(transformedData);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load graph data";
-      console.error("Failed to fetch graph data:", err);
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [repositoryId, options]);
-
-  useEffect(() => {
-    fetchGraphData();
-  }, [fetchGraphData]);
-
-  useEffect(() => {
-    if (!graphData) {
-      setFilteredGraphData(null);
-      return;
-    }
-
-    if (selectedFileTypes.length === 0) {
-      setFilteredGraphData(graphData);
-      return;
-    }
-
-    const filtered = filterGraphData(graphData, {
-      fileTypes: selectedFileTypes,
-      includeExternal: true,
-    });
-
-    setFilteredGraphData(filtered);
-  }, [graphData, selectedFileTypes]);
+  const [dimensions, setDimensions] = useState({ width: 800, height });
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
+    const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         setDimensions({
           width: entry.contentRect.width,
-          height,
+          height: entry.contentRect.height || height,
         });
       }
     });
-
-    resizeObserver.observe(containerRef.current);
-
-    return () => resizeObserver.disconnect();
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
   }, [height]);
 
+  useEffect(() => {
+    if (!graphRef.current) return;
+    graphRef.current.d3Force("charge")?.strength(-300);
+    graphRef.current.d3Force("link")?.distance(120);
+    graphRef.current.d3Force("collide", null);
+  }, [graphData]);
+
   const handleNodeClick = useCallback(
-    (node: ForceGraphNode) => {
-      setSelectedNode(node);
-      onNodeClick?.(node);
-    },
-    [onNodeClick]
+    (node: any) => onNodeClick?.(node as ForceGraphNode),
+    [onNodeClick],
   );
 
   const handleNodeHover = useCallback(
     (node: ForceGraphNode | null) => {
-      setHoveredNode(node);
+      setHoveredNodeId(node?.id ?? null);
       onNodeHover?.(node);
     },
-    [onNodeHover]
-  );
-
-  const paintNode = useCallback(
-    createNodeRenderer(hoveredNode?.id, selectedNode?.id),
-    [hoveredNode?.id, selectedNode?.id]
-  );
-
-  const paintLink = useCallback(
-    (
-      link: ForceGraphLink,
-      ctx: CanvasRenderingContext2D,
-      globalScale: number
-    ) => {
-      const start = link.source as ForceGraphNode;
-      const end = link.target as ForceGraphNode;
-
-      if (typeof start !== "object" || typeof end !== "object") return;
-
-      ctx.beginPath();
-      ctx.moveTo(start.x || 0, start.y || 0);
-      ctx.lineTo(end.x || 0, end.y || 0);
-      ctx.strokeStyle = link.color || "#3b82f6";
-      ctx.lineWidth = (link.isExternal ? 1 : 2) / globalScale;
-      ctx.globalAlpha = link.isExternal ? 0.3 : 0.6;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-
-      const arrowLength = 6 / globalScale;
-      const arrowAngle = Math.PI / 6;
-
-      const dx = (end.x || 0) - (start.x || 0);
-      const dy = (end.y || 0) - (start.y || 0);
-      const angle = Math.atan2(dy, dx);
-
-      const arrowX = (end.x || 0) - (end.size || 5) * Math.cos(angle);
-      const arrowY = (end.y || 0) - (end.size || 5) * Math.sin(angle);
-
-      ctx.beginPath();
-      ctx.moveTo(arrowX, arrowY);
-      ctx.lineTo(
-        arrowX - arrowLength * Math.cos(angle - arrowAngle),
-        arrowY - arrowLength * Math.sin(angle - arrowAngle)
-      );
-      ctx.lineTo(
-        arrowX - arrowLength * Math.cos(angle + arrowAngle),
-        arrowY - arrowLength * Math.sin(angle + arrowAngle)
-      );
-      ctx.closePath();
-      ctx.fillStyle = link.color || "#3b82f6";
-      ctx.fill();
-    },
-    []
+    [onNodeHover],
   );
 
   const handleSearch = useCallback(
     (nodeId: string | null) => {
       if (!nodeId || !graphRef.current) return;
-
-      const node = filteredGraphData?.nodes.find((n) => n.id === nodeId);
-      if (node && node.x !== undefined && node.y !== undefined) {
+      const node = displayData?.nodes.find((node) => node.id === nodeId);
+      if (node?.x !== undefined && node?.y !== undefined) {
         graphRef.current.centerAt(node.x, node.y, 1000);
         graphRef.current.zoom(3, 1000);
-        setSelectedNode(node);
       }
     },
-    [filteredGraphData]
+    [displayData],
   );
 
-  const handleFilterChange = useCallback((fileTypes: string[]) => {
-    setSelectedFileTypes(fileTypes);
+  const zoomIn = useCallback(() => {
+    graphRef.current?.zoom(graphRef.current.zoom() * 1.5, 300);
   }, []);
 
-  const handleZoomIn = useCallback(() => {
-    if (!graphRef.current) return;
-    const currentZoom = graphRef.current.zoom();
-    graphRef.current.zoom(currentZoom * 1.5, 300);
+  const zoomOut = useCallback(() => {
+    graphRef.current?.zoom(graphRef.current.zoom() / 1.5, 300);
   }, []);
 
-  const handleZoomOut = useCallback(() => {
-    if (!graphRef.current) return;
-    const currentZoom = graphRef.current.zoom();
-    graphRef.current.zoom(currentZoom / 1.5, 300);
+  const recenter = useCallback(() => {
+    graphRef.current?.zoomToFit(1000, 50);
   }, []);
 
-  const handleRecenter = useCallback(() => {
-    if (!graphRef.current) return;
-    graphRef.current.zoomToFit(1000, 50);
+  const togglePause = useCallback((paused: boolean) => {
+    if (paused) graphRef.current?.pauseAnimation();
+    else graphRef.current?.resumeAnimation();
   }, []);
 
-  const handlePauseToggle = useCallback((paused: boolean) => {
-    if (!graphRef.current) return;
-    if (paused) {
-      graphRef.current.pauseAnimation();
-    } else {
-      graphRef.current.resumeAnimation();
-    }
-  }, []);
+  const nodeCanvasObject = useCallback(
+    (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+      const forceNode = node as ForceGraphNode;
+      drawBadgeNode(forceNode, ctx, globalScale, forceNode.id === hoveredNodeId);
+    },
+    [hoveredNodeId],
+  );
+
+  const nodePointerAreaPaint = useCallback(
+    (node: any, color: string, ctx: CanvasRenderingContext2D) => {
+      const forceNode = node as ForceGraphNode;
+      const x = forceNode.x ?? 0;
+      const y = forceNode.y ?? 0;
+      const w = estimateBadgeWidth(forceNode);
+      const h = NODE_HEIGHT + 8;
+      ctx.fillStyle = color;
+      ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    },
+    [],
+  );
+
+  const onRenderFramePre = useCallback(
+    (ctx: CanvasRenderingContext2D, globalScale: number) => {
+      drawDotGrid(ctx, globalScale);
+    },
+    [],
+  );
+
+  // ── Loading ─────────────────────────────────────────────────────────────
 
   if (isLoading) {
     return (
       <div
         ref={containerRef}
-        className={`flex items-center justify-center ${className}`}
+        className={`flex items-center justify-center bg-background ${className}`}
         style={{ width: width || "100%", height }}
       >
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="h-8 w-8" />
-          <p className="text-sm text-muted-foreground">Loading graph data...</p>
+        <div className="flex flex-col items-center gap-3 animate-fade-in">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading graph...</p>
         </div>
       </div>
     );
   }
+
+  // ── Error ───────────────────────────────────────────────────────────────
 
   if (error) {
     return (
@@ -276,131 +285,156 @@ export function GraphCanvas({
         className={`flex items-center justify-center ${className}`}
         style={{ width: width || "100%", height }}
       >
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="text-destructive">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="font-semibold">Failed to load graph</p>
-            <p className="text-sm text-muted-foreground">{error}</p>
-          </div>
-          <button
-            onClick={fetchGraphData}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
+        <div className="flex flex-col items-center gap-3 text-center animate-fade-in">
+          <p className="text-sm font-medium">Failed to load graph</p>
+          <p className="text-xs text-muted-foreground max-w-sm">{error}</p>
+          <Button onClick={refresh} variant="outline" size="sm">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
-  if (!graphData || (graphData.nodes.length === 0 && graphData.links.length === 0)) {
+  if (!graphData?.nodes.length) {
     return (
       <div
         ref={containerRef}
-        className={`flex items-center justify-center ${className}`}
+        className={`flex items-center justify-center bg-background ${className}`}
         style={{ width: width || "100%", height }}
       >
-        <div className="text-center">
-          <p className="font-semibold">No graph data available</p>
-          <p className="text-sm text-muted-foreground">
-            This repository hasn't been analyzed yet
-          </p>
+        <div className="flex flex-col items-center gap-4 max-w-xs text-center animate-fade-in">
+          <div className="flex size-10 items-center justify-center rounded-lg border border-dashed border-muted-foreground/25">
+            <Terminal className="size-4 text-muted-foreground/50" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">No graph data</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Run an analysis to map this repository&apos;s dependency structure.
+            </p>
+          </div>
+
+          {analysis.analysisError && (
+            <div className="w-full rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-xs text-destructive">
+              {analysis.analysisError}
+            </div>
+          )}
+
+          <Button
+            onClick={startAnalysis}
+            disabled={analysis.isAnalyzing}
+            size="sm"
+            className="gap-2"
+          >
+            {analysis.isAnalyzing ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Analyzing...
+              </>
+            ) : (
+              <>
+                <PlayCircle className="h-3.5 w-3.5" /> Begin Analysis
+              </>
+            )}
+          </Button>
+
+          {analysis.isAnalyzing && <ElapsedTimer seconds={analysis.elapsedSeconds} />}
         </div>
       </div>
     );
   }
 
-  const displayData = filteredGraphData || graphData;
-
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div ref={containerRef} className={`relative w-full h-full ${className}`}>
       {showControls && (
         <GraphControls
           nodes={graphData.nodes}
           onSearch={handleSearch}
-          onFilterChange={handleFilterChange}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onRecenter={handleRecenter}
-          onPauseToggle={handlePauseToggle}
-          className="absolute top-4 right-4 w-80 max-w-full z-10"
+          onFilterChange={setFileTypeFilter}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onRecenter={recenter}
+          onPauseToggle={togglePause}
+          className="absolute top-3 right-3 w-80 z-10"
         />
       )}
 
+      <AnalysisOverlay analysis={analysis} onStart={startAnalysis} />
+
       <ForceGraph2D
         ref={graphRef}
-        graphData={displayData}
+        graphData={displayData!}
         width={width || dimensions.width}
         height={dimensions.height}
-        nodeCanvasObject={paintNode}
-        linkCanvasObject={paintLink}
-        nodeLabel={(node) => {
-          const n = node as ForceGraphNode;
-          return `
-            <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 4px; color: white;">
-              <div style="font-weight: bold; margin-bottom: 4px;">${n.name}</div>
-              ${n.path ? `<div style="font-size: 12px; opacity: 0.8;">${n.path}</div>` : ""}
-              ${n.fileType ? `<div style="font-size: 12px;">Type: ${n.fileType.toUpperCase()}</div>` : ""}
-              ${n.linesOfCode ? `<div style="font-size: 12px;">Lines: ${n.linesOfCode}</div>` : ""}
-              ${n.isExternal ? '<div style="font-size: 12px; color: #fbbf24;">External</div>' : ""}
-            </div>
-          `;
-        }}
+        nodeId="id"
+        nodeCanvasObject={nodeCanvasObject}
+        nodePointerAreaPaint={nodePointerAreaPaint}
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
-        enableZoomInteraction={true}
-        enablePanInteraction={true}
-        linkCurvature={0.2}
-        linkDirectionalArrowLength={0}
-        linkDirectionalParticles={0}
+        linkColor={() => LINK_COLOR}
+        linkWidth={1.5}
+        linkDirectionalArrowLength={4}
+        linkDirectionalArrowRelPos={1}
+        linkDirectionalArrowColor={() => LINK_ARROW_COLOR}
+        linkCurvature={0.15}
+        onRenderFramePre={onRenderFramePre}
+        enableNodeDrag={false}
+        enableZoomInteraction
+        enablePanInteraction
         cooldownTicks={100}
-        backgroundColor="#000000"
+        backgroundColor="transparent"
       />
+    </div>
+  );
+}
 
-      {hoveredNode && (
-        <div className="absolute top-4 left-4 bg-background/95 border rounded-lg p-3 shadow-lg max-w-xs">
-          <div className="font-semibold text-sm mb-1">{hoveredNode.name}</div>
-          {hoveredNode.path && (
-            <div className="text-xs text-muted-foreground mb-2">
-              {hoveredNode.path}
-            </div>
-          )}
-          <div className="flex gap-4 text-xs">
-            {hoveredNode.fileType && (
-              <div>
-                <span className="text-muted-foreground">Type:</span>{" "}
-                <span className="font-medium">
-                  {hoveredNode.fileType.toUpperCase()}
-                </span>
-              </div>
-            )}
-            {hoveredNode.linesOfCode && (
-              <div>
-                <span className="text-muted-foreground">Lines:</span>{" "}
-                <span className="font-medium">{hoveredNode.linesOfCode}</span>
-              </div>
-            )}
-          </div>
-          {hoveredNode.isExternal && (
-            <div className="text-xs text-yellow-500 mt-2">External dependency</div>
-          )}
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+function AnalysisOverlay({
+  analysis,
+  onStart,
+}: {
+  analysis: AnalysisState;
+  onStart: () => void;
+}) {
+  return (
+    <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onStart}
+        disabled={analysis.isAnalyzing}
+        className="gap-2 glass text-xs"
+      >
+        <RefreshCw
+          className={`h-3 w-3 ${analysis.isAnalyzing ? "animate-spin" : ""}`}
+        />
+        {analysis.isAnalyzing ? "Analyzing..." : "Re-analyze"}
+      </Button>
+
+      {analysis.isAnalyzing && (
+        <div className="glass rounded-md px-3 py-1.5">
+          <ElapsedTimer seconds={analysis.elapsedSeconds} />
         </div>
       )}
+
+      {analysis.analysisError && (
+        <div className="glass rounded-md px-3 py-1.5 border-destructive/20">
+          <p className="text-xs text-destructive">{analysis.analysisError}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ElapsedTimer({ seconds }: { seconds: number }) {
+  const mins = Math.floor(seconds / 60);
+  const secs = String(seconds % 60).padStart(2, "0");
+  return (
+    <div className="flex items-center gap-2 text-xs font-mono">
+      <span className="text-muted-foreground">Elapsed</span>
+      <span className="font-semibold text-primary">
+        {mins}:{secs}
+      </span>
     </div>
   );
 }

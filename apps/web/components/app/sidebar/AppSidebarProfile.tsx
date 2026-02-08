@@ -53,8 +53,8 @@ export function AppSidebarProfile({ profile }: ISidebarProfile) {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
-                  src={profile?.avatar_url}
-                  alt={profile?.display_name}
+                  src={profile?.avatar_url ?? undefined}
+                  alt={profile?.display_name ?? undefined}
                 />
                 <AvatarFallback className="rounded-lg">
                   {profile?.display_name?.charAt(0).toUpperCase()}
@@ -78,7 +78,7 @@ export function AppSidebarProfile({ profile }: ISidebarProfile) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={profile?.avatar_url} alt={profile?.email} />
+                  <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.email ?? undefined} />
                   <AvatarFallback className="rounded-lg">
                     {profile?.display_name?.charAt(0).toUpperCase()}
                   </AvatarFallback>

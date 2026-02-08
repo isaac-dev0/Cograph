@@ -40,7 +40,7 @@ export function RepositorySwitcher() {
 
   if (!currentRepository || !currentProject) return null;
 
-  const ActiveIcon = getRepositoryIcon(currentRepository.icon);
+  const ActiveIcon = getRepositoryIcon(currentRepository.icon ?? undefined);
 
   return (
     <SidebarMenu>
@@ -80,7 +80,7 @@ export function RepositorySwitcher() {
               Repositories
             </DropdownMenuLabel>
             {repositories.map((repository) => {
-              const RepositoryIcon = getRepositoryIcon(repository.icon);
+              const RepositoryIcon = getRepositoryIcon(repository.icon ?? undefined);
               const isActive = repository.id === currentRepository.id;
 
               return (
@@ -100,7 +100,6 @@ export function RepositorySwitcher() {
               );
             })}
             <DropdownMenuSeparator />
-            {/* Import Repository Popup */}
             <DropdownMenuItem className="gap-2 p-2">
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Import className="size-4" />

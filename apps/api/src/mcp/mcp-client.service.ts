@@ -10,12 +10,16 @@ const importEsm = (specifier: string) =>
 interface MCPClient {
   connect(transport: unknown): Promise<void>;
   close(): Promise<void>;
-  callTool(params: {
-    name: string;
-    arguments: Record<string, unknown>;
-  }): Promise<{ content: Array<{ type: string; text?: string }> }>;
+  callTool(
+    params: { name: string; arguments: Record<string, unknown> },
+    options?: { timeout?: number },
+  ): Promise<{ content: Array<{ type: string; text?: string }> }>;
 }
 
+/**
+ * Manages the lifecycle of an MCP stdio client connection.
+ * Connects on module init and disconnects on module destroy.
+ */
 @Injectable()
 export class MCPClientService implements OnModuleInit, OnModuleDestroy {
   private client: MCPClient | null = null;
@@ -33,7 +37,7 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
 
     this.client = new Client(
       { name: 'cograph-api', version: '1.0.0' },
-      { capabilities: {} },
+      { capabilities: {}, requestTimeout: 600_000 },
     ) as MCPClient;
 
     await this.client.connect(transport);
@@ -43,21 +47,23 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
     await this.client?.close();
   }
 
+  /** Invokes an MCP tool by name and parses the JSON response. */
   async callTool<T = unknown>(
     toolName: string,
     args: Record<string, unknown>,
+    options?: { timeout?: number },
   ): Promise<T> {
     if (!this.client) {
       throw new Error('MCP client is not connected');
     }
 
-    const result = await this.client.callTool({
-      name: toolName,
-      arguments: args,
-    });
+    const result = await this.client.callTool(
+      { name: toolName, arguments: args },
+      options,
+    );
 
     const content = result.content as Array<{ type: string; text?: string }>;
-    const textContent = content?.find((ctx) => ctx.type === 'text');
+    const textContent = content?.find((c) => c.type === 'text');
 
     if (!textContent?.text) {
       throw new Error('No text content in MCP response');

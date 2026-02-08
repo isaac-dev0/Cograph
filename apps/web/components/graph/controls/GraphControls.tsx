@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Search,
   X,
@@ -9,15 +9,9 @@ import {
   Maximize2,
   Pause,
   Play,
-  Filter,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { ForceGraphNode } from "../utils/graphDataTransform";
 
 interface GraphControlsProps {
@@ -32,16 +26,20 @@ interface GraphControlsProps {
 }
 
 const FILE_TYPE_OPTIONS = [
-  { value: "ts", label: "TypeScript", color: "#3178c6" },
+  { value: "ts", label: "TS", color: "#3178c6" },
   { value: "tsx", label: "TSX", color: "#9333ea" },
-  { value: "js", label: "JavaScript", color: "#f7df1e" },
+  { value: "js", label: "JS", color: "#f7df1e" },
   { value: "jsx", label: "JSX", color: "#fb923c" },
   { value: "json", label: "JSON", color: "#64748b" },
   { value: "css", label: "CSS", color: "#1572b6" },
   { value: "html", label: "HTML", color: "#e34f26" },
-  { value: "md", label: "Markdown", color: "#22c55e" },
+  { value: "md", label: "MD", color: "#22c55e" },
 ];
 
+/**
+ * Glass-styled graph controls panel with search, file-type filtering,
+ * and navigation actions — styled as a floating command palette.
+ */
 export function GraphControls({
   nodes,
   onSearch,
@@ -55,62 +53,31 @@ export function GraphControls({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>([]);
   const [isPaused, setIsPaused] = useState(false);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const filteredNodes = useMemo(() => {
     if (!searchQuery.trim()) return [];
-
     const query = searchQuery.toLowerCase();
-    return nodes.filter((node) =>
-      node.name.toLowerCase().includes(query) ||
-      node.path?.toLowerCase().includes(query)
-    );
+    return nodes
+      .filter(
+        (node) =>
+          node.name.toLowerCase().includes(query) ||
+          node.path?.toLowerCase().includes(query),
+      )
+      .slice(0, 6);
   }, [nodes, searchQuery]);
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-
-    if (!value.trim()) {
-      onSearch?.(null);
-      return;
-    }
-
-    const query = value.toLowerCase();
-    const firstMatch = nodes.find((node) =>
-      node.name.toLowerCase().includes(query) ||
-      node.path?.toLowerCase().includes(query)
-    );
-
-    if (firstMatch) {
-      onSearch?.(firstMatch.id);
-    }
-  };
-
-  const handleSelectNode = (nodeId: string) => {
-    onSearch?.(nodeId);
-    setSearchQuery("");
-  };
-
-  const handleFileTypeToggle = (fileType: string) => {
-    const newSelected = selectedFileTypes.includes(fileType)
-      ? selectedFileTypes.filter((ft) => ft !== fileType)
-      : [...selectedFileTypes, fileType];
-
-    setSelectedFileTypes(newSelected);
-    onFilterChange?.(newSelected);
-  };
-
-  const handleClearFilters = () => {
-    setSelectedFileTypes([]);
-    onFilterChange?.([]);
-  };
-
-  const handlePauseToggle = () => {
-    const newPausedState = !isPaused;
-    setIsPaused(newPausedState);
-    onPauseToggle?.(newPausedState);
-  };
 
   const fileTypeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -122,223 +89,179 @@ export function GraphControls({
     return counts;
   }, [nodes]);
 
-  return (
-    <div
-      className={`bg-background/95 backdrop-blur border rounded-lg shadow-lg ${className}`}
-    >
-      <div className="md:hidden flex items-center justify-between p-3 border-b">
-        <span className="font-semibold text-sm">Graph Controls</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsMobileExpanded(!isMobileExpanded)}
-        >
-          {isMobileExpanded ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (!value.trim()) {
+      onSearch?.(null);
+      return;
+    }
+    const query = value.toLowerCase();
+    const firstMatch = nodes.find(
+      (node) =>
+        node.name.toLowerCase().includes(query) ||
+        node.path?.toLowerCase().includes(query),
+    );
+    if (firstMatch) onSearch?.(firstMatch.id);
+  };
 
-      <div
-        className={`p-3 space-y-3 ${isMobileExpanded ? "block" : "hidden md:block"}`}
-      >
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold">Search Files</Label>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search by filename..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-8 pr-8 h-9 text-sm"
-            />
-            {searchQuery && (
+  const handleSelectNode = (nodeId: string) => {
+    onSearch?.(nodeId);
+    setSearchQuery("");
+    setIsSearchFocused(false);
+  };
+
+  const handleFileTypeToggle = (fileType: string) => {
+    const next = selectedFileTypes.includes(fileType)
+      ? selectedFileTypes.filter((ft) => ft !== fileType)
+      : [...selectedFileTypes, fileType];
+    setSelectedFileTypes(next);
+    onFilterChange?.(next);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedFileTypes([]);
+    onFilterChange?.([]);
+  };
+
+  const handlePauseToggle = () => {
+    const next = !isPaused;
+    setIsPaused(next);
+    onPauseToggle?.(next);
+  };
+
+  const availableTypes = FILE_TYPE_OPTIONS.filter(
+    (opt) => (fileTypeCounts[opt.value] || 0) > 0,
+  );
+
+  return (
+    <div className={`glass rounded-xl shadow-lg ${className}`}>
+      <div className="p-4 space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Search files..."
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
+            className="w-full h-11 pl-11 pr-20 bg-transparent border border-border/50 rounded-lg text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-colors"
+          />
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-muted-foreground/40 font-mono bg-muted/50 px-2 py-1 rounded-md">
+            Ctrl+K
+          </kbd>
+          {searchQuery && (
+            <button
+              onClick={() => handleSearchChange("")}
+              className="absolute right-16 top-1/2 -translate-y-1/2"
+            >
+              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+            </button>
+          )}
+        </div>
+
+        {isSearchFocused && filteredNodes.length > 0 && (
+          <div className="border border-border/50 rounded-lg overflow-hidden">
+            {filteredNodes.map((node) => (
               <button
-                onClick={() => handleSearchChange("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2"
+                key={node.id}
+                onMouseDown={() => handleSelectNode(node.id)}
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors border-b border-border/30 last:border-b-0 flex items-center gap-3"
               >
-                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                <span
+                  className="shrink-0 text-xs font-mono font-medium px-2 py-0.5 rounded-md"
+                  style={{
+                    backgroundColor: `${node.color}22`,
+                    color: node.color,
+                  }}
+                >
+                  {node.fileType?.toUpperCase() || "FILE"}
+                </span>
+                <span className="truncate text-foreground/80">{node.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {availableTypes.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {availableTypes.map((opt) => {
+              const isActive = selectedFileTypes.includes(opt.value);
+              const count = fileTypeCounts[opt.value] || 0;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => handleFileTypeToggle(opt.value)}
+                  className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                    isActive
+                      ? "border-current bg-current/10"
+                      : "border-border/40 bg-transparent hover:bg-accent/30"
+                  }`}
+                  style={{ color: isActive ? opt.color : undefined }}
+                >
+                  <span
+                    className="size-2.5 rounded-full"
+                    style={{ backgroundColor: opt.color }}
+                  />
+                  {opt.label}
+                  <span className="opacity-50">{count}</span>
+                </button>
+              );
+            })}
+            {selectedFileTypes.length > 0 && (
+              <button
+                onClick={handleClearFilters}
+                className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 transition-colors"
+              >
+                Clear
               </button>
             )}
           </div>
+        )}
 
-          {filteredNodes.length > 0 && (
-            <div className="max-h-32 overflow-y-auto border rounded-md">
-              {filteredNodes.slice(0, 5).map((node) => (
-                <button
-                  key={node.id}
-                  onClick={() => handleSelectNode(node.id)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors border-b last:border-b-0"
-                >
-                  <div className="font-medium truncate">{node.name}</div>
-                  {node.path && (
-                    <div className="text-xs text-muted-foreground truncate">
-                      {node.path}
-                    </div>
-                  )}
-                </button>
-              ))}
-              {filteredNodes.length > 5 && (
-                <div className="px-3 py-2 text-xs text-muted-foreground">
-                  +{filteredNodes.length - 5} more results
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold">Filter by Type</Label>
-              <div className="flex items-center gap-2">
-                {selectedFileTypes.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearFilters}
-                    className="h-6 px-2 text-xs"
-                  >
-                    Clear
-                  </Button>
-                )}
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                    <Filter className="h-3 w-3" />
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </div>
-
-            {selectedFileTypes.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {selectedFileTypes.map((fileType) => {
-                  const option = FILE_TYPE_OPTIONS.find((option) => option.value === fileType);
-                  return (
-                    <Badge
-                      key={fileType}
-                      variant="secondary"
-                      className="text-xs px-2 py-0.5"
-                      style={{
-                        backgroundColor: `${option?.color}20`,
-                        color: option?.color,
-                      }}
-                    >
-                      {option?.label || fileType}
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
-
-            <CollapsibleContent className="space-y-1">
-              {FILE_TYPE_OPTIONS.map((option) => {
-                const count = fileTypeCounts[option.value] || 0;
-                if (count === 0) return null;
-
-                return (
-                  <label
-                    key={option.value}
-                    className="flex items-center justify-between p-2 rounded hover:bg-accent cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedFileTypes.includes(option.value)}
-                        onChange={() => handleFileTypeToggle(option.value)}
-                        className="h-4 w-4 rounded border-gray-300"
-                      />
-                      <div
-                        className="w-3 h-3 rounded"
-                        style={{ backgroundColor: option.color }}
-                      />
-                      <span className="text-sm">{option.label}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{count}</span>
-                  </label>
-                );
-              })}
-            </CollapsibleContent>
-          </div>
-        </Collapsible>
-
-        <div className="border-t" />
-
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold">Navigation</Label>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onZoomIn}
-              className="h-9 text-xs"
-            >
-              <ZoomIn className="h-4 w-4 mr-1" />
-              Zoom In
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onZoomOut}
-              className="h-9 text-xs"
-            >
-              <ZoomOut className="h-4 w-4 mr-1" />
-              Zoom Out
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 border-t border-border/30 pt-4">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={onRecenter}
-            className="w-full h-9 text-xs"
+            variant="ghost"
+            size="icon"
+            onClick={onZoomIn}
+            className="h-10 w-10"
           >
-            <Maximize2 className="h-4 w-4 mr-1" />
-            Recenter Graph
+            <ZoomIn className="h-5 w-5" />
           </Button>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold">Performance</Label>
           <Button
-            variant={isPaused ? "default" : "outline"}
-            size="sm"
+            variant="ghost"
+            size="icon"
+            onClick={onZoomOut}
+            className="h-10 w-10"
+          >
+            <ZoomOut className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onRecenter}
+            className="h-10 w-10"
+          >
+            <Maximize2 className="h-5 w-5" />
+          </Button>
+          <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handlePauseToggle}
-            className="w-full h-9 text-xs"
+            className="h-10 w-10"
           >
             {isPaused ? (
-              <>
-                <Play className="h-4 w-4 mr-1" />
-                Resume Animation
-              </>
+              <Play className="h-5 w-5" />
             ) : (
-              <>
-                <Pause className="h-4 w-4 mr-1" />
-                Pause Animation
-              </>
+              <Pause className="h-5 w-5" />
             )}
           </Button>
-        </div>
-
-        <div className="pt-2 border-t">
-          <div className="text-xs text-muted-foreground space-y-1">
-            <div className="flex justify-between">
-              <span>Total Nodes:</span>
-              <span className="font-medium">{nodes.length}</span>
-            </div>
-            {selectedFileTypes.length > 0 && (
-              <div className="flex justify-between">
-                <span>Filtered:</span>
-                <span className="font-medium">
-                  {nodes.filter((node) =>
-                    node.fileType ? selectedFileTypes.includes(node.fileType) : false
-                  ).length}
-                </span>
-              </div>
-            )}
-          </div>
+          <div className="flex-1" />
+          <Badge variant="secondary" className="text-sm px-3 py-1 h-8 font-mono">
+            {nodes.length} files
+          </Badge>
         </div>
       </div>
     </div>
