@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/hooks/providers/UserProvider";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +9,11 @@ import { RepositoryProvider } from "@/hooks/providers/RepositoryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
@@ -42,7 +47,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html className={geistSans.className} lang="en" suppressHydrationWarning>
+    <html className={`${geistSans.variable} ${geistMono.variable} ${geistSans.className}`} lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider
           attribute="class"

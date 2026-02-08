@@ -19,15 +19,15 @@ export const repositorySidebarConfig: RepositorySidebarConfig = {
       title: "Graph",
       icon: GitGraph,
       isActive: true,
-      url: "/graph",
+      url: "/app/graph",
     },
     {
       title: "Documents",
       icon: File,
       isActive: false,
-      url: "/documents",
+      url: "/app/documents",
       items: [
-        { title: "Create", url: "/documents/create" },
+        { title: "Create", url: "/app/documents/create" },
         { title: "Testing 1", url: "#" },
         { title: "Testing 2", url: "#" },
       ],

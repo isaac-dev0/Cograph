@@ -175,6 +175,14 @@ const inputSchema = {
     .string()
     .optional()
     .describe("Identifier for temp directory naming"),
+  maxFiles: z
+    .number()
+    .optional()
+    .describe("Maximum number of files to analyse (for batch processing)"),
+  skipFiles: z
+    .number()
+    .optional()
+    .describe("Number of files to skip (for batch processing)"),
 };
 
 export function registerAnalyseRepositoryTool(server: McpServer): void {
@@ -189,7 +197,7 @@ export function registerAnalyseRepositoryTool(server: McpServer): void {
         "Clone a git repository and analyse all TypeScript/JavaScript files",
       inputSchema,
     },
-    async ({ repositoryUrl, branch, repositoryId }) => {
+    async ({ repositoryUrl, branch, repositoryId, maxFiles, skipFiles }) => {
       const repoId = repositoryId || extractRepositoryId(repositoryUrl);
       let clonedPath: string | null = null;
 
@@ -199,10 +207,18 @@ export function registerAnalyseRepositoryTool(server: McpServer): void {
         log(`Cloned to: ${clonedPath}`);
 
         log("Scanning for files...");
-        const files = await scanner.scanDirectory({ rootPath: clonedPath });
-        log(`Found ${files.length} files`);
+        const allFiles = await scanner.scanDirectory({ rootPath: clonedPath });
+        log(`Found ${allFiles.length} files`);
+
+        const skip = skipFiles || 0;
+        const limit = maxFiles || allFiles.length;
+        const files = allFiles.slice(skip, skip + limit);
+        log(`Analysing batch: ${skip}-${skip + files.length} of ${allFiles.length}`);
 
         const { results, summary } = await analyseAllFiles(claude, files);
+
+        summary.totalFiles = allFiles.length;
+
         log(
           `Success: ${summary.successfulAnalyses}, Failed: ${summary.failedAnalyses}`,
         );

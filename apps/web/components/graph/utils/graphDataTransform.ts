@@ -1,8 +1,4 @@
-import type {
-  DependencyGraph,
-  GraphNode,
-  GraphEdge,
-} from "../../../lib/queries/GraphQueries";
+import type { DependencyGraph, GraphNode, GraphEdge } from "@/lib/types/graph";
 
 export interface ForceGraphNode {
   id: string;
@@ -48,51 +44,54 @@ const FILE_TYPE_COLORS: Record<string, string> = {
   default: "#6366f1",
 };
 
+const FILE_TYPE_NORMALISE: Record<string, string> = {
+  typescript: "ts",
+  javascript: "js",
+};
+
+/** Returns the display colour for a given file extension. */
 export function getFileTypeColor(fileType: string): string {
-  const normalizedType = fileType.toLowerCase().replace(/^\./, "");
-  return FILE_TYPE_COLORS[normalizedType] || FILE_TYPE_COLORS.default;
+  const normalized = fileType.toLowerCase().replace(/^\./, "");
+  return FILE_TYPE_COLORS[normalized] || FILE_TYPE_COLORS.default;
 }
 
-export function extractFileType(label: string): string | undefined {
+/** Extracts the file extension from a filename (e.g. "app.tsx" → "tsx"). */
+function extractFileType(label: string): string | undefined {
   const match = label.match(/\.([^.]+)$/);
   return match ? match[1] : undefined;
 }
 
-export function isExternalFile(path: string): boolean {
+/** Normalises long-form type names ("typescript" → "ts"). */
+function normaliseFileType(type: string): string {
+  const lower = type.toLowerCase();
+  return FILE_TYPE_NORMALISE[lower] || lower;
+}
+
+function isExternalFile(path: string): boolean {
   return path.includes("node_modules") || path.startsWith("@");
 }
 
-export function calculateNodeSize(linesOfCode?: number): number {
+/** Maps lines-of-code to a relative node size between 3 and 15. */
+function calculateNodeSize(linesOfCode?: number): number {
   if (!linesOfCode) return 5;
-
-  const minSize = 3;
-  const maxSize = 15;
-  const maxLines = 1000;
-
-  const normalizedLines = Math.min(linesOfCode, maxLines);
-  return minSize + (normalizedLines / maxLines) * (maxSize - minSize);
+  const normalised = Math.min(linesOfCode, 1000);
+  return 3 + (normalised / 1000) * 12;
 }
 
-function parseNodeData(dataString: string): Record<string, unknown> {
+function parseJson(raw: string): Record<string, unknown> {
   try {
-    return JSON.parse(dataString);
+    return JSON.parse(raw);
   } catch {
     return {};
   }
 }
 
-function parseEdgeData(dataString?: string): Record<string, unknown> {
-  if (!dataString) return {};
-  try {
-    return JSON.parse(dataString);
-  } catch {
-    return {};
-  }
-}
+// ── Transformers ────────────────────────────────────────────────────────────
 
 function transformNode(node: GraphNode): ForceGraphNode {
-  const data = parseNodeData(node.data);
-  const fileType = extractFileType(node.label);
+  const data = parseJson(node.data);
+  const rawFileType = (data.fileType as string) || extractFileType(node.label);
+  const fileType = rawFileType ? normaliseFileType(rawFileType) : undefined;
   const linesOfCode = (data.linesOfCode as number) || undefined;
   const path = (data.filePath as string) || (data.path as string) || node.label;
   const isExternal = isExternalFile(path);
@@ -111,10 +110,8 @@ function transformNode(node: GraphNode): ForceGraphNode {
 }
 
 function transformEdge(edge: GraphEdge, nodes: ForceGraphNode[]): ForceGraphLink {
-  const data = parseEdgeData(edge.data);
-
-  const sourceNode = nodes.find((n) => n.id === edge.source);
-  const targetNode = nodes.find((n) => n.id === edge.target);
+  const sourceNode = nodes.find((node) => node.id === edge.source);
+  const targetNode = nodes.find((node) => node.id === edge.target);
   const isExternal = sourceNode?.isExternal || targetNode?.isExternal || false;
 
   return {
@@ -126,22 +123,24 @@ function transformEdge(edge: GraphEdge, nodes: ForceGraphNode[]): ForceGraphLink
   };
 }
 
+/**
+ * Converts an API dependency graph into the format expected by react-force-graph.
+ * Only file nodes are included — entity nodes are available via the file details panel.
+ */
 export function transformGraphData(graph: DependencyGraph): ForceGraphData {
-  const nodes = graph.nodes.map(transformNode);
+  const fileNodes = graph.nodes.filter((node) => node.type.toLowerCase() === "file");
+  const nodes = fileNodes.map(transformNode);
   const links = graph.edges.map((edge) => transformEdge(edge, nodes));
-
-  return {
-    nodes,
-    links,
-  };
+  return { nodes, links };
 }
 
+/**
+ * Applies client-side filters to a transformed graph dataset.
+ * Returns only nodes matching the specified file types and their connecting links.
+ */
 export function filterGraphData(
   data: ForceGraphData,
-  options: {
-    includeExternal?: boolean;
-    fileTypes?: string[];
-  }
+  options: { includeExternal?: boolean; fileTypes?: string[] },
 ): ForceGraphData {
   let filteredNodes = data.nodes;
 
@@ -149,21 +148,17 @@ export function filterGraphData(
     filteredNodes = filteredNodes.filter((node) => !node.isExternal);
   }
 
-  if (options.fileTypes && options.fileTypes.length > 0) {
-    filteredNodes = filteredNodes.filter((node) =>
-      node.fileType ? options.fileTypes?.includes(node.fileType) : false
+  if (options.fileTypes?.length) {
+    filteredNodes = filteredNodes.filter(
+      (node) => node.fileType && options.fileTypes!.includes(node.fileType),
     );
   }
 
   const nodeIds = new Set(filteredNodes.map((n) => n.id));
-
   const filteredLinks = data.links.filter(
     (link) =>
-      nodeIds.has(link.source as string) && nodeIds.has(link.target as string)
+      nodeIds.has(link.source as string) && nodeIds.has(link.target as string),
   );
 
-  return {
-    nodes: filteredNodes,
-    links: filteredLinks,
-  };
+  return { nodes: filteredNodes, links: filteredLinks };
 }

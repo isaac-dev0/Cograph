@@ -56,3 +56,15 @@ export const REMOVE_REPOSITORY_FROM_PROJECT = `
     removeRepositoryFromProject(projectId: $projectId, repositoryId: $repositoryId)
   }
 `;
+
+export const ANALYSE_REPOSITORY = `
+  mutation AnalyseRepository($repositoryId: ID!) {
+    analyseRepository(repositoryId: $repositoryId) {
+      id
+      status
+      repositoryId
+      createdAt
+      updatedAt
+    }
+  }
+`;
