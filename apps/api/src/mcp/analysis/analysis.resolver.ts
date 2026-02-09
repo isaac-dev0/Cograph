@@ -1,17 +1,23 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql';
 import { SupabaseJwtGuard } from 'src/auth/supabase-jwt.guard';
+import { CurrentUser } from 'src/auth/current-user.decorator';
 import { AnalysisService } from './analysis.service';
 import { RepositoryFileService } from 'src/repositories/repository-file.service';
+import { AnnotationsService } from 'src/repositories/annotations.service';
 import { AnalysisJob } from './models/analysis-job.model';
 import { RepositoryFile } from './models/repository-file.model';
+import { FileAnnotation } from './models/file-annotation.model';
+import { CreateAnnotationInput, UpdateAnnotationInput } from './dto/annotation-inputs';
+import { Profile as ProfileModel } from 'src/profiles/models/profile.model';
 
 @UseGuards(SupabaseJwtGuard)
-@Resolver()
+@Resolver(() => RepositoryFile)
 export class AnalysisResolver {
   constructor(
     private readonly analysisService: AnalysisService,
     private readonly repositoryFileService: RepositoryFileService,
+    private readonly annotationsService: AnnotationsService,
   ) {}
 
   @Mutation(() => AnalysisJob, {
@@ -55,6 +61,16 @@ export class AnalysisResolver {
     return this.repositoryFileService.findById(id);
   }
 
+  @Query(() => String, {
+    name: 'fileContent',
+    description: 'Fetches the raw content of a file from GitHub.',
+  })
+  async fileContent(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<string> {
+    return this.repositoryFileService.getFileContent(id);
+  }
+
   @Mutation(() => RepositoryFile, {
     name: 'updateFileAnnotation',
     description: 'Updates the user annotation for a repository file.',
@@ -71,9 +87,60 @@ export class AnalysisResolver {
     description: 'Updates the Claude summary for a repository file.',
   })
   async updateFileSummary(
-    @Args('id', { type: () => ID }) id: string,
+    @Args('id', { type: () => ID}) id: string,
     @Args('summary', { type: () => String }) summary: string,
   ): Promise<RepositoryFile> {
     return this.repositoryFileService.updateSummary(id, summary);
+  }
+
+  @Mutation(() => FileAnnotation, {
+    name: 'createAnnotation',
+    description: 'Creates a new annotation on a repository file.',
+  })
+  async createAnnotation(
+    @Args('fileId', { type: () => ID }) fileId: string,
+    @Args('input', { type: () => CreateAnnotationInput }) input: CreateAnnotationInput,
+    @CurrentUser() profile: ProfileModel,
+  ): Promise<FileAnnotation> {
+    return this.annotationsService.createAnnotation(
+      fileId,
+      input,
+      { id: profile.id, name: profile.displayName },
+    );
+  }
+
+  @Mutation(() => FileAnnotation, {
+    name: 'updateAnnotation',
+    description: 'Updates an existing annotation. Only the author can update it.',
+  })
+  async updateAnnotation(
+    @Args('fileId', { type: () => ID }) fileId: string,
+    @Args('annotationId', { type: () => ID }) annotationId: string,
+    @Args('input', { type: () => UpdateAnnotationInput }) input: UpdateAnnotationInput,
+    @CurrentUser() profile: ProfileModel,
+  ): Promise<FileAnnotation> {
+    return this.annotationsService.updateAnnotation(
+      fileId,
+      annotationId,
+      input,
+      profile.id,
+    );
+  }
+
+  @Mutation(() => Boolean, {
+    name: 'deleteAnnotation',
+    description: 'Deletes an annotation. Only the author can delete it.',
+  })
+  async deleteAnnotation(
+    @Args('fileId', { type: () => ID }) fileId: string,
+    @Args('annotationId', { type: () => ID }) annotationId: string,
+    @CurrentUser() profile: ProfileModel,
+  ): Promise<boolean> {
+    return this.annotationsService.deleteAnnotation(fileId, annotationId, profile.id);
+  }
+
+  @ResolveField(() => [FileAnnotation], { nullable: true })
+  async annotations(@Parent() file: RepositoryFile): Promise<FileAnnotation[]> {
+    return this.annotationsService.getAnnotations(file.id);
   }
 }

@@ -382,9 +382,6 @@ type RepositoryFile {
   """Neo4j node ID for graph database reference."""
   neo4jNodeId: String
 
-  """User-provided annotations for this file."""
-  annotations: String
-
   """AI-generated summary of the file contents."""
   claudeSummary: String
 
@@ -396,6 +393,43 @@ type RepositoryFile {
 
   """Code entities (functions, classes, etc.) found in this file."""
   codeEntities: [CodeEntity!]
+  annotations: [FileAnnotation!]
+}
+
+"""Author information for a file annotation."""
+type AnnotationAuthor {
+  """Profile ID of the annotation author."""
+  id: ID!
+
+  """Display name of the annotation author."""
+  name: String!
+}
+
+"""A user-created annotation on a repository file."""
+type FileAnnotation {
+  """Unique identifier of the annotation."""
+  id: ID!
+
+  """Title of the annotation (max 200 characters)."""
+  title: String!
+
+  """Markdown content of the annotation."""
+  content: String!
+
+  """Tags associated with this annotation."""
+  tags: [String!]!
+
+  """IDs of code entities linked to this annotation."""
+  linkedEntityIds: [ID!]!
+
+  """Author of the annotation."""
+  author: AnnotationAuthor!
+
+  """Timestamp when the annotation was created."""
+  createdAt: DateTime!
+
+  """Timestamp when the annotation was last updated."""
+  updatedAt: DateTime!
 }
 
 type Query {
@@ -460,6 +494,9 @@ type Query {
 
   """Retrieves a single repository file by its ID, including code entities."""
   repositoryFile(id: ID!): RepositoryFile!
+
+  """Fetches the raw content of a file from GitHub."""
+  fileContent(id: ID!): String!
 }
 
 input FindRepositoriesInput {
@@ -538,6 +575,15 @@ type Mutation {
 
   """Updates the Claude summary for a repository file."""
   updateFileSummary(id: ID!, summary: String!): RepositoryFile!
+
+  """Creates a new annotation on a repository file."""
+  createAnnotation(fileId: ID!, input: CreateAnnotationInput!): FileAnnotation!
+
+  """Updates an existing annotation. Only the author can update it."""
+  updateAnnotation(fileId: ID!, annotationId: ID!, input: UpdateAnnotationInput!): FileAnnotation!
+
+  """Deletes an annotation. Only the author can delete it."""
+  deleteAnnotation(fileId: ID!, annotationId: ID!): Boolean!
 }
 
 input SyncProfileInput {
@@ -583,4 +629,32 @@ input UpdateProjectInput {
 input SyncRepositoriesInput {
   """GitHub access token for authenticating with GitHub API"""
   githubToken: String!
+}
+
+input CreateAnnotationInput {
+  """Title of the annotation"""
+  title: String!
+
+  """Markdown content of the annotation"""
+  content: String!
+
+  """Tags for organizing the annotation"""
+  tags: [String!]
+
+  """IDs of code entities linked to this annotation"""
+  linkedEntityIds: [ID!]
+}
+
+input UpdateAnnotationInput {
+  """Title of the annotation"""
+  title: String
+
+  """Markdown content of the annotation"""
+  content: String
+
+  """Tags for organizing the annotation"""
+  tags: [String!]
+
+  """IDs of code entities linked to this annotation"""
+  linkedEntityIds: [ID!]
 }

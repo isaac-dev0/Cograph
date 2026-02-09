@@ -76,4 +76,36 @@ export class RepositoryFileService {
       include: { codeEntities: true },
     });
   }
+
+  /** Fetches the raw file content from GitHub. */
+  async getFileContent(id: string): Promise<string> {
+    const file = await this.findById(id);
+    const repository = await this.prisma.repository.findUnique({
+      where: { id: file.repositoryId },
+    });
+
+    if (!repository) {
+      throw new NotFoundException(`Repository with id ${file.repositoryId} not found`);
+    }
+
+    const rawUrl = this.buildGitHubRawUrl(repository.repositoryUrl, file.filePath);
+
+    try {
+      const response = await fetch(rawUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file content: ${response.statusText}`);
+      }
+      return await response.text();
+    } catch (error) {
+      throw new Error(`Failed to fetch file content from GitHub: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  private buildGitHubRawUrl(repositoryUrl: string, filePath: string): string {
+    const cleanUrl = repositoryUrl.replace(/\.git$/, '');
+    const urlParts = cleanUrl.replace('https://github.com/', '').split('/');
+    const owner = urlParts[0];
+    const repo = urlParts[1];
+    return `https://raw.githubusercontent.com/${owner}/${repo}/main/${filePath}`;
+  }
 }

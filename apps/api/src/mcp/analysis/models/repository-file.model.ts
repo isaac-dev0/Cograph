@@ -28,11 +28,6 @@ export class RepositoryFile {
     description: 'Neo4j node ID for graph database reference.',
   })
   neo4jNodeId?: string | null;
-
-  @Field(() => String, {
-    nullable: true,
-    description: 'User-provided annotations for this file.',
-  })
   annotations?: string | null;
 
   @Field(() => String, {

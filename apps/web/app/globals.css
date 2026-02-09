@@ -181,3 +181,36 @@
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.2s; }
 .stagger-5 { animation-delay: 0.25s; }
+
+.w-md-editor {
+  --color-canvas-default: var(--background) !important;
+  --color-fg-default: var(--foreground) !important;
+  --color-border-default: var(--border) !important;
+  border-radius: var(--radius) !important;
+  border-color: var(--border) !important;
+  font-family: var(--font-sans) !important;
+  box-shadow: none !important;
+}
+
+.w-md-editor-toolbar {
+  border-color: var(--border) !important;
+  background: transparent !important;
+}
+
+.w-md-editor-text-pre > code,
+.w-md-editor-text-input {
+  font-family: var(--font-mono) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.6 !important;
+}
+
+.annotation-preview .wmde-markdown {
+  background: transparent !important;
+  color: var(--muted-foreground) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.6 !important;
+}
+
+.annotation-preview .wmde-markdown code {
+  font-family: var(--font-mono) !important;
+}
