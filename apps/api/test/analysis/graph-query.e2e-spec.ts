@@ -2,8 +2,8 @@ import { INestApplication } from '@nestjs/common';
 import { createTestApp, closeTestApp } from '../helpers/test-app';
 import { DatabaseHelper } from '../helpers/database-helper';
 import { SMALL_TS_REPO } from '../fixtures/test-repositories';
-import { Neo4jGraphService } from '../../src/mcp/analysis/neo4j-graph.service';
-import { GraphQueryService } from '../../src/mcp/analysis/graph-query.service';
+import { GraphQueryService } from 'src/graph/services/graph-query.service';
+import { Neo4jGraphService } from 'src/graph/services/neo4j-graph.service';
 
 describe('GraphQueryService', () => {
   let app: INestApplication;

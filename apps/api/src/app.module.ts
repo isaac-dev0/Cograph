@@ -11,6 +11,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { LoggerModule } from 'pino-nestjs';
 import { RepositoriesModule } from './repositories/repositories.module';
 import { MCPModule } from './mcp/mcp.module';
+import { AnalysisModule } from './mcp/analysis/analysis.module';
 import { GraphModule } from './graph/graph.module';
 
 @Module({
@@ -40,6 +41,7 @@ import { GraphModule } from './graph/graph.module';
     ProjectsModule,
     RepositoriesModule,
     MCPModule,
+    AnalysisModule,
     GraphModule,
   ],
 })

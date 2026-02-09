@@ -150,7 +150,7 @@ function buildDependencyGraph(files: FileAnalysisResult[]): DependencyGraph {
   return { nodes, edges };
 }
 
-const inputSchema = {
+const inputSchema = z.object({
   files: z
     .array(
       z.object({
@@ -189,7 +189,7 @@ const inputSchema = {
       }),
     )
     .describe("Array of file analysis results from analyse-repository tool"),
-};
+});
 
 export function registerGenerateDependencyGraphTool(server: McpServer): void {
   server.registerTool(

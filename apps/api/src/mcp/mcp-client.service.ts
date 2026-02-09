@@ -11,6 +11,7 @@ interface MCPClient {
   close(): Promise<void>;
   callTool(
     params: { name: string; arguments: Record<string, unknown> },
+    resultSchema?: unknown,
     options?: { timeout?: number },
   ): Promise<{ content: Array<{ type: string; text?: string }> }>;
 }
@@ -58,6 +59,7 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
 
     const result = await this.client.callTool(
       { name: toolName, arguments: args },
+      undefined,
       options,
     );
 

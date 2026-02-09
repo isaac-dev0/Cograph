@@ -138,7 +138,7 @@ function extractDependencies(files: FileInput[]): DependencyExtractionResult {
   return { internalImports, externalLibraries, externalImports, unresolvedImports };
 }
 
-const inputSchema = {
+const inputSchema = z.object({
   files: z.array(
     z.object({
       id: z.string().describe("Neo4j node ID for the file"),
@@ -151,7 +151,7 @@ const inputSchema = {
       ),
     })
   ).describe("Array of files with their imports"),
-};
+});
 
 export function registerExtractDependenciesTool(server: McpServer): void {
   server.registerTool(

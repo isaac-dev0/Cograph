@@ -165,7 +165,7 @@ function buildRepositoryAnalysis(
   };
 }
 
-const inputSchema = {
+const inputSchema = z.object({
   repositoryUrl: z.string().url().describe("Git repository URL to analyse"),
   branch: z
     .string()
@@ -183,7 +183,7 @@ const inputSchema = {
     .number()
     .optional()
     .describe("Number of files to skip (for batch processing)"),
-};
+});
 
 export function registerAnalyseRepositoryTool(server: McpServer): void {
   const git = new GitService();

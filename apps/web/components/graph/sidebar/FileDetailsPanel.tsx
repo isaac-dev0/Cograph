@@ -29,6 +29,7 @@ import type { FileDetails, CodeEntity, FileAnnotation } from "@/lib/types/graph"
 import { AnnotationsList } from "./AnnotationsList";
 import { AnnotationForm } from "./AnnotationForm";
 import { FileContentViewer } from "./FileContentViewer";
+import { SummaryTab } from "./SummaryTab";
 import { useUser } from "@/hooks/providers/UserProvider";
 
 interface FileDetailsPanelProps {
@@ -221,6 +222,12 @@ export function FileDetailsPanel({
     }
   };
 
+  const handleSummaryGenerated = (summary: string, updatedAt: string) => {
+    setFileDetails((prev) =>
+      prev ? { ...prev, claudeSummary: summary, updatedAt } : prev,
+    );
+  };
+
   if (isLoading) {
     return (
       <div className={`flex items-center justify-center ${className}`}>
@@ -267,6 +274,7 @@ export function FileDetailsPanel({
                     </Badge>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="summary">Summary</TabsTrigger>
                 <TabsTrigger value="content">Content</TabsTrigger>
               </TabsList>
             </div>
@@ -282,10 +290,6 @@ export function FileDetailsPanel({
                     onToggle={setExpandedEntity}
                     onEntityClick={onEntityClick}
                   />
-                )}
-
-                {fileDetails.claudeSummary && (
-                  <SummarySection summary={fileDetails.claudeSummary} />
                 )}
               </div>
             </TabsContent>
@@ -315,6 +319,16 @@ export function FileDetailsPanel({
                   </div>
                 )}
               </div>
+            </TabsContent>
+
+            <TabsContent value="summary">
+              <SummaryTab
+                fileId={fileDetails.id}
+                fileName={fileDetails.fileName}
+                currentSummary={fileDetails.claudeSummary ?? null}
+                updatedAt={fileDetails.updatedAt}
+                onSummaryGenerated={handleSummaryGenerated}
+              />
             </TabsContent>
 
             <TabsContent value="content" className="flex-1 overflow-hidden">
@@ -492,11 +506,3 @@ function EntitiesSection({
   );
 }
 
-function SummarySection({ summary }: { summary: string }) {
-  return (
-    <div className="border-t border-border/50 pt-5">
-      <SectionHeader icon={Sparkles} title="AI Summary" />
-      <p className="text-sm text-muted-foreground/90 leading-relaxed">{summary}</p>
-    </div>
-  );
-}

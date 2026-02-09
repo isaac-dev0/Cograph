@@ -99,6 +99,14 @@ export const DELETE_ANNOTATION_MUTATION = `
   }
 `;
 
+export const GENERATE_FILE_SUMMARY_MUTATION = `
+  mutation GenerateFileSummary($fileId: ID!, $regenerate: Boolean) {
+    generateFileSummary(fileId: $fileId, regenerate: $regenerate) {
+      id claudeSummary updatedAt
+    }
+  }
+`;
+
 export const FILE_CONTENT_QUERY = `
   query FileContent($id: ID!) {
     fileContent(id: $id)

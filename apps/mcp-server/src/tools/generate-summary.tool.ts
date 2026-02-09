@@ -37,7 +37,7 @@ function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-const inputSchema = {
+const inputSchema = z.object({
   code: z.string().describe("The code content to summarise"),
   summaryType: z
     .enum(["file", "entity"])
@@ -54,7 +54,7 @@ const inputSchema = {
     .string()
     .optional()
     .describe("Optional file path for additional context"),
-};
+});
 
 export function registerGenerateSummaryTool(server: McpServer): void {
   const claude = new ClaudeService();
