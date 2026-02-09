@@ -154,7 +154,11 @@ export function useGraphData(
     fetchGraph();
   }, [fetchGraph]);
 
-  useEffect(() => clearTimers, [clearTimers]);
+  useEffect(() => {
+    return () => {
+      clearTimers();
+    };
+  }, [clearTimers]);
 
   const displayData = (() => {
     if (!graphData) return null;

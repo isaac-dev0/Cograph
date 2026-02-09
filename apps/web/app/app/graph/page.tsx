@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { GraphCanvas } from "@/components/graph/GraphCanvas";
+import { GraphErrorBoundary } from "@/components/graph/GraphErrorBoundary";
 import { FileDetailsPanel } from "@/components/graph/sidebar/FileDetailsPanel";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
 import { Separator } from "@/components/ui/separator";
@@ -68,12 +69,14 @@ export default function GraphPage() {
       <GraphHeader repoName={currentRepository.name} />
 
       <div className="flex-1 relative overflow-hidden">
-        <GraphCanvas
-          repositoryId={currentRepository.id}
-          onNodeClick={handleNodeClick}
-          showControls={true}
-          className="w-full h-full"
-        />
+        <GraphErrorBoundary>
+          <GraphCanvas
+            repositoryId={currentRepository.id}
+            onNodeClick={handleNodeClick}
+            showControls={true}
+            className="w-full h-full"
+          />
+        </GraphErrorBoundary>
       </div>
 
       <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
