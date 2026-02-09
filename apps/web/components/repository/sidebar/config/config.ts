@@ -1,4 +1,4 @@
-import { File, GitGraph, LucideIcon } from "lucide-react";
+import { File, GitGraph, LucideIcon, LayoutDashboard } from "lucide-react";
 
 export interface RepositorySidebarConfig {
   hero: {
@@ -15,6 +15,12 @@ export interface RepositorySidebarConfig {
 
 export const repositorySidebarConfig: RepositorySidebarConfig = {
   hero: [
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      isActive: false,
+      url: "/app",
+    },
     {
       title: "Graph",
       icon: GitGraph,

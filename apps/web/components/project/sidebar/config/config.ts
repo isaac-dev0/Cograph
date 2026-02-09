@@ -1,4 +1,4 @@
-import { LucideIcon, Settings } from "lucide-react";
+import { LucideIcon, Settings, LayoutDashboard } from "lucide-react";
 
 export interface ProjectSidebarConfig {
   hero: {
@@ -15,6 +15,12 @@ export interface ProjectSidebarConfig {
 
 export const projectSidebarConfig: ProjectSidebarConfig = {
   hero: [
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      isActive: true,
+      url: "/app",
+    },
     {
       title: "Project Settings",
       icon: Settings,

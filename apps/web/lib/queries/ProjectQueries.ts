@@ -7,6 +7,9 @@ export const FIND_PROJECTS_BY_PROFILE_QUERY = `
       status
       icon
       ownerId
+      createdAt
+      updatedAt
+      archivedAt
     }
   }
 `;
