@@ -3,7 +3,20 @@ export const FIND_REPOSITORIES_BY_PROJECT_QUERY = `
     findRepositoriesByProjectId(projectId: $projectId) {
       id
       name
+      fullName
+      description
+      visibility
+      repositoryUrl
       icon
+      ownerLogin
+      ownerAvatarUrl
+      lastSyncedAt
+      syncStatus
+      syncError
+      isPrivate
+      githubCreatedAt
+      githubUpdatedAt
+      githubPushedAt
     }
   }
 `;

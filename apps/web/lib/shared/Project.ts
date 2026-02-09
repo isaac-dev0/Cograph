@@ -7,4 +7,7 @@ export interface Project {
   status: ProjectStatus;
   icon?: string;
   ownerId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  archivedAt?: Date;
 }
