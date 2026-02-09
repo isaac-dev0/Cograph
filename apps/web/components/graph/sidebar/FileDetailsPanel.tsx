@@ -31,6 +31,7 @@ import { AnnotationForm } from "./AnnotationForm";
 import { FileContentViewer } from "./FileContentViewer";
 import { SummaryTab } from "./SummaryTab";
 import { useUser } from "@/hooks/providers/UserProvider";
+import { toast } from "sonner";
 
 interface FileDetailsPanelProps {
   fileId: string;
@@ -146,9 +147,13 @@ export function FileDetailsPanel({
       setEditingAnnotation(undefined);
 
       localStorage.removeItem(`draft-annotation-${fileDetails!.id}`);
+      toast.success("Annotation created successfully");
     } catch (error) {
       console.error("Failed to create annotation:", error);
-      alert("Failed to create annotation. Please try again.");
+      const message = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Failed to create annotation", {
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -190,9 +195,13 @@ export function FileDetailsPanel({
       localStorage.removeItem(
         `draft-annotation-${fileDetails!.id}-${editingAnnotation.id}`,
       );
+      toast.success("Annotation updated successfully");
     } catch (error) {
       console.error("Failed to update annotation:", error);
-      alert("Failed to update annotation. Please try again.");
+      const message = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Failed to update annotation", {
+        description: message,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -216,9 +225,13 @@ export function FileDetailsPanel({
             }
           : prev,
       );
+      toast.success("Annotation deleted successfully");
     } catch (error) {
       console.error("Failed to delete annotation:", error);
-      alert("Failed to delete annotation. Please try again.");
+      const message = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Failed to delete annotation", {
+        description: message,
+      });
     }
   };
 

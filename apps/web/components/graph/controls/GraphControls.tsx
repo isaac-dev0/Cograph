@@ -134,10 +134,17 @@ export function GraphControls({
   );
 
   return (
-    <div className={`glass rounded-xl shadow-lg ${className}`}>
+    <div
+      className={`glass rounded-xl shadow-lg ${className}`}
+      role="search"
+      aria-label="Graph controls and search"
+    >
       <div className="p-4 space-y-4">
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Search
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
+            aria-hidden="true"
+          />
           <input
             ref={inputRef}
             type="text"
@@ -147,26 +154,41 @@ export function GraphControls({
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
             className="w-full h-11 pl-11 pr-20 bg-transparent border border-border/50 rounded-lg text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-colors"
+            aria-label="Search files in graph"
+            aria-autocomplete="list"
+            aria-controls={isSearchFocused && filteredNodes.length > 0 ? "search-results" : undefined}
+            aria-expanded={isSearchFocused && filteredNodes.length > 0}
           />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-muted-foreground/40 font-mono bg-muted/50 px-2 py-1 rounded-md">
+          <kbd
+            className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-muted-foreground/40 font-mono bg-muted/50 px-2 py-1 rounded-md"
+            aria-label="Keyboard shortcut: Control K"
+          >
             Ctrl+K
           </kbd>
           {searchQuery && (
             <button
               onClick={() => handleSearchChange("")}
               className="absolute right-16 top-1/2 -translate-y-1/2"
+              aria-label="Clear search"
             >
-              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" aria-hidden="true" />
             </button>
           )}
         </div>
 
         {isSearchFocused && filteredNodes.length > 0 && (
-          <div className="border border-border/50 rounded-lg overflow-hidden">
+          <div
+            id="search-results"
+            role="listbox"
+            aria-label="Search results"
+            className="border border-border/50 rounded-lg overflow-hidden"
+          >
             {filteredNodes.map((node) => (
               <button
                 key={node.id}
                 onMouseDown={() => handleSelectNode(node.id)}
+                role="option"
+                aria-selected="false"
                 className="w-full text-left px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors border-b border-border/30 last:border-b-0 flex items-center gap-3"
               >
                 <span
@@ -175,6 +197,7 @@ export function GraphControls({
                     backgroundColor: `${node.color}22`,
                     color: node.color,
                   }}
+                  aria-label={`File type: ${node.fileType}`}
                 >
                   {node.fileType?.toUpperCase() || "FILE"}
                 </span>
@@ -185,7 +208,11 @@ export function GraphControls({
         )}
 
         {availableTypes.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label="File type filters"
+          >
             {availableTypes.map((opt) => {
               const isActive = selectedFileTypes.includes(opt.value);
               const count = fileTypeCounts[opt.value] || 0;
@@ -199,13 +226,17 @@ export function GraphControls({
                       : "border-border/40 bg-transparent hover:bg-accent/30"
                   }`}
                   style={{ color: isActive ? opt.color : undefined }}
+                  role="checkbox"
+                  aria-checked={isActive}
+                  aria-label={`Filter ${opt.label} files, ${count} available`}
                 >
                   <span
                     className="size-2.5 rounded-full"
                     style={{ backgroundColor: opt.color }}
+                    aria-hidden="true"
                   />
                   {opt.label}
-                  <span className="opacity-50">{count}</span>
+                  <span className="opacity-50" aria-hidden="true">{count}</span>
                 </button>
               );
             })}
@@ -213,6 +244,7 @@ export function GraphControls({
               <button
                 onClick={handleClearFilters}
                 className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 transition-colors"
+                aria-label="Clear all file type filters"
               >
                 Clear
               </button>
@@ -220,30 +252,37 @@ export function GraphControls({
           </div>
         )}
 
-        <div className="flex items-center gap-2 border-t border-border/30 pt-4">
+        <div
+          className="flex items-center gap-2 border-t border-border/30 pt-4"
+          role="toolbar"
+          aria-label="Graph navigation controls"
+        >
           <Button
             variant="ghost"
             size="icon"
             onClick={onZoomIn}
             className="h-10 w-10"
+            aria-label="Zoom in"
           >
-            <ZoomIn className="h-5 w-5" />
+            <ZoomIn className="h-5 w-5" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={onZoomOut}
             className="h-10 w-10"
+            aria-label="Zoom out"
           >
-            <ZoomOut className="h-5 w-5" />
+            <ZoomOut className="h-5 w-5" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={onRecenter}
             className="h-10 w-10"
+            aria-label="Recenter graph"
           >
-            <Maximize2 className="h-5 w-5" />
+            <Maximize2 className="h-5 w-5" aria-hidden="true" />
           </Button>
           <div className="flex-1" />
           <Button
@@ -251,15 +290,22 @@ export function GraphControls({
             size="icon"
             onClick={handlePauseToggle}
             className="h-10 w-10"
+            aria-label={isPaused ? "Resume animation" : "Pause animation"}
+            aria-pressed={isPaused}
           >
             {isPaused ? (
-              <Play className="h-5 w-5" />
+              <Play className="h-5 w-5" aria-hidden="true" />
             ) : (
-              <Pause className="h-5 w-5" />
+              <Pause className="h-5 w-5" aria-hidden="true" />
             )}
           </Button>
           <div className="flex-1" />
-          <Badge variant="secondary" className="text-sm px-3 py-1 h-8 font-mono">
+          <Badge
+            variant="secondary"
+            className="text-sm px-3 py-1 h-8 font-mono"
+            role="status"
+            aria-label={`${nodes.length} files in graph`}
+          >
             {nodes.length} files
           </Badge>
         </div>

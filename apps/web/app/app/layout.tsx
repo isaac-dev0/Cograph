@@ -6,6 +6,7 @@ import { RepositorySidebar } from "@/components/repository/sidebar/RepositorySid
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useProject } from "@/hooks/providers/ProjectProvider";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
+import { Toaster } from "sonner";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <>
+      <Toaster position="top-right" richColors />
       {projects.length === 0 ? (
         <ProjectEmptyView />
       ) : (
