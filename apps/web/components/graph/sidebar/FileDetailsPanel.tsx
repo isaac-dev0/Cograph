@@ -10,16 +10,32 @@ import {
   ChevronRight,
   Code,
   Sparkles,
-  MessageSquare,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { graphqlRequest } from "@/lib/graphql/client";
-import { FILE_DETAILS_QUERY } from "@/lib/queries/GraphQueries";
-import type { FileDetails, CodeEntity } from "@/lib/types/graph";
+import {
+  FILE_DETAILS_QUERY,
+  CREATE_ANNOTATION_MUTATION,
+  UPDATE_ANNOTATION_MUTATION,
+  DELETE_ANNOTATION_MUTATION,
+} from "@/lib/queries/GraphQueries";
+import type { FileDetails, CodeEntity, FileAnnotation } from "@/lib/types/graph";
+import { AnnotationsList } from "./AnnotationsList";
+import { AnnotationForm } from "./AnnotationForm";
+import { FileContentViewer } from "./FileContentViewer";
+import { useUser } from "@/hooks/providers/UserProvider";
 
 interface FileDetailsPanelProps {
   fileId: string;
   repositoryUrl?: string;
   onEntityClick?: (entity: CodeEntity) => void;
+  canEdit?: boolean;
   className?: string;
 }
 
@@ -54,11 +70,10 @@ function buildGitHubUrl(repositoryUrl: string, filePath: string): string {
 
 /** Splits a raw annotation string into structured bullet points. */
 function parseAnnotations(raw: string): string[] {
-  const lines = raw
+  return raw
     .split(/[\n;]|(?:\.\s)/)
     .map((s) => s.replace(/^[-•*]\s*/, "").trim())
     .filter(Boolean);
-  return lines;
 }
 
 /**
@@ -69,12 +84,17 @@ export function FileDetailsPanel({
   fileId,
   repositoryUrl,
   onEntityClick,
+  canEdit = false,
   className = "",
 }: FileDetailsPanelProps) {
+  const { profile } = useUser();
   const [fileDetails, setFileDetails] = useState<FileDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
+  const [isAnnotationDialogOpen, setIsAnnotationDialogOpen] = useState(false);
+  const [editingAnnotation, setEditingAnnotation] = useState<FileAnnotation | undefined>();
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchDetails = useCallback(async () => {
     try {
@@ -95,6 +115,111 @@ export function FileDetailsPanel({
   useEffect(() => {
     fetchDetails();
   }, [fetchDetails]);
+
+  const handleCreateAnnotation = async (data: {
+    title: string;
+    content: string;
+    tags: string[];
+    linkedEntityIds: string[];
+  }) => {
+    setIsSaving(true);
+    try {
+      const result = await graphqlRequest<{ createAnnotation: FileAnnotation }>(
+        CREATE_ANNOTATION_MUTATION,
+        {
+          fileId: fileDetails!.id,
+          input: data,
+        },
+      );
+
+      setFileDetails((prev) =>
+        prev
+          ? {
+              ...prev,
+              annotations: [...(prev.annotations || []), result.createAnnotation],
+            }
+          : prev,
+      );
+
+      setIsAnnotationDialogOpen(false);
+      setEditingAnnotation(undefined);
+
+      localStorage.removeItem(`draft-annotation-${fileDetails!.id}`);
+    } catch (error) {
+      console.error("Failed to create annotation:", error);
+      alert("Failed to create annotation. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdateAnnotation = async (data: {
+    title: string;
+    content: string;
+    tags: string[];
+    linkedEntityIds: string[];
+  }) => {
+    if (!editingAnnotation) return;
+
+    setIsSaving(true);
+    try {
+      const result = await graphqlRequest<{ updateAnnotation: FileAnnotation }>(
+        UPDATE_ANNOTATION_MUTATION,
+        {
+          fileId: fileDetails!.id,
+          annotationId: editingAnnotation.id,
+          input: data,
+        },
+      );
+
+      setFileDetails((prev) =>
+        prev
+          ? {
+              ...prev,
+              annotations: prev.annotations?.map((a) =>
+                a.id === editingAnnotation.id ? result.updateAnnotation : a,
+              ),
+            }
+          : prev,
+      );
+
+      setIsAnnotationDialogOpen(false);
+      setEditingAnnotation(undefined);
+
+      localStorage.removeItem(
+        `draft-annotation-${fileDetails!.id}-${editingAnnotation.id}`,
+      );
+    } catch (error) {
+      console.error("Failed to update annotation:", error);
+      alert("Failed to update annotation. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAnnotation = async (annotationId: string) => {
+    try {
+      await graphqlRequest<{ deleteAnnotation: boolean }>(
+        DELETE_ANNOTATION_MUTATION,
+        {
+          fileId: fileDetails!.id,
+          annotationId,
+        },
+      );
+
+      setFileDetails((prev) =>
+        prev
+          ? {
+              ...prev,
+              annotations: prev.annotations?.filter((a) => a.id !== annotationId),
+            }
+          : prev,
+      );
+    } catch (error) {
+      console.error("Failed to delete annotation:", error);
+      alert("Failed to delete annotation. Please try again.");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -129,27 +254,102 @@ export function FileDetailsPanel({
   return (
     <div className={className}>
       <ScrollArea className="h-full">
-        <div className="p-5 space-y-6 animate-fade-in">
-          <FileInfoSection fileDetails={fileDetails} githubUrl={githubUrl} />
+        <div className="animate-fade-in">
+          <Tabs defaultValue="overview" className="flex flex-col h-full">
+            <div className="px-5 pt-5">
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="annotations">
+                  Annotations
+                  {fileDetails.annotations && fileDetails.annotations.length > 0 && (
+                    <Badge variant="secondary" className="ml-2 text-xs">
+                      {fileDetails.annotations.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="content">Content</TabsTrigger>
+              </TabsList>
+            </div>
 
-          {!!fileDetails.codeEntities?.length && (
-            <EntitiesSection
-              entities={fileDetails.codeEntities}
-              expandedEntity={expandedEntity}
-              onToggle={setExpandedEntity}
-              onEntityClick={onEntityClick}
-            />
-          )}
+            <TabsContent value="overview">
+              <div className="p-5 space-y-6">
+                <FileInfoSection fileDetails={fileDetails} githubUrl={githubUrl} />
 
-          {fileDetails.annotations && (
-            <AnnotationsSection annotations={fileDetails.annotations} />
-          )}
+                {!!fileDetails.codeEntities?.length && (
+                  <EntitiesSection
+                    entities={fileDetails.codeEntities}
+                    expandedEntity={expandedEntity}
+                    onToggle={setExpandedEntity}
+                    onEntityClick={onEntityClick}
+                  />
+                )}
 
-          {fileDetails.claudeSummary && (
-            <SummarySection summary={fileDetails.claudeSummary} />
-          )}
+                {fileDetails.claudeSummary && (
+                  <SummarySection summary={fileDetails.claudeSummary} />
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="annotations">
+              <div className="p-5">
+                {canEdit ? (
+                  <AnnotationsList
+                    annotations={fileDetails.annotations || []}
+                    codeEntities={fileDetails.codeEntities || []}
+                    currentUserId={profile?.id || ""}
+                    onEdit={(annotation) => {
+                      setEditingAnnotation(annotation);
+                      setIsAnnotationDialogOpen(true);
+                    }}
+                    onDelete={handleDeleteAnnotation}
+                    onCreate={() => {
+                      setEditingAnnotation(undefined);
+                      setIsAnnotationDialogOpen(true);
+                    }}
+                  />
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-sm text-muted-foreground">
+                      You don&apos;t have permission to view annotations
+                    </p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="content" className="flex-1 overflow-hidden">
+              <FileContentViewer
+                fileId={fileDetails.id}
+                fileName={fileDetails.fileName}
+                fileType={fileDetails.fileType}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </ScrollArea>
+
+      <Dialog open={isAnnotationDialogOpen} onOpenChange={setIsAnnotationDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingAnnotation ? "Edit Annotation" : "New Annotation"}
+            </DialogTitle>
+          </DialogHeader>
+          <AnnotationForm
+            fileId={fileDetails.id}
+            annotation={editingAnnotation}
+            codeEntities={fileDetails.codeEntities || []}
+            onSave={
+              editingAnnotation ? handleUpdateAnnotation : handleCreateAnnotation
+            }
+            onCancel={() => {
+              setIsAnnotationDialogOpen(false);
+              setEditingAnnotation(undefined);
+            }}
+            isSaving={isSaving}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -288,27 +488,6 @@ function EntitiesSection({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function AnnotationsSection({ annotations }: { annotations: string }) {
-  const items = parseAnnotations(annotations);
-
-  return (
-    <div className="border-t border-border/50 pt-5">
-      <SectionHeader icon={MessageSquare} title="Annotations" />
-      <ul className="space-y-2">
-        {items.map((item, i) => (
-          <li
-            key={i}
-            className="flex gap-2.5 text-sm text-muted-foreground/90 leading-relaxed"
-          >
-            <span className="text-primary/60 shrink-0 mt-0.5">&bull;</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

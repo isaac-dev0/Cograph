@@ -39,6 +39,24 @@ export interface CircularDependency {
   length: number;
 }
 
+/** Author information for an annotation. */
+export interface AnnotationAuthor {
+  id: string;
+  name: string;
+}
+
+/** A user-created annotation on a repository file. */
+export interface FileAnnotation {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  linkedEntityIds: string[];
+  author: AnnotationAuthor;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** A code entity (function, class, interface) within a file. */
 export interface CodeEntity {
   id: string;
@@ -57,7 +75,7 @@ export interface FileDetails {
   fileName: string;
   fileType: string;
   linesOfCode: number;
-  annotations?: string | null;
+  annotations?: FileAnnotation[] | null;
   claudeSummary?: string | null;
   createdAt: string;
   updatedAt: string;

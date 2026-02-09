@@ -31,10 +31,6 @@ export default function GraphPage() {
     console.log("Entity clicked:", entity);
   }, []);
 
-  const handleClose = useCallback(() => {
-    setPanelOpen(false);
-  }, []);
-
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center animate-fade-in">
@@ -81,7 +77,7 @@ export default function GraphPage() {
       </div>
 
       <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
-        <SheetContent side="right" className="sm:max-w-md p-0">
+        <SheetContent side="right" className="lg:max-w-3xl p-0">
           <SheetHeader className="px-4 pt-4 pb-2 border-b">
             <SheetTitle className="text-sm truncate">
               {selectedNode?.name ?? "File Details"}
@@ -95,6 +91,7 @@ export default function GraphPage() {
               fileId={selectedNode.id}
               repositoryUrl={currentRepository.repositoryUrl}
               onEntityClick={handleEntityClick}
+              canEdit={true}
               className="flex-1 overflow-hidden"
             />
           )}

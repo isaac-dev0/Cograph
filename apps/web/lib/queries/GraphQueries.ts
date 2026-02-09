@@ -56,8 +56,45 @@ export const FILE_DETAILS_QUERY = `
   query RepositoryFile($id: ID!) {
     repositoryFile(id: $id) {
       id repositoryId filePath fileName fileType linesOfCode
-      annotations claudeSummary createdAt updatedAt
+      claudeSummary createdAt updatedAt
+      annotations {
+        id title content tags linkedEntityIds
+        author { id name }
+        createdAt updatedAt
+      }
       codeEntities { id name type startLine endLine annotations }
     }
+  }
+`;
+
+export const CREATE_ANNOTATION_MUTATION = `
+  mutation CreateAnnotation($fileId: ID!, $input: CreateAnnotationInput!) {
+    createAnnotation(fileId: $fileId, input: $input) {
+      id title content tags linkedEntityIds
+      author { id name }
+      createdAt updatedAt
+    }
+  }
+`;
+
+export const UPDATE_ANNOTATION_MUTATION = `
+  mutation UpdateAnnotation($fileId: ID!, $annotationId: ID!, $input: UpdateAnnotationInput!) {
+    updateAnnotation(fileId: $fileId, annotationId: $annotationId, input: $input) {
+      id title content tags linkedEntityIds
+      author { id name }
+      createdAt updatedAt
+    }
+  }
+`;
+
+export const DELETE_ANNOTATION_MUTATION = `
+  mutation DeleteAnnotation($fileId: ID!, $annotationId: ID!) {
+    deleteAnnotation(fileId: $fileId, annotationId: $annotationId)
+  }
+`;
+
+export const FILE_CONTENT_QUERY = `
+  query FileContent($id: ID!) {
+    fileContent(id: $id)
   }
 `;
