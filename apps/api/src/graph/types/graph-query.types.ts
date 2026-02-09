@@ -43,9 +43,9 @@ export interface GraphEdgeData {
 }
 
 export interface CircularDependency {
-  cycle: string[]; // Array of file IDs in the cycle
-  paths: string[]; // Array of file paths for display
-  length: number; // Number of files in the cycle
+  cycle: string[];
+  paths: string[];
+  length: number;
 }
 
 export interface Neo4jNode {

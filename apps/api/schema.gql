@@ -212,75 +212,6 @@ enum SyncStatus {
   FAILED
 }
 
-"""A node in the dependency graph"""
-type GraphNode {
-  """Unique identifier for the node"""
-  id: ID!
-
-  """Display label for the node"""
-  label: String!
-
-  """Type of node (FILE, FUNCTION, CLASS, INTERFACE)"""
-  type: NodeType!
-
-  """Additional node metadata as JSON string"""
-  data: String!
-}
-
-"""Types of nodes in the dependency graph"""
-enum NodeType {
-  FILE
-  FUNCTION
-  CLASS
-  INTERFACE
-}
-
-"""An edge (relationship) in the dependency graph"""
-type GraphEdge {
-  """Unique identifier for the edge"""
-  id: ID!
-
-  """Source node ID"""
-  source: String!
-
-  """Target node ID"""
-  target: String!
-
-  """Type of relationship (IMPORTS, EXPORTS, CONTAINS)"""
-  type: EdgeType!
-
-  """Additional edge metadata as JSON string (e.g., import specifiers)"""
-  data: String
-}
-
-"""Types of relationships between nodes"""
-enum EdgeType {
-  IMPORTS
-  EXPORTS
-  CONTAINS
-}
-
-"""A complete dependency graph with nodes and edges"""
-type DependencyGraph {
-  """All nodes in the graph"""
-  nodes: [GraphNode!]!
-
-  """All edges in the graph"""
-  edges: [GraphEdge!]!
-}
-
-"""A detected circular dependency in the import graph"""
-type CircularDependency {
-  """Array of file IDs forming the cycle"""
-  cycle: [String!]!
-
-  """Array of file paths forming the cycle"""
-  paths: [String!]!
-
-  """Number of files in the cycle"""
-  length: Int!
-}
-
 """An analysis job for processing a repository."""
 type AnalysisJob {
   """Unique identifier of the analysis job."""
@@ -432,6 +363,75 @@ type FileAnnotation {
   updatedAt: DateTime!
 }
 
+"""A node in the dependency graph"""
+type GraphNode {
+  """Unique identifier for the node"""
+  id: ID!
+
+  """Display label for the node"""
+  label: String!
+
+  """Type of node (FILE, FUNCTION, CLASS, INTERFACE)"""
+  type: NodeType!
+
+  """Additional node metadata as JSON string"""
+  data: String!
+}
+
+"""Types of nodes in the dependency graph"""
+enum NodeType {
+  FILE
+  FUNCTION
+  CLASS
+  INTERFACE
+}
+
+"""An edge (relationship) in the dependency graph"""
+type GraphEdge {
+  """Unique identifier for the edge"""
+  id: ID!
+
+  """Source node ID"""
+  source: String!
+
+  """Target node ID"""
+  target: String!
+
+  """Type of relationship (IMPORTS, EXPORTS, CONTAINS)"""
+  type: EdgeType!
+
+  """Additional edge metadata as JSON string (e.g., import specifiers)"""
+  data: String
+}
+
+"""Types of relationships between nodes"""
+enum EdgeType {
+  IMPORTS
+  EXPORTS
+  CONTAINS
+}
+
+"""A complete dependency graph with nodes and edges"""
+type DependencyGraph {
+  """All nodes in the graph"""
+  nodes: [GraphNode!]!
+
+  """All edges in the graph"""
+  edges: [GraphEdge!]!
+}
+
+"""A detected circular dependency in the import graph"""
+type CircularDependency {
+  """Array of file IDs forming the cycle"""
+  cycle: [String!]!
+
+  """Array of file paths forming the cycle"""
+  paths: [String!]!
+
+  """Number of files in the cycle"""
+  length: Int!
+}
+
 type Query {
   """Finds a profile based on Profile ID"""
   findProfileById(id: String!): Profile!
@@ -461,6 +461,18 @@ type Query {
   """Finds a repository by its full name (e.g., "owner/repo")."""
   findRepositoryByFullName(fullName: String!): Repository
 
+  """Retrieves an analysis job by its ID."""
+  analysisJob(id: ID!): AnalysisJob!
+
+  """Retrieves all files for a repository, sorted alphabetically by path."""
+  repositoryFiles(repositoryId: ID!): [RepositoryFile!]!
+
+  """Retrieves a single repository file by its ID, including code entities."""
+  repositoryFile(id: ID!): RepositoryFile!
+
+  """Fetches the raw content of a file from GitHub."""
+  fileContent(id: ID!): String!
+
   """
   Returns the complete dependency graph for a repository with all nodes and edges. Supports pagination and filtering.
   """
@@ -476,6 +488,9 @@ type Query {
   """
   fileDependents(fileId: ID!, options: GraphOptionsInput): DependencyGraph!
 
+  """Returns the total number of file nodes in the repository."""
+  repositoryNodeCount(repositoryId: ID!): Float!
+
   """
   Detects and returns all circular dependencies (import cycles) in the repository. Limited to 100 results.
   """
@@ -485,18 +500,6 @@ type Query {
   Returns files filtered by extension (e.g., "ts", "tsx", "js") with their dependencies.
   """
   filesByType(repositoryId: ID!, fileType: String!, options: GraphOptionsInput): DependencyGraph!
-
-  """Retrieves an analysis job by its ID."""
-  analysisJob(id: ID!): AnalysisJob!
-
-  """Retrieves all files for a repository, sorted alphabetically by path."""
-  repositoryFiles(repositoryId: ID!): [RepositoryFile!]!
-
-  """Retrieves a single repository file by its ID, including code entities."""
-  repositoryFile(id: ID!): RepositoryFile!
-
-  """Fetches the raw content of a file from GitHub."""
-  fileContent(id: ID!): String!
 }
 
 input FindRepositoriesInput {
@@ -575,6 +578,11 @@ type Mutation {
 
   """Updates the Claude summary for a repository file."""
   updateFileSummary(id: ID!, summary: String!): RepositoryFile!
+
+  """
+  Generates an AI summary for a file using Claude. Can regenerate existing summaries.
+  """
+  generateFileSummary(fileId: ID!, regenerate: Boolean! = false): RepositoryFile!
 
   """Creates a new annotation on a repository file."""
   createAnnotation(fileId: ID!, input: CreateAnnotationInput!): FileAnnotation!

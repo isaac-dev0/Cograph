@@ -3,7 +3,6 @@ import { join } from 'path';
 
 const MCP_SERVER_PATH = join(__dirname, '../../../mcp-server/build/index.js');
 
-// eslint-disable-next-line @typescript-eslint/no-implied-eval
 const importEsm = (specifier: string) =>
   new Function('specifier', 'return import(specifier)')(specifier);
 
@@ -12,6 +11,7 @@ interface MCPClient {
   close(): Promise<void>;
   callTool(
     params: { name: string; arguments: Record<string, unknown> },
+    resultSchema?: unknown,
     options?: { timeout?: number },
   ): Promise<{ content: Array<{ type: string; text?: string }> }>;
 }
@@ -59,6 +59,7 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
 
     const result = await this.client.callTool(
       { name: toolName, arguments: args },
+      undefined,
       options,
     );
 

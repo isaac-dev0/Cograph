@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { graphqlRequest } from "@/lib/graphql/client";
-import { REPOSITORY_GRAPH_QUERY } from "@/lib/queries/GraphQueries";
+import { REPOSITORY_GRAPH_QUERY, REPOSITORY_NODE_COUNT_QUERY } from "@/lib/queries/GraphQueries";
 import { ANALYSE_REPOSITORY } from "@/lib/queries/RepositoryQueries";
 import {
   transformGraphData,
@@ -13,6 +13,7 @@ import type { DependencyGraph, GraphOptionsInput } from "@/lib/types/graph";
 
 const POLL_INTERVAL_MS = 5_000;
 const ANALYSIS_TIMEOUT_MS = 600_000;
+const DEFAULT_LIMIT = 200;
 
 interface AnalysisState {
   isAnalyzing: boolean;
@@ -26,6 +27,8 @@ interface UseGraphDataReturn {
   isLoading: boolean;
   error: string | null;
   analysis: AnalysisState;
+  totalCount: number;
+  loadedCount: number;
   setFileTypeFilter: (fileTypes: string[]) => void;
   startAnalysis: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -40,6 +43,7 @@ export function useGraphData(
   options?: GraphOptionsInput,
 ): UseGraphDataReturn {
   const [graphData, setGraphData] = useState<ForceGraphData | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedFileTypes, setSelectedFileTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,13 +73,25 @@ export function useGraphData(
         if (!silent) setIsLoading(true);
         setError(null);
 
-        const data = await graphqlRequest<{ repositoryGraph: DependencyGraph }>(
-          REPOSITORY_GRAPH_QUERY,
-          { repositoryId, options },
-        );
+        const paginatedOptions = {
+          ...options,
+          limit: options?.limit ?? DEFAULT_LIMIT,
+        };
 
-        const transformed = transformGraphData(data.repositoryGraph);
+        const [graphResult, countResult] = await Promise.all([
+          graphqlRequest<{ repositoryGraph: DependencyGraph }>(
+            REPOSITORY_GRAPH_QUERY,
+            { repositoryId, options: paginatedOptions },
+          ),
+          graphqlRequest<{ repositoryNodeCount: number }>(
+            REPOSITORY_NODE_COUNT_QUERY,
+            { repositoryId },
+          ),
+        ]);
+
+        const transformed = transformGraphData(graphResult.repositoryGraph);
         setGraphData(transformed);
+        setTotalCount(countResult.repositoryNodeCount);
 
         if (silent && isAnalyzing) {
           const currentCount = transformed.nodes.length;
@@ -149,12 +165,16 @@ export function useGraphData(
     });
   })();
 
+  const loadedCount = graphData?.nodes.length ?? 0;
+
   return {
     graphData,
     displayData,
     isLoading,
     error,
     analysis: { isAnalyzing, analysisError, elapsedSeconds },
+    totalCount,
+    loadedCount,
     setFileTypeFilter: setSelectedFileTypes,
     startAnalysis,
     refresh: () => fetchGraph(),

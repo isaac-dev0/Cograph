@@ -35,6 +35,12 @@ export const FILE_DEPENDENTS_QUERY = `
   }
 `;
 
+export const REPOSITORY_NODE_COUNT_QUERY = `
+  query RepositoryNodeCount($repositoryId: ID!) {
+    repositoryNodeCount(repositoryId: $repositoryId)
+  }
+`;
+
 export const CIRCULAR_DEPENDENCIES_QUERY = `
   query CircularDependencies($repositoryId: ID!) {
     circularDependencies(repositoryId: $repositoryId) {
@@ -90,6 +96,14 @@ export const UPDATE_ANNOTATION_MUTATION = `
 export const DELETE_ANNOTATION_MUTATION = `
   mutation DeleteAnnotation($fileId: ID!, $annotationId: ID!) {
     deleteAnnotation(fileId: $fileId, annotationId: $annotationId)
+  }
+`;
+
+export const GENERATE_FILE_SUMMARY_MUTATION = `
+  mutation GenerateFileSummary($fileId: ID!, $regenerate: Boolean) {
+    generateFileSummary(fileId: $fileId, regenerate: $regenerate) {
+      id claudeSummary updatedAt
+    }
   }
 `;
 

@@ -17,7 +17,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <>
-      {/* <AppHeader /> */}
       {projects.length === 0 ? (
         <ProjectEmptyView />
       ) : (

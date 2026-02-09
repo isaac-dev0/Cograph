@@ -1,10 +1,10 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard';
-import { GraphQueryService } from '../mcp/analysis/graph-query.service';
+import { GraphQueryService } from './services/graph-query.service';
 import { DependencyGraph, CircularDependency, GraphNode, GraphEdge, NodeType, EdgeType } from './models/graph.model';
 import { GraphOptionsInput } from './dto/graph-options.input';
-import { TraversalDepth } from '../mcp/analysis/graph-query.types';
+import { TraversalDepth } from './types/graph-query.types';
 
 /**
  * GraphQL resolver for dependency graph queries
@@ -65,6 +65,19 @@ export class GraphResolver {
     const result = await this.graphQueryService.getFileDependents(fileId, depth);
 
     return this.convertToGraphQLFormat(result);
+  }
+
+  /**
+   * Get total node count for a repository
+   */
+  @Query(() => Number, {
+    name: 'repositoryNodeCount',
+    description: 'Returns the total number of file nodes in the repository.',
+  })
+  async repositoryNodeCount(
+    @Args('repositoryId', { type: () => ID }) repositoryId: string,
+  ): Promise<number> {
+    return this.graphQueryService.getRepositoryNodeCount(repositoryId);
   }
 
   /**

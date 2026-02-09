@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AnalysisStatus } from '@prisma/client';
 import { MCPAnalysisService } from './mcp-analysis.service';
-import { Neo4jGraphService } from './neo4j-graph.service';
+import { Neo4jGraphService } from '../../graph/services/neo4j-graph.service';
 import { RepositoryAnalysis } from '../../common/shared/types/repository-analysis.type';
 import { FileAnalysisResult } from '../../common/shared/types/file-analysis-result.type';
 

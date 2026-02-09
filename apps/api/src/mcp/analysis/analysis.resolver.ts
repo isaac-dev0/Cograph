@@ -5,6 +5,7 @@ import { CurrentUser } from 'src/auth/current-user.decorator';
 import { AnalysisService } from './analysis.service';
 import { RepositoryFileService } from 'src/repositories/repository-file.service';
 import { AnnotationsService } from 'src/repositories/annotations.service';
+import { MCPSummaryService } from './mcp-summary.service';
 import { AnalysisJob } from './models/analysis-job.model';
 import { RepositoryFile } from './models/repository-file.model';
 import { FileAnnotation } from './models/file-annotation.model';
@@ -18,6 +19,7 @@ export class AnalysisResolver {
     private readonly analysisService: AnalysisService,
     private readonly repositoryFileService: RepositoryFileService,
     private readonly annotationsService: AnnotationsService,
+    private readonly mcpSummaryService: MCPSummaryService,
   ) {}
 
   @Mutation(() => AnalysisJob, {
@@ -91,6 +93,29 @@ export class AnalysisResolver {
     @Args('summary', { type: () => String }) summary: string,
   ): Promise<RepositoryFile> {
     return this.repositoryFileService.updateSummary(id, summary);
+  }
+
+  @Mutation(() => RepositoryFile, {
+    name: 'generateFileSummary',
+    description: 'Generates an AI summary for a file using Claude. Can regenerate existing summaries.',
+  })
+  async generateFileSummary(
+    @Args('fileId', { type: () => ID }) fileId: string,
+    @Args('regenerate', { type: () => Boolean, defaultValue: false }) regenerate: boolean,
+  ): Promise<RepositoryFile> {
+    const file = await this.repositoryFileService.findById(fileId);
+
+    if (file.claudeSummary && !regenerate) {
+      return file;
+    }
+
+    const fileContent = await this.repositoryFileService.getFileContent(fileId);
+    const summary = await this.mcpSummaryService.generateFileSummary(
+      fileContent,
+      file.filePath,
+    );
+
+    return this.repositoryFileService.updateSummary(fileId, summary);
   }
 
   @Mutation(() => FileAnnotation, {
