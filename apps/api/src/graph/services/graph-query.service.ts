@@ -11,7 +11,7 @@ import {
   TraversalDepth,
   Neo4jNode,
   Neo4jRelationship,
-} from './graph-query.types';
+} from '../types/graph-query.types';
 
 interface RawGraphComponents {
   fileNodes: Neo4jNode[];
@@ -131,6 +131,21 @@ export class GraphQueryService {
     return this.buildGraph(components);
   }
 
+  /** Returns the total count of file nodes in a repository. */
+  async getRepositoryNodeCount(repositoryId: string): Promise<number> {
+    this.logger.log(`Counting nodes for repository ${repositoryId}`);
+
+    const result = await this.neo4jService.read(
+      `MATCH (f:File {repositoryId: $repositoryId})
+       RETURN count(f) as total`,
+      { repositoryId },
+    );
+
+    const total = result.records[0]?.get('total')?.toNumber() ?? 0;
+    this.logger.log(`Repository ${repositoryId} has ${total} nodes`);
+    return total;
+  }
+
   /** Detects circular dependency cycles in the import graph. */
   async findCircularDependencies(repositoryId: string): Promise<CircularDependency[]> {
     this.logger.log(`Detecting circular dependencies for ${repositoryId}`);
@@ -193,8 +208,6 @@ export class GraphQueryService {
     const components = this.extractCombinedRecords(result.records);
     return this.buildGraph(components);
   }
-
-  // ── Record extraction ─────────────────────────────────────────────────
 
   /**
    * Extracts graph components from combined queries that return

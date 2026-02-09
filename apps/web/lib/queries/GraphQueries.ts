@@ -35,6 +35,12 @@ export const FILE_DEPENDENTS_QUERY = `
   }
 `;
 
+export const REPOSITORY_NODE_COUNT_QUERY = `
+  query RepositoryNodeCount($repositoryId: ID!) {
+    repositoryNodeCount(repositoryId: $repositoryId)
+  }
+`;
+
 export const CIRCULAR_DEPENDENCIES_QUERY = `
   query CircularDependencies($repositoryId: ID!) {
     circularDependencies(repositoryId: $repositoryId) {

@@ -334,7 +334,6 @@ describe('GraphQueryService', () => {
       expect(cycle.paths).toBeDefined();
       expect(cycle.length).toBeGreaterThan(0);
 
-      // Verify cycle contains both files
       expect(cycle.paths).toContain('src/a.ts');
       expect(cycle.paths).toContain('src/b.ts');
     }, 60000);

@@ -86,8 +86,6 @@ function parseJson(raw: string): Record<string, unknown> {
   }
 }
 
-// ── Transformers ────────────────────────────────────────────────────────────
-
 function transformNode(node: GraphNode): ForceGraphNode {
   const data = parseJson(node.data);
   const rawFileType = (data.fileType as string) || extractFileType(node.label);

@@ -122,7 +122,6 @@ function drawBadgeNode(
   ctx.textBaseline = "middle";
   ctx.fillText(ext, x - halfWidth + 2 + extBadgeWidth / 2, y + 0.5);
 
-  // File name text
   ctx.fillStyle = isHovered ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.7)";
   ctx.textAlign = "left";
   ctx.fillText(label, x - halfWidth + extBadgeWidth + NODE_PADDING_X, y + 0.5);
@@ -158,6 +157,8 @@ export function GraphCanvas({
     isLoading,
     error,
     analysis,
+    totalCount,
+    loadedCount,
     setFileTypeFilter,
     startAnalysis,
     refresh,
@@ -259,8 +260,6 @@ export function GraphCanvas({
     [],
   );
 
-  // ── Loading ─────────────────────────────────────────────────────────────
-
   if (isLoading) {
     return (
       <div
@@ -275,8 +274,6 @@ export function GraphCanvas({
       </div>
     );
   }
-
-  // ── Error ───────────────────────────────────────────────────────────────
 
   if (error) {
     return (
@@ -359,6 +356,7 @@ export function GraphCanvas({
       )}
 
       <AnalysisOverlay analysis={analysis} onStart={startAnalysis} />
+      <NodeCountIndicator loaded={loadedCount} total={totalCount} />
 
       <ForceGraph2D
         ref={graphRef}
@@ -386,8 +384,6 @@ export function GraphCanvas({
     </div>
   );
 }
-
-// ── Sub-components ──────────────────────────────────────────────────────────
 
 function AnalysisOverlay({
   analysis,
@@ -435,6 +431,29 @@ function ElapsedTimer({ seconds }: { seconds: number }) {
       <span className="font-semibold text-primary">
         {mins}:{secs}
       </span>
+    </div>
+  );
+}
+
+function NodeCountIndicator({ loaded, total }: { loaded: number; total: number }) {
+  if (total === 0) return null;
+
+  const showPlus = loaded < total;
+  const displayText = showPlus ? `${loaded}+` : `${loaded}`;
+
+  return (
+    <div className="absolute top-3 left-3 z-10">
+      <div className="glass rounded-md px-3 py-1.5 border border-border/40">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">Nodes</span>
+          <span className="font-semibold font-mono text-foreground">
+            {displayText}
+          </span>
+          {total > 0 && (
+            <span className="text-muted-foreground/60">of {total}</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

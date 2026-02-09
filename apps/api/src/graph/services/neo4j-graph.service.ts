@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Neo4jService } from 'nest-neo4j';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { MCPClientService } from '../mcp-client.service';
+import { MCPClientService } from '../../mcp/mcp-client.service';
 
 export interface FileNodeData {
   id: string;
