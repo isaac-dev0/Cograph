@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useGraphData } from "@/hooks/useGraphData";
 import { GraphControls } from "./controls/GraphControls";
+import { GraphStatsWidget } from "./GraphStatsWidget";
 import { Loader2, PlayCircle, RefreshCw, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { GraphOptionsInput } from "@/lib/types/graph";
@@ -168,6 +169,8 @@ export function GraphCanvas({
   const graphRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height });
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [connectedNodeIds, setConnectedNodeIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -190,17 +193,105 @@ export function GraphCanvas({
     graphRef.current.d3Force("collide", null);
   }, [graphData]);
 
+  const recenter = useCallback(() => {
+    graphRef.current?.zoomToFit(1000, 50);
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isFocused) return;
+
+      const PAN_STEP = 50;
+      const currentZoom = graphRef.current?.zoom() || 1;
+      const currentPos = graphRef.current?.centerAt() || { x: 0, y: 0 };
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        graphRef.current?.centerAt(currentPos.x, currentPos.y - PAN_STEP / currentZoom, 200);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        graphRef.current?.centerAt(currentPos.x, currentPos.y + PAN_STEP / currentZoom, 200);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        graphRef.current?.centerAt(currentPos.x - PAN_STEP / currentZoom, currentPos.y, 200);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        graphRef.current?.centerAt(currentPos.x + PAN_STEP / currentZoom, currentPos.y, 200);
+      } else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        recenter();
+      } else if (e.ctrlKey && (e.key === "r" || e.key === "R")) {
+        e.preventDefault();
+        startAnalysis();
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      if (!isFocused || !e.ctrlKey) return;
+      e.preventDefault();
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      graphRef.current?.zoom(graphRef.current.zoom() * zoomFactor, 100);
+    };
+
+    container.addEventListener("keydown", handleKeyDown);
+    container.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener("keydown", handleKeyDown);
+      container.removeEventListener("wheel", handleWheel);
+    };
+  }, [isFocused, recenter, startAnalysis]);
+
   const handleNodeClick = useCallback(
     (node: any) => onNodeClick?.(node as ForceGraphNode),
     [onNodeClick],
   );
 
+  const findConnectedNodes = useCallback(
+    (nodeId: string, graphData: ForceGraphData): Set<string> => {
+      const connected = new Set<string>();
+      const queue = [nodeId];
+      connected.add(nodeId);
+
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+
+        for (const link of graphData.links) {
+          const sourceId = typeof link.source === "object" ? link.source.id : link.source;
+          const targetId = typeof link.target === "object" ? link.target.id : link.target;
+
+          if (sourceId === current && !connected.has(targetId)) {
+            connected.add(targetId);
+            queue.push(targetId);
+          } else if (targetId === current && !connected.has(sourceId)) {
+            connected.add(sourceId);
+            queue.push(sourceId);
+          }
+        }
+      }
+
+      return connected;
+    },
+    [],
+  );
+
   const handleNodeHover = useCallback(
     (node: ForceGraphNode | null) => {
       setHoveredNodeId(node?.id ?? null);
+
+      if (node && displayData) {
+        const connected = findConnectedNodes(node.id, displayData);
+        setConnectedNodeIds(connected);
+      } else {
+        setConnectedNodeIds(new Set());
+      }
+
       onNodeHover?.(node);
     },
-    [onNodeHover],
+    [onNodeHover, displayData, findConnectedNodes],
   );
 
   const handleSearch = useCallback(
@@ -223,10 +314,6 @@ export function GraphCanvas({
     graphRef.current?.zoom(graphRef.current.zoom() / 1.5, 300);
   }, []);
 
-  const recenter = useCallback(() => {
-    graphRef.current?.zoomToFit(1000, 50);
-  }, []);
-
   const togglePause = useCallback((paused: boolean) => {
     if (paused) graphRef.current?.pauseAnimation();
     else graphRef.current?.resumeAnimation();
@@ -235,9 +322,20 @@ export function GraphCanvas({
   const nodeCanvasObject = useCallback(
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const forceNode = node as ForceGraphNode;
-      drawBadgeNode(forceNode, ctx, globalScale, forceNode.id === hoveredNodeId);
+      const isHovered = forceNode.id === hoveredNodeId;
+      const isDimmed = hoveredNodeId && !connectedNodeIds.has(forceNode.id);
+
+      if (isDimmed) {
+        ctx.globalAlpha = 0.15;
+      }
+
+      drawBadgeNode(forceNode, ctx, globalScale, isHovered);
+
+      if (isDimmed) {
+        ctx.globalAlpha = 1;
+      }
     },
-    [hoveredNodeId],
+    [hoveredNodeId, connectedNodeIds],
   );
 
   const nodePointerAreaPaint = useCallback(
@@ -341,7 +439,15 @@ export function GraphCanvas({
   }
 
   return (
-    <div ref={containerRef} className={`relative w-full h-full ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative w-full h-full ${className}`}
+      tabIndex={0}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      role="application"
+      aria-label="Dependency graph visualization"
+    >
       {showControls && (
         <GraphControls
           nodes={graphData.nodes}
@@ -357,6 +463,8 @@ export function GraphCanvas({
 
       <AnalysisOverlay analysis={analysis} onStart={startAnalysis} />
       <NodeCountIndicator loaded={loadedCount} total={totalCount} />
+      <GraphStatsWidget graphData={displayData} className="absolute bottom-3 right-3 z-10 max-w-xs" />
+      <KeyboardShortcutsHint isFocused={isFocused} />
 
       <ForceGraph2D
         ref={graphRef}
@@ -368,7 +476,13 @@ export function GraphCanvas({
         nodePointerAreaPaint={nodePointerAreaPaint}
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
-        linkColor={() => LINK_COLOR}
+        linkColor={(link: any) => {
+          if (!hoveredNodeId) return LINK_COLOR;
+          const sourceId = typeof link.source === "object" ? link.source.id : link.source;
+          const targetId = typeof link.target === "object" ? link.target.id : link.target;
+          const isConnected = connectedNodeIds.has(sourceId) && connectedNodeIds.has(targetId);
+          return isConnected ? LINK_COLOR : "rgba(59, 130, 246, 0.08)";
+        }}
         linkWidth={1.5}
         linkDirectionalArrowLength={4}
         linkDirectionalArrowRelPos={1}
@@ -453,6 +567,18 @@ function NodeCountIndicator({ loaded, total }: { loaded: number; total: number }
             <span className="text-muted-foreground/60">of {total}</span>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function KeyboardShortcutsHint({ isFocused }: { isFocused: boolean }) {
+  if (isFocused) return null;
+
+  return (
+    <div className="absolute bottom-3 right-3 z-10">
+      <div className="glass rounded-md px-3 py-1.5 text-xs text-muted-foreground/60">
+        Click to enable keyboard shortcuts
       </div>
     </div>
   );

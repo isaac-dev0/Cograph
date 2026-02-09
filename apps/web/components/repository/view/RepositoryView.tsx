@@ -18,24 +18,46 @@ interface RepositoryViewProps {
   repository: Repository | null;
 }
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return "N/A";
+  try {
+    const parsed = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(parsed.getTime())) return "Invalid date";
+    return parsed.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return "Invalid date";
+  }
 }
 
-function timeAgo(date: Date): string {
-  const now = Date.now();
-  const diff = now - new Date(date).getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 30) return `${days} days ago`;
-  const months = Math.floor(days / 30);
-  if (months === 1) return "1 month ago";
-  return `${months} months ago`;
+function timeAgo(date: Date | string | null | undefined): string {
+  if (!date) return "Never";
+  try {
+    const parsed = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(parsed.getTime())) return "Unknown";
+
+    const now = Date.now();
+    const diff = now - parsed.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days < 0) return "In the future";
+    if (days === 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 30) return `${days} days ago`;
+
+    const months = Math.floor(days / 30);
+    if (months === 1) return "1 month ago";
+    if (months < 12) return `${months} months ago`;
+
+    const years = Math.floor(months / 12);
+    if (years === 1) return "1 year ago";
+    return `${years} years ago`;
+  } catch {
+    return "Unknown";
+  }
 }
 
 export function RepositoryView({ repository }: RepositoryViewProps) {
