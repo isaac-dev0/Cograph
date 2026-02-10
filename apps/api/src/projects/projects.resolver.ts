@@ -7,24 +7,25 @@ import {
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
+import { Injectable, Scope, UseGuards } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
+import { ProjectsLoaders } from './projects.loaders';
 import { Project as ProjectModel } from './models/project.model';
 import { ProjectMember as ProjectMemberModel } from './models/project-member.model';
 import { Profile as ProfileModel } from '../profiles/models/profile.model';
 import { CreateProjectInput } from './dto/create-project.input';
 import { UpdateProjectInput } from './dto/update-project.input';
-import { UseGuards } from '@nestjs/common';
 import { SupabaseJwtGuard } from 'src/auth/supabase-jwt.guard';
 import { ProjectRole } from '@prisma/client';
 import { CurrentUser } from 'src/auth/current-user.decorator';
-import { PrismaService } from 'src/common/prisma/prisma.service';
 
+@Injectable({ scope: Scope.REQUEST })
 @UseGuards(SupabaseJwtGuard)
 @Resolver(() => ProjectModel)
 export class ProjectsResolver {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly projectsService: ProjectsService,
+    private readonly loaders: ProjectsLoaders,
   ) {}
 
   @Mutation(() => ProjectModel, {
@@ -59,10 +60,13 @@ export class ProjectsResolver {
 
   @Query(() => [ProjectMemberModel], {
     name: 'findProjectMembers',
-    description: 'Finds all project members',
+    description: 'Finds all members of a project. Caller must be a member.',
   })
-  findProjectMembers(@Args('projectId', { type: () => ID }) projectId: string) {
-    return this.projectsService.findProjectMembers(projectId);
+  findProjectMembers(
+    @Args('projectId', { type: () => ID }) projectId: string,
+    @CurrentUser() profile: ProfileModel,
+  ) {
+    return this.projectsService.findProjectMembers(projectId, profile.userId);
   }
 
   @Mutation(() => ProjectModel, {
@@ -155,16 +159,11 @@ export class ProjectsResolver {
 
   @ResolveField(() => ProfileModel)
   async owner(@Parent() project: ProjectModel) {
-    return this.prisma.profile.findUnique({
-      where: { id: project.ownerId },
-    });
+    return this.loaders.owner.load(project.ownerId);
   }
 
   @ResolveField(() => [ProjectMemberModel])
   async members(@Parent() project: ProjectModel) {
-    return this.prisma.projectMember.findMany({
-      where: { projectId: project.id },
-      include: { profile: true },
-    });
+    return this.loaders.members.load(project.id);
   }
 }

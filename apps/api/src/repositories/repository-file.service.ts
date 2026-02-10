@@ -88,7 +88,7 @@ export class RepositoryFileService {
       throw new NotFoundException(`Repository with id ${file.repositoryId} not found`);
     }
 
-    const rawUrl = this.buildGitHubRawUrl(repository.repositoryUrl, file.filePath);
+    const rawUrl = this.buildGitHubRawUrl(repository.repositoryUrl, repository.defaultBranch, file.filePath);
 
     try {
       const response = await fetch(rawUrl);
@@ -101,11 +101,11 @@ export class RepositoryFileService {
     }
   }
 
-  private buildGitHubRawUrl(repositoryUrl: string, filePath: string): string {
+  private buildGitHubRawUrl(repositoryUrl: string, defaultBranch: string, filePath: string): string {
     const cleanUrl = repositoryUrl.replace(/\.git$/, '');
     const urlParts = cleanUrl.replace('https://github.com/', '').split('/');
     const owner = urlParts[0];
     const repo = urlParts[1];
-    return `https://raw.githubusercontent.com/${owner}/${repo}/main/${filePath}`;
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${defaultBranch}/${filePath}`;
   }
 }

@@ -86,13 +86,28 @@ export class ProjectsService {
 
   /**
    * Retrieves all project members given a project ID.
-   * 
+   * The calling user must be a member of the project.
+   *
    * @param {string} projectId - The ID of the project.
+   * @param {string} userId - The ID of the user making the request.
    * @returns {Promise<{profileId}[]>} Array of profileIds.
+   * @throws {UnauthorisedProjectAccessException} If the caller is not a member.
    */
   async findProjectMembers(
     projectId: string,
+    userId: string,
   ): Promise<{ profileId: string }[]> {
+    const membership = await this.prisma.projectMember.findFirst({
+      where: { projectId, profileId: userId },
+    });
+
+    if (!membership) {
+      this.logger.warn(
+        `Unauthorised attempt by ${userId} to view members of project ${projectId}`,
+      );
+      throw new UnauthorisedProjectAccessException('view members of');
+    }
+
     return this.prisma.projectMember.findMany({
       where: { projectId },
       select: { profileId: true },

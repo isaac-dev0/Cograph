@@ -82,6 +82,8 @@ model ProjectMember {
     project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
     @@id([profileId, projectId])
+    @@index([profileId])
+    @@index([projectId, role])
     @@map("project_members")
 }
 
@@ -94,6 +96,7 @@ model Repository {
     description     String?
     visibility      String     @default("public")
     repositoryUrl   String     @map("repository_url")
+    defaultBranch   String     @default("main") @map("default_branch")
     icon            String?    @map("icon_url")
     ownerLogin      String     @map("owner_login")
     ownerType       String     @map("owner_type")
@@ -139,6 +142,7 @@ model RepositorySyncHistory {
 
     @@index([repositoryId])
     @@index([syncStartedAt])
+    @@index([repositoryId, syncStartedAt])
     @@map("repository_sync_history")
 }
 
@@ -170,13 +174,33 @@ model RepositoryFile {
     createdAt     DateTime @default(now()) @map("created_at")
     updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
 
-    repository   Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-    codeEntities CodeEntity[]
+    repository      Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+    codeEntities    CodeEntity[]
+    fileAnnotations Annotation[]
 
     @@unique([repositoryId, filePath])
     @@index([repositoryId])
     @@index([fileType])
+    @@index([neo4jNodeId])
     @@map("repository_files")
+}
+
+model Annotation {
+    id              String         @id @default(uuid()) @db.Uuid
+    fileId          String         @map("file_id") @db.Uuid
+    title           String
+    content         String         @db.Text
+    tags            String[]
+    linkedEntityIds String[]       @map("linked_entity_ids")
+    authorId        String         @map("author_id")
+    authorName      String         @map("author_name")
+    createdAt       DateTime       @default(now()) @map("created_at")
+    updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at")
+
+    file RepositoryFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+    @@index([fileId])
+    @@map("annotations")
 }
 
 model CodeEntity {

@@ -45,6 +45,7 @@ export class SyncRepositoriesService {
       description: repository.description || null,
       visibility: repository.visibility || (repository.private ? 'private' : 'public'),
       repositoryUrl: repository.html_url,
+      defaultBranch: repository.default_branch || 'main',
       icon: repository.owner.avatar_url || null,
       ownerLogin: repository.owner.login,
       ownerType: repository.owner.type === 'Organization' ? 'Organization' : 'User',
@@ -73,31 +74,36 @@ export class SyncRepositoriesService {
       throw new Error('GitHub token is required but was not provided');
     }
 
-    this.logger.log(`Token received - type: ${typeof token}, length: ${token?.length}`);
-
     const octokit = this.createOctokitClient(token);
     const repositories: ImportRepositoryInput[] = [];
 
     try {
-      this.logger.log(`Fetching repositories with token: ${token.substring(0, 20)}...`);
+      this.logger.log('Fetching repositories from GitHub');
 
-      const { data: userRepos } = await octokit.rest.repos.listForAuthenticatedUser({
-        per_page: 100,
-        sort: 'updated',
-      });
+      let page = 1;
+      while (true) {
+        const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+          per_page: 100,
+          page,
+          sort: 'updated',
+        });
 
-      for (const repository of userRepos) {
-        repositories.push(this.transformGitHubRepository(repository));
+        for (const repository of data) {
+          repositories.push(this.transformGitHubRepository(repository));
+        }
+
+        if (data.length < 100) break;
+        page++;
       }
 
       this.logger.log(`Fetched ${repositories.length} repositories from GitHub.`);
       return repositories;
     } catch (error) {
-      this.logger.error(`Failed to fetch repositories from GitHub`);
-      this.logger.error(`Error type: ${error.constructor.name}`);
-      this.logger.error(`Error message: ${error.message}`);
-      this.logger.error(`Error status: ${error.status}`);
-      this.logger.error(`Full error: ${JSON.stringify(error, null, 2)}`);
+      this.logger.error('Failed to fetch repositories from GitHub', {
+        type: error.constructor.name,
+        message: error.message,
+        status: error.status,
+      });
       throw error;
     }
   }

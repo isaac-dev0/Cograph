@@ -10,6 +10,7 @@ export class ImportRepositoryInput {
   description?: string | null;
   visibility: string;
   repositoryUrl: string;
+  defaultBranch: string;
   icon?: string | null;
   ownerLogin: string;
   ownerType: string;

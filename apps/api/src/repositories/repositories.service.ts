@@ -34,6 +34,7 @@ export class RepositoriesService {
         description: input.description,
         visibility: input.visibility.toLowerCase(),
         repositoryUrl: input.repositoryUrl,
+        defaultBranch: input.defaultBranch,
         icon: input.icon,
         ownerLogin: input.ownerLogin,
         ownerType: input.ownerType.includes('/orgs/') ? 'Organization' : 'User',
@@ -56,6 +57,7 @@ export class RepositoriesService {
         description: input.description,
         visibility: input.visibility.toLowerCase(),
         repositoryUrl: input.repositoryUrl,
+        defaultBranch: input.defaultBranch,
         icon: input.icon,
         ownerLogin: input.ownerLogin,
         ownerType: input.ownerType.includes('/orgs/') ? 'Organization' : 'User',
@@ -83,13 +85,15 @@ export class RepositoriesService {
   async bulkImport(inputs: ImportRepositoryInput[]): Promise<void> {
     this.logger.log(`Bulk importing ${inputs.length} repositories.`);
 
-    for (const input of inputs) {
-      try {
-        await this.import(input);
-      } catch (error) {
-        this.logger.log(`Failed to import ${input.fullName}`, error);
+    const results = await Promise.allSettled(inputs.map((input) => this.import(input)));
+
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        this.logger.warn(
+          `Failed to import ${inputs[index].fullName}: ${result.reason?.message ?? result.reason}`,
+        );
       }
-    }
+    });
 
     this.logger.log('Bulk import completed.');
   }
@@ -438,22 +442,19 @@ export class RepositoriesService {
    * @returns {number} returns.failed - Number of repositories with failed syncs
    */
   async getSyncStats() {
-    const [total, synced, pending, syncing, failed] = await Promise.all([
-      this.prisma.repository.count(),
-      this.prisma.repository.count({
-        where: { syncStatus: SyncStatus.SYNCED },
-      }),
-      this.prisma.repository.count({
-        where: { syncStatus: SyncStatus.PENDING },
-      }),
-      this.prisma.repository.count({
-        where: { syncStatus: SyncStatus.SYNCING },
-      }),
-      this.prisma.repository.count({
-        where: { syncStatus: SyncStatus.FAILED },
-      }),
-    ]);
+    const rows = await this.prisma.repository.groupBy({
+      by: ['syncStatus'],
+      _count: { _all: true },
+    });
 
-    return { total, synced, pending, syncing, failed };
+    const counts = Object.fromEntries(rows.map((row) => [row.syncStatus, row._count._all]));
+
+    return {
+      total: rows.reduce((sum, row) => sum + row._count._all, 0),
+      synced: counts[SyncStatus.SYNCED] ?? 0,
+      pending: counts[SyncStatus.PENDING] ?? 0,
+      syncing: counts[SyncStatus.SYNCING] ?? 0,
+      failed: counts[SyncStatus.FAILED] ?? 0,
+    };
   }
 }

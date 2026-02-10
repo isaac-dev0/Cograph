@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
 import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard';
 import { GraphQueryService } from './services/graph-query.service';
@@ -181,14 +181,12 @@ export class GraphResolver {
       return 1;
     }
 
-    if (maxDepth === -1) {
-      return -1;
-    }
-
-    if (maxDepth === 1 || maxDepth === 2 || maxDepth === 3) {
+    if (maxDepth === -1 || maxDepth === 1 || maxDepth === 2 || maxDepth === 3) {
       return maxDepth;
     }
 
-    return 1;
+    throw new BadRequestException(
+      `Invalid maxDepth value: ${maxDepth}. Must be 1, 2, 3, or -1 (unlimited).`,
+    );
   }
 }

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AnalysisStatus } from '@prisma/client';
 import { MCPAnalysisService } from './mcp-analysis.service';
-import { Neo4jGraphService } from '../../graph/services/neo4j-graph.service';
+import { Neo4jGraphService, ImportRelationshipData } from '../../graph/services/neo4j-graph.service';
 import { RepositoryAnalysis } from '../../common/shared/types/repository-analysis.type';
 import { FileAnalysisResult } from '../../common/shared/types/file-analysis-result.type';
 
@@ -220,32 +220,37 @@ export class AnalysisService {
     repositoryId: string,
     files: SuccessfulFile[],
   ): Promise<void> {
-    for (const file of files) {
-      const { analysis } = file;
+    const fileNodes = files.map((file) => ({
+      id: `file-${repositoryId}-${file.relativePath}`,
+      repositoryId,
+      path: file.relativePath,
+      name: file.analysis.fileName,
+      type: file.analysis.fileType,
+      linesOfCode: file.analysis.lines,
+    }));
+
+    await this.neo4jGraph.bulkCreateFileNodes(fileNodes);
+
+    const entityTasks = files.flatMap((file) => {
+      if (!file.analysis.entities?.length) return [];
       const fileNodeId = `file-${repositoryId}-${file.relativePath}`;
+      return file.analysis.entities.map((entity) =>
+        this.neo4jGraph.createEntityNode({
+          id: `entity-${repositoryId}-${file.relativePath}-${entity.name}`,
+          fileId: fileNodeId,
+          name: entity.name,
+          type: entity.type as 'Function' | 'Class' | 'Interface',
+          startLine: entity.startLine,
+          endLine: entity.endLine,
+        }).catch((error) => {
+          this.logger.error(
+            `[${jobId}] Failed to create entity ${entity.name}: ${error instanceof Error ? error.message : error}`,
+          );
+        }),
+      );
+    });
 
-      await this.neo4jGraph.createFileNode({
-        id: fileNodeId,
-        repositoryId,
-        path: file.relativePath,
-        name: analysis.fileName,
-        type: analysis.fileType,
-        linesOfCode: analysis.lines,
-      });
-
-      if (analysis.entities?.length) {
-        for (const entity of analysis.entities) {
-          await this.neo4jGraph.createEntityNode({
-            id: `entity-${repositoryId}-${file.relativePath}-${entity.name}`,
-            fileId: fileNodeId,
-            name: entity.name,
-            type: entity.type as 'Function' | 'Class' | 'Interface',
-            startLine: entity.startLine,
-            endLine: entity.endLine,
-          });
-        }
-      }
-    }
+    await Promise.all(entityTasks);
 
     this.logger.log(`[${jobId}] Wrote ${files.length} files to Neo4j`);
   }
@@ -267,30 +272,33 @@ export class AnalysisService {
       pathIndex.set(file.relativePath, file.relativePath);
     }
 
-    let created = 0;
+    const imports: ImportRelationshipData[] = [];
 
     for (const file of files) {
       if (!file.analysis.imports?.length) continue;
 
       const fromFileId = `file-${repositoryId}-${file.relativePath}`;
 
-      for (const imp of file.analysis.imports) {
-        if (imp.isExternal) continue;
+      for (const importStatement of file.analysis.imports) {
+        if (importStatement.isExternal) continue;
 
-        const resolvedPath = this.resolveImportSource(imp.source, file.relativePath, pathIndex);
+        const resolvedPath = this.resolveImportSource(importStatement.source, file.relativePath, pathIndex);
         if (!resolvedPath) continue;
 
-        await this.neo4jGraph.createImportRelationship({
+        imports.push({
           fromFileId,
           toFileId: `file-${repositoryId}-${resolvedPath}`,
-          specifiers: imp.specifiers || [],
+          specifiers: importStatement.specifiers || [],
         });
-
-        created++;
       }
     }
 
-    this.logger.log(`[${jobId}] Created ${created} import relationships`);
+    if (imports.length > 0) {
+      const created = await this.neo4jGraph.bulkCreateImportRelationships(imports);
+      this.logger.log(`[${jobId}] Created ${created} import relationships`);
+    } else {
+      this.logger.log(`[${jobId}] No import relationships to create`);
+    }
   }
 
   /**

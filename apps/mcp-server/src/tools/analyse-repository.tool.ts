@@ -10,6 +10,7 @@ import {
 } from "../types.js";
 import path from "path";
 import { FileScannerService } from "../services/file-scanner.service.js";
+import { FILE_TYPE_MAP } from "../constants.js";
 
 const FILE_ANALYSIS_SCHEMA = `{
   "filePath": "string",
@@ -31,16 +32,9 @@ Use fileType: typescript, javascript, tsx, or jsx.`;
 const log = (message: string) =>
   console.error(`[RepositoryAnalysis] ${message}`);
 
-const EXTENSION_MAP: Record<string, string> = {
-  ".ts": "typescript",
-  ".tsx": "tsx",
-  ".js": "javascript",
-  ".jsx": "jsx",
-};
-
 function getFileType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
-  return EXTENSION_MAP[ext] || ext.slice(1);
+  return FILE_TYPE_MAP[ext] || ext.slice(1);
 }
 
 function extractRepositoryId(repositoryUrl: string): string {
@@ -51,14 +45,31 @@ function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+const MAX_RETRY_ATTEMPTS = 3;
+
+async function withRetry<T>(fn: () => Promise<T>, maxAttempts = MAX_RETRY_ATTEMPTS): Promise<T> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxAttempts) throw error;
+      const delay = Math.min(1000 * 2 ** attempt, 30_000);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('unreachable');
+}
+
 async function analyseFile(
   claude: ClaudeService,
   file: ScannedFile,
 ): Promise<FileAnalysis> {
-  const analysis = await claude.analyseCodeStructured<FileAnalysis>(
-    FILE_ANALYSIS_PROMPT,
-    file.content,
-    FILE_ANALYSIS_SCHEMA,
+  const analysis = await withRetry(() =>
+    claude.analyseCodeStructured<FileAnalysis>(
+      FILE_ANALYSIS_PROMPT,
+      file.content,
+      FILE_ANALYSIS_SCHEMA,
+    ),
   );
 
   return {
@@ -103,6 +114,8 @@ async function analyseFileWithErrorHandling(
   }
 }
 
+const ANALYSIS_CONCURRENCY = parseInt(process.env.ANALYSIS_CONCURRENCY ?? "5");
+
 async function analyseAllFiles(
   claude: ClaudeService,
   files: ScannedFile[],
@@ -110,33 +123,43 @@ async function analyseAllFiles(
   results: FileAnalysisResult[];
   summary: RepositoryAnalysis["summary"];
 }> {
-  const results: FileAnalysisResult[] = [];
+  // Pre-compute file type distribution and line counts from scan metadata —
+  // these don't require API calls so we can do them up front.
   const filesByType: Record<string, number> = {};
   let totalLines = 0;
-  let successfulAnalyses = 0;
-  let failedAnalyses = 0;
-
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-
+  for (const file of files) {
     const fileType = getFileType(file.relativePath);
     filesByType[fileType] = (filesByType[fileType] || 0) + 1;
     totalLines += file.lines;
-
-    const { result, success } = await analyseFileWithErrorHandling(
-      claude,
-      file,
-      i,
-      files.length,
-    );
-    results.push(result);
-
-    if (success) {
-      successfulAnalyses++;
-    } else {
-      failedAnalyses++;
-    }
   }
+
+  const results: FileAnalysisResult[] = new Array(files.length);
+  let successfulAnalyses = 0;
+  let failedAnalyses = 0;
+  let cursor = 0;
+
+  // Worker pool: each worker grabs the next file atomically (JS is single-threaded
+  // so cursor++ is safe across concurrent async workers).
+  const worker = async () => {
+    while (true) {
+      const index = cursor++;
+      if (index >= files.length) break;
+
+      const { result, success } = await analyseFileWithErrorHandling(
+        claude,
+        files[index],
+        index,
+        files.length,
+      );
+
+      results[index] = result;
+      if (success) successfulAnalyses++;
+      else failedAnalyses++;
+    }
+  };
+
+  const workerCount = Math.min(ANALYSIS_CONCURRENCY, files.length);
+  await Promise.all(Array.from({ length: workerCount }, worker));
 
   return {
     results,

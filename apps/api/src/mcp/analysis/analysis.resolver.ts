@@ -1,8 +1,9 @@
-import { UseGuards } from '@nestjs/common';
+import { Injectable, Scope, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql';
 import { SupabaseJwtGuard } from 'src/auth/supabase-jwt.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { AnalysisService } from './analysis.service';
+import { AnalysisLoaders } from './analysis.loaders';
 import { RepositoryFileService } from 'src/repositories/repository-file.service';
 import { AnnotationsService } from 'src/repositories/annotations.service';
 import { MCPSummaryService } from './mcp-summary.service';
@@ -12,11 +13,13 @@ import { FileAnnotation } from './models/file-annotation.model';
 import { CreateAnnotationInput, UpdateAnnotationInput } from './dto/annotation-inputs';
 import { Profile as ProfileModel } from 'src/profiles/models/profile.model';
 
+@Injectable({ scope: Scope.REQUEST })
 @UseGuards(SupabaseJwtGuard)
 @Resolver(() => RepositoryFile)
 export class AnalysisResolver {
   constructor(
     private readonly analysisService: AnalysisService,
+    private readonly loaders: AnalysisLoaders,
     private readonly repositoryFileService: RepositoryFileService,
     private readonly annotationsService: AnnotationsService,
     private readonly mcpSummaryService: MCPSummaryService,
@@ -166,6 +169,6 @@ export class AnalysisResolver {
 
   @ResolveField(() => [FileAnnotation], { nullable: true })
   async annotations(@Parent() file: RepositoryFile): Promise<FileAnnotation[]> {
-    return this.annotationsService.getAnnotations(file.id);
+    return this.loaders.fileAnnotations.load(file.id);
   }
 }

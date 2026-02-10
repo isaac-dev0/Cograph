@@ -1,18 +1,9 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import path from "path";
+import { EXTENSIONS_TO_TRY } from "../constants.js";
 
 const log = (message: string) => console.error(`[ExtractDependencies] ${message}`);
-
-const EXTENSIONS_TO_TRY = [
-  "",
-  ".ts",
-  ".tsx",
-  ".js",
-  ".jsx",
-  "/index.ts",
-  "/index.js",
-];
 
 function normalisePath(filePath: string): string {
   return filePath.replace(/\\/g, "/").replace(/^\.\//, "");

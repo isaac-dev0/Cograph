@@ -15,8 +15,8 @@ export class ClaudeService {
   async analyseCode(prompt: string, code: string): Promise<string> {
     try {
       const response = await this.client.messages.create({
-        model: "claude-sonnet-4-5",
-        max_tokens: 4096,
+        model: process.env.CLAUDE_MODEL ?? "claude-sonnet-4-5",
+        max_tokens: parseInt(process.env.CLAUDE_MAX_TOKENS ?? "4096"),
         messages: [
           {
             role: "user",

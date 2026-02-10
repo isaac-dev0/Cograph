@@ -7,18 +7,9 @@ import {
   GraphEdge,
 } from "../types.js";
 import path from "path";
+import { EXTENSIONS_TO_TRY } from "../constants.js";
 
 const log = (message: string) => console.error(`[DependencyGraph] ${message}`);
-
-const EXTENSIONS_TO_TRY = [
-  "",
-  ".ts",
-  ".tsx",
-  ".js",
-  ".jsx",
-  "/index.ts",
-  "/index.js",
-];
 
 function normalisePath(filePath: string): string {
   return filePath.replace(/\\/g, "/").replace(/^\.\//, "");
@@ -107,21 +98,21 @@ function processFileImports(
     return edges;
   }
 
-  for (const impoort of file.analysis.imports) {
-    if (impoort.isExternal) {
+  for (const importItem of file.analysis.imports) {
+    if (importItem.isExternal) {
       continue;
     }
 
-    if (!isRelativeImport(impoort.source)) {
+    if (!isRelativeImport(importItem.source)) {
       continue;
     }
 
-    const resolvedPath = resolveImportPath(impoort.source, file.relativePath);
+    const resolvedPath = resolveImportPath(importItem.source, file.relativePath);
     const targetFile = findMatchingFile(resolvedPath, knownFiles);
 
     /* Only create edge if target file exists in the analysis. */
     if (targetFile) {
-      edges.push(createEdge(sourceFile, targetFile, impoort.specifiers));
+      edges.push(createEdge(sourceFile, targetFile, importItem.specifiers));
     }
   }
 

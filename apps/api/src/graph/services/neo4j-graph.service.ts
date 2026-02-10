@@ -111,6 +111,12 @@ export class Neo4jGraphService implements OnModuleInit {
     }
   }
 
+  private static readonly VALID_ENTITY_TYPES = new Set<EntityNodeData['type']>([
+    'Function',
+    'Class',
+    'Interface',
+  ]);
+
   /**
    * Creates an Entity node (Function, Class, or Interface) in Neo4j and links it to a file.
    * Creates a CONTAINS relationship from the file to the entity.
@@ -119,6 +125,12 @@ export class Neo4jGraphService implements OnModuleInit {
    * @returns The created entity node
    */
   async createEntityNode(data: EntityNodeData) {
+    if (!Neo4jGraphService.VALID_ENTITY_TYPES.has(data.type)) {
+      throw new Error(
+        `Invalid entity type "${data.type}". Must be one of: Function, Class, Interface.`,
+      );
+    }
+
     const query = `
       MATCH (f:File {id: $fileId})
       CREATE (e:${data.type} {
