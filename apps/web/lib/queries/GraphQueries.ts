@@ -112,3 +112,16 @@ export const FILE_CONTENT_QUERY = `
     fileContent(id: $id)
   }
 `;
+
+export const ANALYSIS_JOB_QUERY = `
+  query AnalysisJob($id: ID!) {
+    analysisJob(id: $id) {
+      id
+      status
+      progress
+      filesAnalysed
+      totalFiles
+      errorMessage
+    }
+  }
+`;

@@ -21,10 +21,5 @@ export const projectSidebarConfig: ProjectSidebarConfig = {
       isActive: true,
       url: "/app",
     },
-    {
-      title: "Project Settings",
-      icon: Settings,
-      isActive: false,
-    },
   ],
 };

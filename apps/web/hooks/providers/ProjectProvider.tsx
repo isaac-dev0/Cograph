@@ -61,7 +61,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const { data, errors } = await response.json();
 
       if (errors) {
-        throw new Error("Failed to load projects:", errors[0]?.message);
+        throw new Error(errors[0]?.message ?? "Failed to load projects");
       }
 
       const fetchedProjects = data.findProjectsByProfileId;

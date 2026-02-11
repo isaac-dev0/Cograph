@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { RepositoriesService } from './repositories.service';
 import { Octokit } from '@octokit/rest';
 import { ImportRepositoryInput } from './dto/import-repository.input';
@@ -71,7 +71,7 @@ export class SyncRepositoriesService {
   async fetchRepositories(token: string): Promise<ImportRepositoryInput[]> {
     if (!token) {
       this.logger.error('Token is undefined or null!');
-      throw new Error('GitHub token is required but was not provided');
+      throw new BadRequestException('GitHub token is required but was not provided');
     }
 
     const octokit = this.createOctokitClient(token);

@@ -30,22 +30,6 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  let profile = null;
-
-  if (user) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (error) {
-      console.error("Failed to load profile:", error);
-    } else {
-      profile = data;
-    }
-  }
-
   return (
     <html className={`${geistSans.variable} ${geistMono.variable} ${geistSans.className}`} lang="en" suppressHydrationWarning>
       <body>
@@ -55,7 +39,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <UserProvider user={user} profile={profile}>
+          <UserProvider user={user}>
             <ProjectProvider>
               <RepositoryProvider>{children}</RepositoryProvider>
             </ProjectProvider>

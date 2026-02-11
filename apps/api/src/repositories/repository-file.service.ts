@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -90,15 +90,20 @@ export class RepositoryFileService {
 
     const rawUrl = this.buildGitHubRawUrl(repository.repositoryUrl, repository.defaultBranch, file.filePath);
 
+    let response: Response;
     try {
-      const response = await fetch(rawUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch file content: ${response.statusText}`);
-      }
-      return await response.text();
+      response = await fetch(rawUrl);
     } catch (error) {
-      throw new Error(`Failed to fetch file content from GitHub: ${error instanceof Error ? error.message : String(error)}`);
+      throw new InternalServerErrorException(
+        `Failed to fetch file content from GitHub: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
+
+    if (!response.ok) {
+      throw new InternalServerErrorException(`Failed to fetch file content: ${response.statusText}`);
+    }
+
+    return response.text();
   }
 
   private buildGitHubRawUrl(repositoryUrl: string, defaultBranch: string, filePath: string): string {

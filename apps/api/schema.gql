@@ -255,7 +255,7 @@ type AnalysisJob {
 enum AnalysisStatus {
   PENDING
   CLONING
-  ANALYZING
+  ANALYSING
   COMPLETED
   FAILED
 }
@@ -446,7 +446,7 @@ type Query {
   """Finds projects that the specified profile is a member of."""
   findProjectsByProfileId(profileId: ID!): [Project!]!
 
-  """Finds all project members"""
+  """Finds all members of a project. Caller must be a member."""
   findProjectMembers(projectId: ID!): [ProjectMember!]!
 
   """Finds repositories associated with a specific project."""

@@ -32,11 +32,6 @@ export const repositorySidebarConfig: RepositorySidebarConfig = {
       icon: File,
       isActive: false,
       url: "/app/documents",
-      items: [
-        { title: "Create", url: "/app/documents/create" },
-        { title: "Testing 1", url: "#" },
-        { title: "Testing 2", url: "#" },
-      ],
     },
   ],
 };

@@ -1,5 +1,5 @@
 import { Injectable, Scope } from '@nestjs/common';
-import DataLoader from 'dataloader';
+import * as DataLoader from 'dataloader';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { FileAnnotation } from './models/file-annotation.model';
 
