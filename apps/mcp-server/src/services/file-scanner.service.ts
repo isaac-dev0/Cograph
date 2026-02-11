@@ -38,10 +38,17 @@ export class FileScannerService {
     const scannedFiles: ScannedFile[] = [];
     const total = files.length;
 
+    const resolvedRoot = path.resolve(rootPath);
+
     for (let i = 0; i < files.length; i++) {
       const relativePath = files[i];
-      const absolutePath = path.join(rootPath, relativePath);
+      const absolutePath = path.resolve(rootPath, relativePath);
       const fileName = path.basename(relativePath);
+
+      if (!absolutePath.startsWith(resolvedRoot + path.sep) && absolutePath !== resolvedRoot) {
+        console.error(`Skipping path-traversal attempt: ${relativePath}`);
+        continue;
+      }
 
       try {
         const content = await fs.readFile(absolutePath, "utf-8");

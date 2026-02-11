@@ -38,7 +38,7 @@ export class MCPAnalysisService {
     const filesByType: Record<string, number> = {};
 
     while (hasMore) {
-      this.logger.log(`Analyzing batch starting at file ${skip}`);
+      this.logger.log(`Analysing batch starting at file ${skip}`);
 
       let batchResult: RepositoryAnalysis;
       try {

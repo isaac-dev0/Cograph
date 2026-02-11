@@ -134,7 +134,7 @@ export function SummaryTab({
       {isGenerating && (
         <div className="flex flex-col items-center justify-center py-12 space-y-3">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Analyzing {fileName}...</p>
+          <p className="text-sm text-muted-foreground">Analysing {fileName}...</p>
           <p className="text-xs text-muted-foreground/60">
             This may take 5-10 seconds
           </p>

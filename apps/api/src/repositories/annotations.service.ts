@@ -83,7 +83,7 @@ export class AnnotationsService {
       throw new NotFoundException(`Annotation with id ${annotationId} not found`);
     }
 
-    if (row.authorId !== userId) {
+    if (!row.authorId || row.authorId !== userId) {
       throw new ForbiddenException('You can only edit your own annotations');
     }
 
@@ -115,7 +115,7 @@ export class AnnotationsService {
       throw new NotFoundException(`Annotation with id ${annotationId} not found`);
     }
 
-    if (row.authorId !== userId) {
+    if (!row.authorId || row.authorId !== userId) {
       throw new ForbiddenException('You can only delete your own annotations');
     }
 

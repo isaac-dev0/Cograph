@@ -15,12 +15,13 @@ import {
   FIND_PROJECT_MEMBERS,
   ADD_PROJECT_MEMBERS,
   REMOVE_PROJECT_MEMBER,
-  FIND_ALL_PROFILES,
+  SEARCH_PROFILES,
   TRANSFER_PROJECT_OWNERSHIP,
 } from "@/lib/queries/ProjectQueries";
 import { useProject } from "@/hooks/providers/ProjectProvider";
 import { useUser } from "@/hooks/providers/UserProvider";
-import { Loader, Trash2, UserPlus, Settings, Crown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader, Trash2, UserPlus, Settings, Crown, Search } from "lucide-react";
 import { ProjectMember, ProjectRole, Profile } from "@/lib/shared/ProjectMember";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -41,9 +42,10 @@ export function ProjectSettingsDialog({ trigger }: ProjectSettingsDialogProps) {
   const [open, setOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [members, setMembers] = useState<ProjectMember[]>([]);
-  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProfileId, setSelectedProfileId] = useState<string>("");
+  const [emailQuery, setEmailQuery] = useState<string>("");
+  const [searchResult, setSearchResult] = useState<Profile | null | undefined>(undefined);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
   const [selectedOwnerProfileId, setSelectedOwnerProfileId] = useState<string>("");
   const [isAddingMember, setIsAddingMember] = useState<boolean>(false);
   const [isTransferring, setIsTransferring] = useState<boolean>(false);
@@ -99,16 +101,20 @@ export function ProjectSettingsDialog({ trigger }: ProjectSettingsDialogProps) {
     }
   };
 
-  const loadAllProfiles = async () => {
+  const searchByEmail = async () => {
+    const trimmed = emailQuery.trim().toLowerCase();
+    if (!trimmed) return;
+
     try {
+      setIsSearching(true);
+      setSearchResult(undefined);
+
       const supabase = createClient();
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
-        throw new Error("No active session");
-      }
+      if (!session) throw new Error("No active session");
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
@@ -119,32 +125,39 @@ export function ProjectSettingsDialog({ trigger }: ProjectSettingsDialogProps) {
             Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            query: FIND_ALL_PROFILES,
+            query: SEARCH_PROFILES,
+            variables: { query: trimmed },
           }),
         }
       );
 
       const { data, errors } = await response.json();
 
-      if (errors) {
-        throw new Error(errors[0]?.message || "Failed to load profiles");
-      }
+      if (errors) throw new Error(errors[0]?.message || "Search failed");
 
-      setAllProfiles(data.findAllProfiles || []);
-    } catch (error) {
-      console.error("Failed to load profiles:", error);
+      setSearchResult(data.searchProfiles ?? null);
+    } catch (err) {
+      console.error("Profile search failed:", err);
+      setSearchResult(null);
+    } finally {
+      setIsSearching(false);
     }
   };
 
   useEffect(() => {
     if (open && currentProject) {
       loadMembers();
-      loadAllProfiles();
     }
   }, [open, currentProject?.id]);
 
   const handleAddMember = async () => {
-    if (!currentProject || !selectedProfileId) return;
+    if (!currentProject || !searchResult) return;
+
+    const alreadyMember = members.some((member) => member.profileId === searchResult.id);
+    if (alreadyMember) {
+      setError("This user is already a member of the project");
+      return;
+    }
 
     try {
       setIsAddingMember(true);
@@ -155,18 +168,7 @@ export function ProjectSettingsDialog({ trigger }: ProjectSettingsDialogProps) {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const memberToAdd = members.find(
-        (member) => member.profileId === selectedProfileId
-      );
-
-      if (memberToAdd) {
-        setError("This user is already a member of the project");
-        return;
-      }
+      if (!session) throw new Error("No active session");
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
@@ -180,7 +182,7 @@ export function ProjectSettingsDialog({ trigger }: ProjectSettingsDialogProps) {
             query: ADD_PROJECT_MEMBERS,
             variables: {
               projectId: currentProject.id,
-              profileIds: [selectedProfileId],
+              profileIds: [searchResult.id],
             },
           }),
         }
@@ -188,17 +190,14 @@ export function ProjectSettingsDialog({ trigger }: ProjectSettingsDialogProps) {
 
       const { errors } = await response.json();
 
-      if (errors) {
-        throw new Error(errors[0]?.message || "Failed to add member");
-      }
+      if (errors) throw new Error(errors[0]?.message || "Failed to add member");
 
-      setSelectedProfileId("");
+      setEmailQuery("");
+      setSearchResult(undefined);
       await loadMembers();
-    } catch (error) {
-      console.error("Failed to add member:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to add member"
-      );
+    } catch (err) {
+      console.error("Failed to add member:", err);
+      setError(err instanceof Error ? err.message : "Failed to add member");
     } finally {
       setIsAddingMember(false);
     }
@@ -335,11 +334,7 @@ export function ProjectSettingsDialog({ trigger }: ProjectSettingsDialogProps) {
       .slice(0, 2);
   };
 
-  const availableProfiles = allProfiles.filter(
-    (p) => !members.some((m) => m.profileId === p.id)
-  );
-
-  const currentUserMember = members.find((m) => m.profileId === profile?.id);
+  const currentUserMember = members.find((member) => member.profileId === profile?.id);
   const isCurrentUserOwner = currentProject?.ownerId === profile?.id;
   const isCurrentUserAdmin = currentUserMember?.role === ProjectRole.ADMIN;
   const canManageMembers = isCurrentUserOwner || isCurrentUserAdmin;
@@ -419,38 +414,66 @@ export function ProjectSettingsDialog({ trigger }: ProjectSettingsDialogProps) {
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Add Member</h3>
               <div className="flex gap-2">
-                <Select
-                  value={selectedProfileId}
-                  onValueChange={setSelectedProfileId}
-                  disabled={isAddingMember}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select a user" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableProfiles.map((profile) => (
-                      <SelectItem key={profile.id} value={profile.id}>
-                        {profile.displayName} ({profile.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  type="email"
+                  placeholder="Search by email address"
+                  value={emailQuery}
+                  onChange={(e) => {
+                    setEmailQuery(e.target.value);
+                    setSearchResult(undefined);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") searchByEmail();
+                  }}
+                  disabled={isSearching || isAddingMember}
+                  className="flex-1"
+                />
                 <Button
-                  onClick={handleAddMember}
-                  disabled={isAddingMember || !selectedProfileId}
+                  variant="outline"
                   size="sm"
+                  onClick={searchByEmail}
+                  disabled={isSearching || !emailQuery.trim()}
                 >
-                  {isAddingMember ? (
+                  {isSearching ? (
                     <Loader className="h-4 w-4 animate-spin" />
                   ) : (
-                    <UserPlus className="h-4 w-4" />
+                    <Search className="h-4 w-4" />
                   )}
-                  Add
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Select a user from your organization to add to this project
-              </p>
+
+              {searchResult === null && (
+                <p className="text-xs text-muted-foreground">
+                  No user found with that email address.
+                </p>
+              )}
+
+              {searchResult && (
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={searchResult.avatarUrl} />
+                      <AvatarFallback>{getInitials(searchResult.displayName)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{searchResult.displayName}</p>
+                      <p className="text-xs text-muted-foreground">{searchResult.email}</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleAddMember}
+                    disabled={isAddingMember}
+                  >
+                    {isAddingMember ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <UserPlus className="h-4 w-4" />
+                    )}
+                    Add
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

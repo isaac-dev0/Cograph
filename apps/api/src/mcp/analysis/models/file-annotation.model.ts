@@ -4,8 +4,8 @@ import { Field, ID, ObjectType } from '@nestjs/graphql';
   description: 'Author information for a file annotation.',
 })
 export class AnnotationAuthor {
-  @Field(() => ID, { description: 'Profile ID of the annotation author.' })
-  id: string;
+  @Field(() => ID, { nullable: true, description: 'Profile ID of the annotation author. Null if the profile has been deleted.' })
+  id: string | null;
 
   @Field(() => String, { description: 'Display name of the annotation author.' })
   name: string;

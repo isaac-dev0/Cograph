@@ -5,10 +5,18 @@ import dynamic from "next/dynamic";
 import { useGraphData } from "@/hooks/useGraphData";
 import { GraphControls } from "./controls/GraphControls";
 import { GraphStatsWidget } from "./GraphStatsWidget";
-import { Loader2, PlayCircle, RefreshCw, Terminal } from "lucide-react";
+import { Loader2, PlayCircle, RefreshCw, Terminal, SlidersHorizontal, X, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { GraphOptionsInput } from "@/lib/types/graph";
-import type { ForceGraphNode } from "./utils/graphDataTransform";
+import type { ForceGraphData, ForceGraphNode } from "./utils/graphDataTransform";
 import { getFileTypeColor } from "./utils/graphDataTransform";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -171,6 +179,10 @@ export function GraphCanvas({
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [connectedNodeIds, setConnectedNodeIds] = useState<Set<string>>(new Set());
+  const [isControlsOpen, setIsControlsOpen] = useState(true);
+  const [isReanalysisConfirmOpen, setIsReanalysisConfirmOpen] = useState(false);
+
+  const isNarrow = dimensions.width < 600;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -225,7 +237,7 @@ export function GraphCanvas({
         recenter();
       } else if (e.ctrlKey && (e.key === "r" || e.key === "R")) {
         e.preventDefault();
-        startAnalysis();
+        setIsReanalysisConfirmOpen(true);
       }
     };
 
@@ -449,22 +461,70 @@ export function GraphCanvas({
       aria-label="Dependency graph visualization"
     >
       {showControls && (
-        <GraphControls
-          nodes={graphData.nodes}
-          onSearch={handleSearch}
-          onFilterChange={setFileTypeFilter}
-          onZoomIn={zoomIn}
-          onZoomOut={zoomOut}
-          onRecenter={recenter}
-          onPauseToggle={togglePause}
-          className="absolute top-3 right-3 w-80 z-10"
-        />
+        <>
+          {isNarrow ? (
+            <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="glass h-9 w-9"
+                onClick={() => setIsControlsOpen((open) => !open)}
+                aria-label={isControlsOpen ? "Close graph controls" : "Open graph controls"}
+                aria-expanded={isControlsOpen}
+              >
+                {isControlsOpen ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <SlidersHorizontal className="h-4 w-4" />
+                )}
+              </Button>
+              {isControlsOpen && (
+                <GraphControls
+                  nodes={graphData.nodes}
+                  onSearch={handleSearch}
+                  onFilterChange={setFileTypeFilter}
+                  onZoomIn={zoomIn}
+                  onZoomOut={zoomOut}
+                  onRecenter={recenter}
+                  onPauseToggle={togglePause}
+                  className="w-72"
+                />
+              )}
+            </div>
+          ) : (
+            <GraphControls
+              nodes={graphData.nodes}
+              onSearch={handleSearch}
+              onFilterChange={setFileTypeFilter}
+              onZoomIn={zoomIn}
+              onZoomOut={zoomOut}
+              onRecenter={recenter}
+              onPauseToggle={togglePause}
+              className="absolute top-3 right-3 w-80 z-10"
+            />
+          )}
+        </>
       )}
 
-      <AnalysisOverlay analysis={analysis} onStart={startAnalysis} />
+      <AnalysisOverlay
+        analysis={analysis}
+        onRequestStart={() => setIsReanalysisConfirmOpen(true)}
+      />
       <NodeCountIndicator loaded={loadedCount} total={totalCount} />
-      <GraphStatsWidget graphData={displayData} className="absolute bottom-3 right-3 z-10 max-w-xs" />
+      {!isNarrow && (
+        <GraphStatsWidget graphData={displayData} className="absolute bottom-3 right-3 z-10 max-w-xs" />
+      )}
       <KeyboardShortcutsHint isFocused={isFocused} />
+
+      <ReanalysisConfirmDialog
+        open={isReanalysisConfirmOpen}
+        onOpenChange={setIsReanalysisConfirmOpen}
+        nodeCount={loadedCount}
+        onConfirm={() => {
+          setIsReanalysisConfirmOpen(false);
+          startAnalysis();
+        }}
+      />
 
       <ForceGraph2D
         ref={graphRef}
@@ -501,24 +561,24 @@ export function GraphCanvas({
 
 function AnalysisOverlay({
   analysis,
-  onStart,
+  onRequestStart,
 }: {
   analysis: AnalysisState;
-  onStart: () => void;
+  onRequestStart: () => void;
 }) {
   return (
-    <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2">
+    <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2 w-56">
       <Button
         variant="outline"
         size="sm"
-        onClick={onStart}
+        onClick={onRequestStart}
         disabled={analysis.isAnalyzing}
         className="gap-2 glass text-xs"
       >
         <RefreshCw
           className={`h-3 w-3 ${analysis.isAnalyzing ? "animate-spin" : ""}`}
         />
-        {analysis.isAnalyzing ? "Analyzing..." : "Re-analyze"}
+        {analysis.isAnalyzing ? "Analysing..." : "Re-analyse"}
       </Button>
 
       {analysis.isAnalyzing && (
@@ -581,5 +641,56 @@ function KeyboardShortcutsHint({ isFocused }: { isFocused: boolean }) {
         Click to enable keyboard shortcuts
       </div>
     </div>
+  );
+}
+
+function ReanalysisConfirmDialog({
+  open,
+  onOpenChange,
+  nodeCount,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  nodeCount: number;
+  onConfirm: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-destructive/10">
+              <AlertTriangle className="size-5 text-destructive" />
+            </div>
+            <DialogTitle>Re-analyse repository?</DialogTitle>
+          </div>
+          <DialogDescription className="pt-2 space-y-3">
+            <span className="block">
+              This will delete all current graph data and re-run a full analysis
+              from scratch.
+            </span>
+            {nodeCount > 0 && (
+              <span className="block rounded-md bg-muted px-3 py-2 text-xs font-mono text-muted-foreground">
+                ~{nodeCount} file{nodeCount !== 1 ? "s" : ""} &times; 1 Claude
+                API call per file
+              </span>
+            )}
+            <span className="block">
+              Analysis for large repositories can take several minutes and
+              cannot be cancelled once started.
+            </span>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Re-analyse
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

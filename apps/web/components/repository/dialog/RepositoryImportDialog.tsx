@@ -232,7 +232,7 @@ export function RepositoryImportDialog({
                   <FormItem>
                     <FormLabel>Select Repositories</FormLabel>
                     <FormControl>
-                      <div>
+                      <div className="relative">
                         <button
                           type="button"
                           onClick={() => setDropdownOpen(!dropdownOpen)}

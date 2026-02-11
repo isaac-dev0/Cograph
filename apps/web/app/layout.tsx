@@ -33,16 +33,37 @@ export default async function RootLayout({
   let profile = null;
 
   if (user) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    if (error) {
-      console.error("Failed to load profile:", error);
-    } else {
-      profile = data;
+    if (session) {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              query: `query {
+                findProfileByUserId(userId: "${user.id}") {
+                  id userId email displayName avatarUrl job location
+                }
+              }`,
+            }),
+            cache: "no-store",
+          }
+        );
+        const { data, errors } = await response.json();
+        if (!errors) {
+          profile = data.findProfileByUserId;
+        }
+      } catch {
+        // Profile will be null; client-side sync will handle it.
+      }
     }
   }
 

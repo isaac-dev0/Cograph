@@ -68,9 +68,9 @@ export const REMOVE_PROJECT_MEMBER = `
   }
 `;
 
-export const FIND_ALL_PROFILES = `
-  query FindAllProfiles {
-    findAllProfiles {
+export const SEARCH_PROFILES = `
+  query SearchProfiles($query: String!) {
+    searchProfiles(query: $query) {
       id
       email
       displayName

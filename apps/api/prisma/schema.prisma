@@ -49,6 +49,7 @@ model Profile {
 
     projectsOwned      Project[]       @relation("ProjectsOwned")
     projectMemberships ProjectMember[]
+    annotations        Annotation[]
 
     @@map("profiles")
 }
@@ -192,12 +193,13 @@ model Annotation {
     content         String         @db.Text
     tags            String[]
     linkedEntityIds String[]       @map("linked_entity_ids")
-    authorId        String         @map("author_id")
+    authorId        String?        @map("author_id") @db.Uuid
     authorName      String         @map("author_name")
     createdAt       DateTime       @default(now()) @map("created_at")
     updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at")
 
-    file RepositoryFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+    file   RepositoryFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+    author Profile?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
     @@index([fileId])
     @@map("annotations")

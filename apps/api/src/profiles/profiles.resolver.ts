@@ -36,9 +36,13 @@ export class ProfilesResolver {
     return this.profilesService.findByUserId(userId);
   }
 
-  @Query(() => [ProfileModel], { name: 'findAllProfiles' })
-  findAll() {
-    return this.profilesService.findAll();
+  @Query(() => ProfileModel, {
+    name: 'searchProfiles',
+    nullable: true,
+    description: 'Searches for a single profile by exact email address.',
+  })
+  searchByEmail(@Args('query', { type: () => String }) query: string) {
+    return this.profilesService.searchByEmail(query);
   }
 
   @Mutation(() => ProfileModel, {

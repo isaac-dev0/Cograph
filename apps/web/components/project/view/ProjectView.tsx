@@ -18,6 +18,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -35,6 +37,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { RepositoryImportDialog } from "@/components/repository/dialog/RepositoryImportDialog";
+import { ProjectSettingsDialog } from "@/components/project/dialog/ProjectSettingsDialog";
 
 interface ProjectViewProps {
   project: Project | null;
@@ -78,6 +89,8 @@ export function ProjectView({ project }: ProjectViewProps) {
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   const [isLoadingRepos, setIsLoadingRepos] = useState(true);
+  const [membersError, setMembersError] = useState<string | null>(null);
+  const [reposError, setReposError] = useState<string | null>(null);
   const { setCurrentRepository } = useRepository();
 
   useEffect(() => {
@@ -92,6 +105,7 @@ export function ProjectView({ project }: ProjectViewProps) {
 
     try {
       setIsLoadingMembers(true);
+      setMembersError(null);
       const supabase = createClient();
       const {
         data: { session },
@@ -117,13 +131,18 @@ export function ProjectView({ project }: ProjectViewProps) {
       const { data, errors } = await response.json();
 
       if (errors) {
-        console.error("Failed to load members:", errors);
+        // Silently treat authorisation failures as an empty member list;
+        // guests may not have permission to enumerate members.
+        const message: string = errors[0]?.message ?? "";
+        if (!message.toLowerCase().includes("forbidden") && !message.toLowerCase().includes("unauthori")) {
+          setMembersError(message || "Failed to load members");
+        }
         return;
       }
 
       setMembers(data.findProjectMembers || []);
     } catch (error) {
-      console.error("Failed to load members:", error);
+      setMembersError(error instanceof Error ? error.message : "Failed to load members");
     } finally {
       setIsLoadingMembers(false);
     }
@@ -134,6 +153,7 @@ export function ProjectView({ project }: ProjectViewProps) {
 
     try {
       setIsLoadingRepos(true);
+      setReposError(null);
       const supabase = createClient();
       const {
         data: { session },
@@ -159,13 +179,13 @@ export function ProjectView({ project }: ProjectViewProps) {
       const { data, errors } = await response.json();
 
       if (errors) {
-        console.error("Failed to load repositories:", errors);
+        setReposError(errors[0]?.message ?? "Failed to load repositories");
         return;
       }
 
       setRepositories(data.findRepositoriesByProjectId || []);
     } catch (error) {
-      console.error("Failed to load repositories:", error);
+      setReposError(error instanceof Error ? error.message : "Failed to load repositories");
     } finally {
       setIsLoadingRepos(false);
     }
@@ -319,39 +339,37 @@ export function ProjectView({ project }: ProjectViewProps) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <button
-          onClick={() => {
-            /* TODO: Open add repositories dialog */
-          }}
-          className="group flex items-center gap-5 p-6 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-accent/30 transition-all text-left"
-        >
-          <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
-            <Plus className="size-6 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-base font-semibold">Add Repositories</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Connect GitHub repositories to this project
-            </p>
-          </div>
-        </button>
+        <RepositoryImportDialog
+          trigger={
+            <button className="group flex items-center gap-5 p-6 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-accent/30 transition-all text-left w-full">
+              <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                <Plus className="size-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold">Add Repositories</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Connect GitHub repositories to this project
+                </p>
+              </div>
+            </button>
+          }
+        />
 
-        <button
-          onClick={() => {
-            /* TODO: Open manage members dialog */
-          }}
-          className="group flex items-center gap-5 p-6 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-accent/30 transition-all text-left"
-        >
-          <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
-            <UserPlus className="size-6 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-base font-semibold">Manage Members</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Add or remove team members from this project
-            </p>
-          </div>
-        </button>
+        <ProjectSettingsDialog
+          trigger={
+            <button className="group flex items-center gap-5 p-6 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-accent/30 transition-all text-left w-full">
+              <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                <UserPlus className="size-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold">Manage Members</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Add or remove team members from this project
+                </p>
+              </div>
+            </button>
+          }
+        />
       </div>
 
       <div className="space-y-5">
@@ -360,15 +378,32 @@ export function ProjectView({ project }: ProjectViewProps) {
         </h2>
         {isLoadingMembers ? (
           <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
+            {[...Array(3)].map((_, index) => (
+              <Skeleton key={index} className="h-16 w-full" />
             ))}
           </div>
+        ) : membersError ? (
+          <ErrorBanner message={membersError} onRetry={loadMembers} />
         ) : members.length === 0 ? (
-          <div className="rounded-xl border border-border/50 bg-card/50 p-8 text-center">
-            <Users className="size-8 text-muted-foreground/50 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No members yet</p>
-          </div>
+          <Empty className="border border-border/50 bg-card/50">
+            <EmptyContent>
+              <EmptyMedia variant="icon">
+                <Users />
+              </EmptyMedia>
+              <EmptyTitle>No members yet</EmptyTitle>
+              <EmptyDescription>
+                Invite teammates to collaborate on this project.
+              </EmptyDescription>
+              <ProjectSettingsDialog
+                trigger={
+                  <Button size="sm" className="gap-2 mt-2">
+                    <UserPlus className="size-4" />
+                    Invite Members
+                  </Button>
+                }
+              />
+            </EmptyContent>
+          </Empty>
         ) : (
           <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
             <div className="divide-y divide-border/50">
@@ -391,17 +426,32 @@ export function ProjectView({ project }: ProjectViewProps) {
         </h2>
         {isLoadingRepos ? (
           <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
+            {[...Array(3)].map((_, index) => (
+              <Skeleton key={index} className="h-24 w-full" />
             ))}
           </div>
+        ) : reposError ? (
+          <ErrorBanner message={reposError} onRetry={loadRepositories} />
         ) : repositories.length === 0 ? (
-          <div className="rounded-xl border border-border/50 bg-card/50 p-8 text-center">
-            <FolderGit2 className="size-8 text-muted-foreground/50 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No repositories added yet
-            </p>
-          </div>
+          <Empty className="border border-border/50 bg-card/50">
+            <EmptyContent>
+              <EmptyMedia variant="icon">
+                <FolderGit2 />
+              </EmptyMedia>
+              <EmptyTitle>No repositories yet</EmptyTitle>
+              <EmptyDescription>
+                Connect a GitHub repository to start mapping its dependency graph.
+              </EmptyDescription>
+              <RepositoryImportDialog
+                trigger={
+                  <Button size="sm" className="gap-2 mt-2">
+                    <Plus className="size-4" />
+                    Add your first repository
+                  </Button>
+                }
+              />
+            </EmptyContent>
+          </Empty>
         ) : (
           <div className="space-y-3">
             {repositories.map((repo) => (
@@ -416,6 +466,30 @@ export function ProjectView({ project }: ProjectViewProps) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ErrorBanner({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 flex items-center gap-3">
+      <AlertCircle className="size-4 text-destructive shrink-0" />
+      <p className="text-sm text-destructive flex-1 min-w-0 truncate">{message}</p>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRetry}
+        className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+      >
+        <RefreshCw className="size-3.5" />
+        Retry
+      </Button>
     </div>
   );
 }

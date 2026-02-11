@@ -30,7 +30,7 @@ export function FileContentViewer({ fileId, fileName, fileType }: FileContentVie
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -76,7 +76,7 @@ export function FileContentViewer({ fileId, fileName, fileType }: FileContentVie
   }
 
   const language = getLanguage(fileType);
-  const editorTheme = theme === "dark" ? "vs-dark" : "light";
+  const editorTheme = resolvedTheme === "dark" ? "vs-dark" : "light";
 
   return (
     <div className="h-full w-full">

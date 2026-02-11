@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AnalysisStatus } from '@prisma/client';
 import { MCPAnalysisService } from './mcp-analysis.service';
@@ -11,6 +11,9 @@ type SuccessfulFile = FileAnalysisResult & {
 };
 
 const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
+
+/** Minimum milliseconds between analysis jobs for the same repository. */
+const ANALYSIS_COOLDOWN_MS = 5 * 60 * 1_000;
 
 /**
  * Orchestrates repository analysis: job management, batch storage to
@@ -34,6 +37,31 @@ export class AnalysisService {
 
     if (!repository) {
       throw new Error(`Repository not found: ${repositoryId}`);
+    }
+
+    const cooldownCutoff = new Date(Date.now() - ANALYSIS_COOLDOWN_MS);
+    const recentJob = await this.prisma.analysisJob.findFirst({
+      where: {
+        repositoryId,
+        OR: [
+          { status: { in: [AnalysisStatus.PENDING, AnalysisStatus.CLONING, AnalysisStatus.ANALYSING] } },
+          { status: { in: [AnalysisStatus.COMPLETED, AnalysisStatus.FAILED] }, createdAt: { gte: cooldownCutoff } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (recentJob) {
+      const isActive = [AnalysisStatus.PENDING, AnalysisStatus.CLONING, AnalysisStatus.ANALYSING].includes(recentJob.status);
+      if (isActive) {
+        throw new ConflictException('An analysis job is already running for this repository.');
+      }
+      const secondsRemaining = Math.ceil(
+        (recentJob.createdAt.getTime() + ANALYSIS_COOLDOWN_MS - Date.now()) / 1_000,
+      );
+      throw new ConflictException(
+        `Analysis was run recently. Please wait ${secondsRemaining} seconds before re-analysing.`,
+      );
     }
 
     const job = await this.prisma.analysisJob.create({
@@ -64,7 +92,7 @@ export class AnalysisService {
   ): Promise<void> {
     try {
       await this.updateJobStatus(jobId, AnalysisStatus.CLONING);
-      await this.updateJobStatus(jobId, AnalysisStatus.ANALYZING);
+      await this.updateJobStatus(jobId, AnalysisStatus.ANALYSING);
 
       await this.prisma.repositoryFile.deleteMany({ where: { repositoryId } });
       await this.neo4jGraph.deleteRepositoryGraph(repositoryId);
