@@ -18,6 +18,7 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -28,6 +29,8 @@ import {
 import { FIND_REPOSITORIES_BY_PROJECT_QUERY } from "@/lib/queries/RepositoryQueries";
 import Link from "next/link";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
+import { RepositoryImportDialog } from "@/components/repository/dialog/RepositoryImportDialog";
+import { ProjectSettingsDialog } from "@/components/project/dialog/ProjectSettingsDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -319,39 +322,37 @@ export function ProjectView({ project }: ProjectViewProps) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <button
-          onClick={() => {
-            /* TODO: Open add repositories dialog */
-          }}
-          className="group flex items-center gap-5 p-6 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-accent/30 transition-all text-left"
-        >
-          <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
-            <Plus className="size-6 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-base font-semibold">Add Repositories</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Connect GitHub repositories to this project
-            </p>
-          </div>
-        </button>
+        <RepositoryImportDialog
+          trigger={
+            <button className="group flex items-center gap-5 p-6 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-accent/30 transition-all text-left">
+              <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                <Plus className="size-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold">Add Repositories</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Connect GitHub repositories to this project
+                </p>
+              </div>
+            </button>
+          }
+        />
 
-        <button
-          onClick={() => {
-            /* TODO: Open manage members dialog */
-          }}
-          className="group flex items-center gap-5 p-6 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-accent/30 transition-all text-left"
-        >
-          <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
-            <UserPlus className="size-6 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-base font-semibold">Manage Members</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Add or remove team members from this project
-            </p>
-          </div>
-        </button>
+        <ProjectSettingsDialog
+          trigger={
+            <button className="group flex items-center gap-5 p-6 rounded-xl border border-border/50 hover:border-primary/40 hover:bg-accent/30 transition-all text-left">
+              <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                <UserPlus className="size-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold">Manage Members</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Add or remove team members from this project
+                </p>
+              </div>
+            </button>
+          }
+        />
       </div>
 
       <div className="space-y-5">
@@ -426,7 +427,7 @@ function StatCard({
   value,
   valueClass = "",
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   value: string;
   valueClass?: string;

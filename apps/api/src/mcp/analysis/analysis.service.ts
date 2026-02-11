@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AnalysisStatus } from '@prisma/client';
 import { MCPAnalysisService } from './mcp-analysis.service';
@@ -33,7 +33,7 @@ export class AnalysisService {
     });
 
     if (!repository) {
-      throw new Error(`Repository not found: ${repositoryId}`);
+      throw new NotFoundException(`Repository not found: ${repositoryId}`);
     }
 
     const job = await this.prisma.analysisJob.create({
@@ -64,7 +64,7 @@ export class AnalysisService {
   ): Promise<void> {
     try {
       await this.updateJobStatus(jobId, AnalysisStatus.CLONING);
-      await this.updateJobStatus(jobId, AnalysisStatus.ANALYZING);
+      await this.updateJobStatus(jobId, AnalysisStatus.ANALYSING);
 
       await this.prisma.repositoryFile.deleteMany({ where: { repositoryId } });
       await this.neo4jGraph.deleteRepositoryGraph(repositoryId);
@@ -129,7 +129,7 @@ export class AnalysisService {
     });
 
     if (!job) {
-      throw new Error(`Analysis job not found: ${jobId}`);
+      throw new NotFoundException(`Analysis job not found: ${jobId}`);
     }
 
     return job;

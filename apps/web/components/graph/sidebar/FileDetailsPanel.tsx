@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Code,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import {
   Dialog,
@@ -94,6 +95,8 @@ export function FileDetailsPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [jumpToLine, setJumpToLine] = useState<number | null>(null);
   const [isAnnotationDialogOpen, setIsAnnotationDialogOpen] = useState(false);
   const [editingAnnotation, setEditingAnnotation] = useState<FileAnnotation | undefined>();
   const [isSaving, setIsSaving] = useState(false);
@@ -275,7 +278,7 @@ export function FileDetailsPanel({
     <div className={className}>
       <ScrollArea className="h-full">
         <div className="animate-fade-in">
-          <Tabs defaultValue="overview" className="flex flex-col h-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
             <div className="px-5 pt-5">
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -301,7 +304,11 @@ export function FileDetailsPanel({
                     entities={fileDetails.codeEntities}
                     expandedEntity={expandedEntity}
                     onToggle={setExpandedEntity}
-                    onEntityClick={onEntityClick}
+                    onViewDetails={(entity) => {
+                      setActiveTab("content");
+                      setJumpToLine(entity.startLine);
+                      onEntityClick?.(entity);
+                    }}
                   />
                 )}
               </div>
@@ -349,6 +356,7 @@ export function FileDetailsPanel({
                 fileId={fileDetails.id}
                 fileName={fileDetails.fileName}
                 fileType={fileDetails.fileType}
+                jumpToLine={jumpToLine ?? undefined}
               />
             </TabsContent>
           </Tabs>
@@ -381,7 +389,7 @@ export function FileDetailsPanel({
   );
 }
 
-function SectionHeader({ icon: Icon, title, count }: { icon: any; title: string; count?: number }) {
+function SectionHeader({ icon: Icon, title, count }: { icon: LucideIcon; title: string; count?: number }) {
   return (
     <div className="flex items-center gap-2.5 mb-4">
       <Icon className="h-4 w-4 text-muted-foreground" />
@@ -446,12 +454,12 @@ function EntitiesSection({
   entities,
   expandedEntity,
   onToggle,
-  onEntityClick,
+  onViewDetails,
 }: {
   entities: CodeEntity[];
   expandedEntity: string | null;
   onToggle: (id: string | null) => void;
-  onEntityClick?: (entity: CodeEntity) => void;
+  onViewDetails: (entity: CodeEntity) => void;
 }) {
   return (
     <div className="border-t border-border/50 pt-5">
@@ -501,14 +509,12 @@ function EntitiesSection({
                       ))}
                     </ul>
                   )}
-                  {onEntityClick && (
-                    <button
-                      onClick={() => onEntityClick(entity)}
-                      className="text-xs text-primary hover:text-primary/80 transition-colors"
-                    >
-                      View details &rarr;
-                    </button>
-                  )}
+                  <button
+                    onClick={() => onViewDetails(entity)}
+                    className="text-xs text-primary hover:text-primary/80 transition-colors"
+                  >
+                    View details &rarr;
+                  </button>
                 </div>
               )}
             </div>

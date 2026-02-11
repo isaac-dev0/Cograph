@@ -19,13 +19,21 @@ import { RepositoryImportDialog } from "@/components/repository/dialog/Repositor
 
 export function ProjectRepositories() {
   const { isMobile } = useSidebar();
-  const { setCurrentRepository, repositories, removeRepositoryFromProject } = useRepository();
+  const { setCurrentRepository, repositories, removeRepositoryFromProject, archiveRepository } = useRepository();
 
   const handleRemoveRepository = async (repositoryId: string) => {
     try {
       await removeRepositoryFromProject(repositoryId);
     } catch (error) {
       console.error("Failed to remove repository:", error);
+    }
+  };
+
+  const handleArchiveRepository = async (repositoryId: string) => {
+    try {
+      await archiveRepository(repositoryId);
+    } catch (error) {
+      console.error("Failed to archive repository:", error);
     }
   };
 
@@ -59,7 +67,9 @@ export function ProjectRepositories() {
                 side={isMobile ? "bottom" : "right"}
                 align={isMobile ? "end" : "start"}
               >
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleArchiveRepository(repository.id)}
+                >
                   <Archive className="text-muted-foreground" />
                   <span>Archive</span>
                 </DropdownMenuItem>

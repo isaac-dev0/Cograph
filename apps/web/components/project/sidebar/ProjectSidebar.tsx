@@ -5,7 +5,11 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/providers/UserProvider";
@@ -16,6 +20,8 @@ import { ProjectSidebarMain } from "./ProjectSidebarMain";
 import { projectSidebarConfig } from "./config/config";
 import { appSidebarConfig } from "@/components/app/sidebar/config/config";
 import { AppSidebarFooter } from "@/components/app/sidebar/AppSidebarFooter";
+import { ProjectSettingsDialog } from "@/components/project/dialog/ProjectSettingsDialog";
+import { Settings } from "lucide-react";
 
 export function ProjectSidebar({
   ...props
@@ -39,6 +45,20 @@ export function ProjectSidebar({
           <>
             <ProjectRepositories />
             <ProjectSidebarMain config={projectSidebarConfig.hero} />
+            <SidebarGroup>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <ProjectSettingsDialog
+                    trigger={
+                      <SidebarMenuButton tooltip="Project Settings">
+                        <Settings />
+                        <span>Project Settings</span>
+                      </SidebarMenuButton>
+                    }
+                  />
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
           </>
         )}
         <AppSidebarFooter

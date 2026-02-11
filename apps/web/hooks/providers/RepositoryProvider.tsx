@@ -9,6 +9,7 @@ import {
   FIND_ALL_USER_REPOSITORIES,
   SYNC_REPOSITORIES_FROM_GITHUB,
   REMOVE_REPOSITORY_FROM_PROJECT,
+  ARCHIVE_REPOSITORY,
 } from "@/lib/queries/RepositoryQueries";
 import { useUser } from "./UserProvider";
 
@@ -23,6 +24,7 @@ interface RepositoryContextType {
   refreshAccountRepositories: () => Promise<void>;
   syncRepositoriesFromGitHub: () => Promise<void>;
   removeRepositoryFromProject: (repositoryId: string) => Promise<void>;
+  archiveRepository: (repositoryId: string) => Promise<void>;
 }
 
 const RepositoryContext = createContext<RepositoryContextType | undefined>(
@@ -236,6 +238,61 @@ export function RepositoryProvider({
     }
   };
 
+  const archiveRepository = async (repositoryId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("No active session");
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            query: ARCHIVE_REPOSITORY,
+            variables: { repositoryId },
+          }),
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (responseData.errors) {
+        const errorMessage = responseData.errors[0]?.message || "Unknown error";
+        throw new Error(`Failed to archive repository: ${errorMessage}`);
+      }
+
+      if (currentRepository?.id === repositoryId) {
+        setCurrentRepository(null);
+        if (currentProject) {
+          localStorage.removeItem(`currentRepositoryId-${currentProject.id}`);
+        }
+      }
+
+      await loadRepositories();
+    } catch (error) {
+      console.error("Failed to archive repository:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to archive repository"
+      );
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSetCurrentRepository = (repository: Repository | null) => {
     setCurrentRepository(repository);
 
@@ -322,6 +379,7 @@ export function RepositoryProvider({
         refreshAccountRepositories: loadAccountRepositories,
         syncRepositoriesFromGitHub,
         removeRepositoryFromProject,
+        archiveRepository,
       }}
     >
       {children}

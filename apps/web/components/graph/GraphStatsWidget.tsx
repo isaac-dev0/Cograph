@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { TrendingUp, Network, Activity } from "lucide-react";
+import { TrendingUp, Network, Activity, type LucideIcon } from "lucide-react";
 import type { ForceGraphData, ForceGraphNode } from "./utils/graphDataTransform";
 
 interface GraphStatsWidgetProps {
@@ -121,7 +121,7 @@ function StatItem({
   label,
   value,
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   value: string;
 }) {
