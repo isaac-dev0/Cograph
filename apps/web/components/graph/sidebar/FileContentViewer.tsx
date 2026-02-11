@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { graphqlRequest } from "@/lib/graphql/client";
 import { FILE_CONTENT_QUERY } from "@/lib/queries/GraphQueries";
 import dynamic from "next/dynamic";
+import type { editor } from "monaco-editor";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -13,6 +14,7 @@ interface FileContentViewerProps {
   fileId: string;
   fileName: string;
   fileType: string;
+  jumpToLine?: number;
 }
 
 const EXTENSION_TO_LANGUAGE: Record<string, string> = {
@@ -26,7 +28,7 @@ function getLanguage(fileType: string): string {
   return EXTENSION_TO_LANGUAGE[fileType.toLowerCase()] || fileType;
 }
 
-export function FileContentViewer({ fileId, fileName, fileType }: FileContentViewerProps) {
+export function FileContentViewer({ fileId, fileName, fileType, jumpToLine }: FileContentViewerProps) {
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +87,13 @@ export function FileContentViewer({ fileId, fileName, fileType }: FileContentVie
         language={language}
         value={content}
         theme={editorTheme}
+        onMount={(editorInstance) => {
+          editorRef.current = editorInstance;
+          if (jumpToLine != null) {
+            editorInstance.revealLineInCenter(jumpToLine);
+            editorInstance.setPosition({ lineNumber: jumpToLine, column: 1 });
+          }
+        }}
         options={{
           readOnly: true,
           minimap: { enabled: false },

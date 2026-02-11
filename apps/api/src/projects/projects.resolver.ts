@@ -66,7 +66,7 @@ export class ProjectsResolver {
     @Args('projectId', { type: () => ID }) projectId: string,
     @CurrentUser() profile: ProfileModel,
   ) {
-    return this.projectsService.findProjectMembers(projectId, profile.userId);
+    return this.projectsService.findProjectMembers(projectId, profile.id);
   }
 
   @Mutation(() => ProjectModel, {
@@ -80,7 +80,7 @@ export class ProjectsResolver {
   ) {
     return this.projectsService.update(
       projectId,
-      profile.userId,
+      profile.id,
       updateProjectInput,
     );
   }
@@ -108,7 +108,7 @@ export class ProjectsResolver {
   ) {
     return this.projectsService.transferOwnership(
       projectId,
-      profile.userId,
+      profile.id,
       newOwnerId,
     );
   }
@@ -124,7 +124,7 @@ export class ProjectsResolver {
   ) {
     return this.projectsService.addMembers(
       projectId,
-      profile.userId,
+      profile.id,
       profileIds,
     );
   }
@@ -140,7 +140,7 @@ export class ProjectsResolver {
   ) {
     return this.projectsService.removeMember(
       projectId,
-      profile.userId,
+      profile.id,
       profileId,
     );
   }

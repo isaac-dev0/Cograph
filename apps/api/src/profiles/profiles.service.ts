@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -31,8 +32,8 @@ export class ProfileService {
    */
   async syncProfile(data: SupabaseAuthData): Promise<Profile> {
     if (!data.userId) {
-      throw new Error(
-        'Cannot syncronise profile: Supabase Auth ID is missing.',
+      throw new BadRequestException(
+        'Cannot synchronise profile: Supabase Auth ID is missing.',
       );
     }
 

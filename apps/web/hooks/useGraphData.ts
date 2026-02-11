@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { graphqlRequest } from "@/lib/graphql/client";
-import { REPOSITORY_GRAPH_QUERY, REPOSITORY_NODE_COUNT_QUERY } from "@/lib/queries/GraphQueries";
+import { REPOSITORY_GRAPH_QUERY, REPOSITORY_NODE_COUNT_QUERY, ANALYSIS_JOB_QUERY } from "@/lib/queries/GraphQueries";
 import { ANALYSE_REPOSITORY } from "@/lib/queries/RepositoryQueries";
 import {
   transformGraphData,
@@ -19,6 +19,19 @@ interface AnalysisState {
   isAnalyzing: boolean;
   analysisError: string | null;
   elapsedSeconds: number;
+  progress: number;
+  filesAnalysed: number;
+  totalFiles: number | null;
+  status: string | null;
+}
+
+interface AnalysisJobResult {
+  id: string;
+  status: string;
+  progress: number;
+  filesAnalysed: number;
+  totalFiles: number | null;
+  errorMessage: string | null;
 }
 
 interface UseGraphDataReturn {
@@ -51,12 +64,15 @@ export function useGraphData(
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [filesAnalysed, setFilesAnalysed] = useState(0);
+  const [totalFiles, setTotalFiles] = useState<number | null>(null);
+  const [analysisStatus, setAnalysisStatus] = useState<string | null>(null);
 
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const prevNodeCountRef = useRef(0);
-  const stableCountRef = useRef(0);
+  const jobIdRef = useRef<string | null>(null);
 
   const clearTimers = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -93,20 +109,6 @@ export function useGraphData(
         setGraphData(transformed);
         setTotalCount(countResult.repositoryNodeCount);
 
-        if (silent && isAnalyzing) {
-          const currentCount = transformed.nodes.length;
-          if (currentCount === prevNodeCountRef.current) {
-            stableCountRef.current++;
-          } else {
-            stableCountRef.current = 0;
-          }
-          prevNodeCountRef.current = currentCount;
-
-          if (stableCountRef.current >= 3 && currentCount > 0) {
-            clearTimers();
-            setIsAnalyzing(false);
-          }
-        }
       } catch (err) {
         if (!silent) {
           setError(err instanceof Error ? err.message : "Failed to load graph");
@@ -115,7 +117,36 @@ export function useGraphData(
         if (!silent) setIsLoading(false);
       }
     },
-    [repositoryId, options, isAnalyzing, clearTimers],
+    [repositoryId, options],
+  );
+
+  const pollJobStatus = useCallback(
+    async (jobId: string) => {
+      try {
+        const result = await graphqlRequest<{ analysisJob: AnalysisJobResult }>(
+          ANALYSIS_JOB_QUERY,
+          { id: jobId },
+        );
+        const job = result.analysisJob;
+        setAnalysisProgress(job.progress);
+        setFilesAnalysed(job.filesAnalysed);
+        setTotalFiles(job.totalFiles);
+        setAnalysisStatus(job.status);
+
+        if (job.status === "COMPLETED") {
+          clearTimers();
+          setIsAnalyzing(false);
+          fetchGraph(false);
+        } else if (job.status === "FAILED") {
+          clearTimers();
+          setIsAnalyzing(false);
+          setAnalysisError(job.errorMessage ?? "Analysis failed");
+        }
+      } catch {
+        // swallow poll errors — will retry next interval
+      }
+    },
+    [clearTimers, fetchGraph],
   );
 
   const startAnalysis = useCallback(async () => {
@@ -123,23 +154,36 @@ export function useGraphData(
       setIsAnalyzing(true);
       setAnalysisError(null);
       setElapsedSeconds(0);
-      prevNodeCountRef.current = 0;
-      stableCountRef.current = 0;
+      setAnalysisProgress(0);
+      setFilesAnalysed(0);
+      setTotalFiles(null);
+      setAnalysisStatus("PENDING");
+      jobIdRef.current = null;
 
       clearTimers();
 
       timerRef.current = setInterval(
-        () => setElapsedSeconds((s) => s + 1),
+        () => setElapsedSeconds((seconds) => seconds + 1),
         1000,
       );
 
-      await graphqlRequest(ANALYSE_REPOSITORY, { repositoryId });
+      const result = await graphqlRequest<{ analyseRepository: { id: string } }>(
+        ANALYSE_REPOSITORY,
+        { repositoryId },
+      );
 
-      pollRef.current = setInterval(() => fetchGraph(true), POLL_INTERVAL_MS);
+      const jobId = result.analyseRepository.id;
+      jobIdRef.current = jobId;
+
+      pollRef.current = setInterval(
+        () => pollJobStatus(jobId),
+        POLL_INTERVAL_MS,
+      );
 
       timeoutRef.current = setTimeout(() => {
         clearTimers();
         setIsAnalyzing(false);
+        setAnalysisError("Analysis timed out");
       }, ANALYSIS_TIMEOUT_MS);
     } catch (err) {
       setAnalysisError(
@@ -148,7 +192,7 @@ export function useGraphData(
       setIsAnalyzing(false);
       clearTimers();
     }
-  }, [repositoryId, fetchGraph, clearTimers]);
+  }, [repositoryId, pollJobStatus, clearTimers]);
 
   useEffect(() => {
     fetchGraph();
@@ -176,7 +220,15 @@ export function useGraphData(
     displayData,
     isLoading,
     error,
-    analysis: { isAnalyzing, analysisError, elapsedSeconds },
+    analysis: {
+      isAnalyzing,
+      analysisError,
+      elapsedSeconds,
+      progress: analysisProgress,
+      filesAnalysed,
+      totalFiles,
+      status: analysisStatus,
+    },
     totalCount,
     loadedCount,
     setFileTypeFilter: setSelectedFileTypes,

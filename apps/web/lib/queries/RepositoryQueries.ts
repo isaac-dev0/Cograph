@@ -70,6 +70,15 @@ export const REMOVE_REPOSITORY_FROM_PROJECT = `
   }
 `;
 
+export const ARCHIVE_REPOSITORY = `
+  mutation ArchiveRepository($repositoryId: ID!) {
+    archiveRepository(repositoryId: $repositoryId) {
+      id
+      isArchived
+    }
+  }
+`;
+
 export const ANALYSE_REPOSITORY = `
   mutation AnalyseRepository($repositoryId: ID!) {
     analyseRepository(repositoryId: $repositoryId) {

@@ -1,5 +1,5 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { ProfileService } from 'src/profiles/profiles.service';
@@ -33,7 +33,7 @@ export class SupabaseJwtStrategy extends PassportStrategy(
     const secret = configService.get<string>('SUPABASE_JWT_SECRET');
 
     if (!secret) {
-      throw new Error(
+      throw new InternalServerErrorException(
         'SUPABASE_JWT_SECRET is not defined in the configuration.',
       );
     }

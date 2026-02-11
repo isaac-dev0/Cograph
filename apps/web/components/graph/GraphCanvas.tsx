@@ -43,7 +43,19 @@ interface AnalysisState {
   isAnalyzing: boolean;
   analysisError: string | null;
   elapsedSeconds: number;
+  progress: number;
+  filesAnalysed: number;
+  totalFiles: number | null;
+  status: string | null;
 }
+
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pending...",
+  CLONING: "Cloning repository...",
+  ANALYSING: "Analysing files...",
+  COMPLETED: "Completed",
+  FAILED: "Failed",
+};
 
 const DOT_SPACING = 24;
 const DOT_RADIUS = 0.6;
@@ -174,7 +186,7 @@ export function GraphCanvas({
   } = useGraphData(repositoryId, options);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<any>(null);
+  const graphRef = useRef<ForceGraphMethods<ForceGraphNode, ForceGraphLink>>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height });
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -258,7 +270,7 @@ export function GraphCanvas({
   }, [isFocused, recenter, startAnalysis]);
 
   const handleNodeClick = useCallback(
-    (node: any) => onNodeClick?.(node as ForceGraphNode),
+    (node: ForceGraphNode) => onNodeClick?.(node),
     [onNodeClick],
   );
 
@@ -332,16 +344,15 @@ export function GraphCanvas({
   }, []);
 
   const nodeCanvasObject = useCallback(
-    (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const forceNode = node as ForceGraphNode;
-      const isHovered = forceNode.id === hoveredNodeId;
-      const isDimmed = hoveredNodeId && !connectedNodeIds.has(forceNode.id);
+    (node: ForceGraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
+      const isHovered = node.id === hoveredNodeId;
+      const isDimmed = hoveredNodeId && !connectedNodeIds.has(node.id);
 
       if (isDimmed) {
         ctx.globalAlpha = 0.15;
       }
 
-      drawBadgeNode(forceNode, ctx, globalScale, isHovered);
+      drawBadgeNode(node, ctx, globalScale, isHovered);
 
       if (isDimmed) {
         ctx.globalAlpha = 1;
@@ -351,11 +362,10 @@ export function GraphCanvas({
   );
 
   const nodePointerAreaPaint = useCallback(
-    (node: any, color: string, ctx: CanvasRenderingContext2D) => {
-      const forceNode = node as ForceGraphNode;
-      const x = forceNode.x ?? 0;
-      const y = forceNode.y ?? 0;
-      const w = estimateBadgeWidth(forceNode);
+    (node: ForceGraphNode, color: string, ctx: CanvasRenderingContext2D) => {
+      const x = node.x ?? 0;
+      const y = node.y ?? 0;
+      const w = estimateBadgeWidth(node);
       const h = NODE_HEIGHT + 8;
       ctx.fillStyle = color;
       ctx.fillRect(x - w / 2, y - h / 2, w, h);
@@ -444,7 +454,29 @@ export function GraphCanvas({
             )}
           </Button>
 
-          {analysis.isAnalyzing && <ElapsedTimer seconds={analysis.elapsedSeconds} />}
+          {analysis.isAnalyzing && (
+            <div className="w-full space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  {analysis.status
+                    ? (STATUS_LABELS[analysis.status] ?? analysis.status)
+                    : "Starting..."}
+                </span>
+                <ElapsedTimer seconds={analysis.elapsedSeconds} />
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-500"
+                  style={{ width: `${analysis.progress}%` }}
+                />
+              </div>
+              {analysis.totalFiles != null && analysis.totalFiles > 0 && (
+                <p className="text-xs text-muted-foreground font-mono text-center">
+                  {analysis.filesAnalysed} / {analysis.totalFiles} files
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -536,7 +568,7 @@ export function GraphCanvas({
         nodePointerAreaPaint={nodePointerAreaPaint}
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
-        linkColor={(link: any) => {
+        linkColor={(link: ForceGraphLink) => {
           if (!hoveredNodeId) return LINK_COLOR;
           const sourceId = typeof link.source === "object" ? link.source.id : link.source;
           const targetId = typeof link.target === "object" ? link.target.id : link.target;
@@ -568,6 +600,7 @@ function AnalysisOverlay({
 }) {
   return (
     <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2 w-56">
+    <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2 w-56">
       <Button
         variant="outline"
         size="sm"
@@ -582,8 +615,26 @@ function AnalysisOverlay({
       </Button>
 
       {analysis.isAnalyzing && (
-        <div className="glass rounded-md px-3 py-1.5">
-          <ElapsedTimer seconds={analysis.elapsedSeconds} />
+        <div className="glass rounded-md px-3 py-2 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">
+              {analysis.status ? (STATUS_LABELS[analysis.status] ?? analysis.status) : "Starting..."}
+            </span>
+            <ElapsedTimer seconds={analysis.elapsedSeconds} />
+          </div>
+
+          <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${analysis.progress}%` }}
+            />
+          </div>
+
+          {analysis.totalFiles != null && analysis.totalFiles > 0 && (
+            <p className="text-xs text-muted-foreground font-mono">
+              {analysis.filesAnalysed} / {analysis.totalFiles} files
+            </p>
+          )}
         </div>
       )}
 

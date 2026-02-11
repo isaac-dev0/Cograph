@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { Neo4jService } from 'nest-neo4j';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { MCPClientService } from '../../mcp/mcp-client.service';
@@ -100,7 +100,7 @@ export class Neo4jGraphService implements OnModuleInit {
 
       const record = result.records[0];
       if (!record) {
-        throw new Error('Failed to create file node');
+        throw new InternalServerErrorException('Failed to create file node');
       }
 
       this.logger.log(`Created File node: ${data.path}`);
@@ -126,7 +126,7 @@ export class Neo4jGraphService implements OnModuleInit {
    */
   async createEntityNode(data: EntityNodeData) {
     if (!Neo4jGraphService.VALID_ENTITY_TYPES.has(data.type)) {
-      throw new Error(
+      throw new BadRequestException(
         `Invalid entity type "${data.type}". Must be one of: Function, Class, Interface.`,
       );
     }
@@ -157,8 +157,8 @@ export class Neo4jGraphService implements OnModuleInit {
 
       const record = result.records[0];
       if (!record) {
-        throw new Error(
-          `Failed to create entity node or file not found: ${data.fileId}`,
+        throw new NotFoundException(
+          `Failed to create entity node: file not found: ${data.fileId}`,
         );
       }
 
@@ -198,7 +198,7 @@ export class Neo4jGraphService implements OnModuleInit {
 
       const record = result.records[0];
       if (!record) {
-        throw new Error(
+        throw new InternalServerErrorException(
           `Failed to create import relationship: ${data.fromFileId} -> ${data.toFileId}`,
         );
       }
@@ -351,7 +351,7 @@ export class Neo4jGraphService implements OnModuleInit {
 
       const record = result.records[0];
       if (!record) {
-        throw new Error(
+        throw new InternalServerErrorException(
           `Failed to create export relationship: ${fileId} -> ${entityId}`,
         );
       }

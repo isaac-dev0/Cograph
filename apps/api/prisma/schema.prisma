@@ -36,7 +36,7 @@ enum AnalysisStatus {
 }
 
 model Profile {
-    id          String   @id @default(uuid()) @db.Uuid
+    id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
     userId      String   @unique @map("user_id") @db.Uuid
     email       String   @unique
     displayName String   @map("display_name")

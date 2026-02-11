@@ -11,6 +11,7 @@ import {
   Clock,
   Shield,
   Activity,
+  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -201,7 +202,7 @@ function StatCard({
   value,
   valueClass = "",
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   value: string;
   valueClass?: string;
@@ -223,7 +224,7 @@ function TimelineItem({
   date,
   relative,
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   date: string;
   relative: string;

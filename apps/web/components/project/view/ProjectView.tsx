@@ -30,6 +30,8 @@ import {
 import { FIND_REPOSITORIES_BY_PROJECT_QUERY } from "@/lib/queries/RepositoryQueries";
 import Link from "next/link";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
+import { RepositoryImportDialog } from "@/components/repository/dialog/RepositoryImportDialog";
+import { ProjectSettingsDialog } from "@/components/project/dialog/ProjectSettingsDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -500,7 +502,7 @@ function StatCard({
   value,
   valueClass = "",
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   value: string;
   valueClass?: string;

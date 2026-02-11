@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { join } from 'path';
 
 const MCP_SERVER_PATH = join(__dirname, '../../../mcp-server/build/index.js');
@@ -54,7 +54,7 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
     options?: { timeout?: number },
   ): Promise<T> {
     if (!this.client) {
-      throw new Error('MCP client is not connected');
+      throw new InternalServerErrorException('MCP client is not connected');
     }
 
     const result = await this.client.callTool(
@@ -67,7 +67,7 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
     const textContent = content?.find((c) => c.type === 'text');
 
     if (!textContent?.text) {
-      throw new Error('No text content in MCP response');
+      throw new InternalServerErrorException('No text content in MCP response');
     }
 
     try {

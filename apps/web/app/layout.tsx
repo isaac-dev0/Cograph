@@ -76,7 +76,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <UserProvider user={user} profile={profile}>
+          <UserProvider user={user}>
             <ProjectProvider>
               <RepositoryProvider>{children}</RepositoryProvider>
             </ProjectProvider>
