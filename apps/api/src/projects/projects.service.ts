@@ -96,7 +96,7 @@ export class ProjectsService {
   async findProjectMembers(
     projectId: string,
     userId: string,
-  ): Promise<{ profileId: string }[]> {
+  ) {
     const membership = await this.prisma.projectMember.findFirst({
       where: { projectId, profileId: userId },
     });
@@ -110,7 +110,7 @@ export class ProjectsService {
 
     return this.prisma.projectMember.findMany({
       where: { projectId },
-      select: { profileId: true },
+      include: { profile: true },
     });
   }
 

@@ -55,20 +55,22 @@ export default async function RootLayout({
               }`,
             }),
             cache: "no-store",
-          }
+          },
         );
         const { data, errors } = await response.json();
         if (!errors) {
           profile = data.findProfileByUserId;
         }
-      } catch {
-        // Profile will be null; client-side sync will handle it.
-      }
+      } catch {}
     }
   }
 
   return (
-    <html className={`${geistSans.variable} ${geistMono.variable} ${geistSans.className}`} lang="en" suppressHydrationWarning>
+    <html
+      className={`${geistSans.variable} ${geistMono.variable} ${geistSans.className}`}
+      lang="en"
+      suppressHydrationWarning
+    >
       <body>
         <ThemeProvider
           attribute="class"

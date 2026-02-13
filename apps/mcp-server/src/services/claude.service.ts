@@ -11,7 +11,6 @@ export class ClaudeService {
     this.client = new Anthropic({ apiKey: key });
   }
 
-  /* Provide prompt and code and produce an analysis on the code structure. */
   async analyseCode(prompt: string, code: string): Promise<string> {
     try {
       const response = await this.client.messages.create({

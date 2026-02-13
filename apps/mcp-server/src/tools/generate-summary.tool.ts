@@ -88,9 +88,7 @@ export function registerGenerateSummaryTool(server: McpServer): void {
         const summary = await claude.analyseCode(contextualPrompt, code);
         const trimmedSummary = summary.trim();
 
-        log(
-          `Summary generated successfully (${trimmedSummary.length} characters)`,
-        );
+        log(`Summary generated successfully (${trimmedSummary.length} characters)`);
 
         return {
           content: [{ type: "text" as const, text: trimmedSummary }],

@@ -1,6 +1,6 @@
 "use client";
 
-import { Repository } from "@/lib/shared/Repository";
+import { Repository } from "@/lib/interfaces/repository.interfaces";
 import { Badge } from "@/components/ui/badge";
 import {
   GitGraph,

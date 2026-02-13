@@ -10,7 +10,6 @@ type Profile {
   job: String
   location: String
   avatarUrl: String
-  githubToken: String
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -365,6 +364,44 @@ type FileAnnotation {
   updatedAt: DateTime!
 }
 
+"""
+An annotation enriched with its source file information, for display in the documents view.
+"""
+type DocumentAnnotation {
+  """Unique identifier of the annotation."""
+  id: ID!
+
+  """Title of the annotation (max 200 characters)."""
+  title: String!
+
+  """Markdown content of the annotation."""
+  content: String!
+
+  """Tags associated with this annotation."""
+  tags: [String!]!
+
+  """IDs of code entities linked to this annotation."""
+  linkedEntityIds: [ID!]!
+
+  """Author of the annotation."""
+  author: AnnotationAuthor!
+
+  """Timestamp when the annotation was created."""
+  createdAt: DateTime!
+
+  """Timestamp when the annotation was last updated."""
+  updatedAt: DateTime!
+
+  """Postgres UUID of the repository file this annotation belongs to."""
+  fileId: ID!
+
+  """Repository-relative path of the source file."""
+  filePath: String!
+
+  """Base name of the source file (e.g. "foo.ts")."""
+  fileName: String!
+}
+
 """A node in the dependency graph"""
 type GraphNode {
   """Unique identifier for the node"""
@@ -476,6 +513,11 @@ type Query {
 
   """Fetches the raw content of a file from GitHub."""
   fileContent(id: ID!): String!
+
+  """
+  Retrieves all annotations across every file in a repository, ordered by creation date descending.
+  """
+  repositoryAnnotations(repositoryId: ID!): [DocumentAnnotation!]!
 
   """
   Returns the complete dependency graph for a repository with all nodes and edges. Supports pagination and filtering.
@@ -613,7 +655,6 @@ input UpdateProfileInput {
   job: String
   location: String
   avatarUrl: String
-  githubToken: String
 }
 
 input CreateProjectInput {
@@ -650,7 +691,7 @@ input CreateAnnotationInput {
   """Markdown content of the annotation"""
   content: String!
 
-  """Tags for organizing the annotation"""
+  """Tags for organising the annotation"""
   tags: [String!]
 
   """IDs of code entities linked to this annotation"""
@@ -664,7 +705,7 @@ input UpdateAnnotationInput {
   """Markdown content of the annotation"""
   content: String
 
-  """Tags for organizing the annotation"""
+  """Tags for organising the annotation"""
   tags: [String!]
 
   """IDs of code entities linked to this annotation"""

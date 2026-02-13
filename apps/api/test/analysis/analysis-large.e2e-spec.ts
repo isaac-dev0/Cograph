@@ -61,10 +61,9 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
       let lastFilesAnalysed = 0;
 
       const { job } = await pollAndTrackStatuses(gqlClient, jobId, {
-        maxWaitMs: 600000, // 10 minutes max
-        intervalMs: 5000, // Check every 5 seconds
+        maxWaitMs: 600000,
+        intervalMs: 5000,
         onProgress: (j) => {
-          // Only log when progress changes significantly
           if (j.progress !== lastProgress || j.filesAnalysed !== lastFilesAnalysed) {
             console.log(
               `[${Math.round((Date.now() - startTime) / 1000)}s] ` +
@@ -86,25 +85,20 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
       console.log(`Files analyzed: ${job.filesAnalysed}`);
       console.log(`Status: ${job.status}`);
 
-      // Assert completion
       expect(job.status).toBe('COMPLETED');
       expect(job.progress).toBe(100);
       expect(job.filesAnalysed).toBeGreaterThanOrEqual(
         LARGE_REPO.expectedFileCount.min,
       );
 
-      // Assert performance requirement: < 5 minutes for 100 files
-      // Calculate rate to verify acceptable performance
       const filesPerMinute = job.filesAnalysed / durationMinutes;
       console.log(`Performance: ${Math.round(filesPerMinute)} files/minute`);
 
-      // If we have 100+ files, it should complete within 5 minutes
       if (job.filesAnalysed >= 100) {
-        expect(duration).toBeLessThan(300000); // 5 minutes in ms
+        expect(duration).toBeLessThan(300000);
         console.log('✓ Performance requirement met: < 5 min for 100+ files');
       }
 
-      // Verify file count
       const files = await db.getRepositoryFiles(testRepositoryId);
       expect(files.length).toBe(job.filesAnalysed);
       expect(files.length).toBeGreaterThanOrEqual(
@@ -113,7 +107,6 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
 
       console.log(`\n=== File Statistics ===`);
 
-      // Analyze file types
       const filesByType: Record<string, number> = {};
       let totalLines = 0;
       let totalEntities = 0;
@@ -129,11 +122,10 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
       console.log(`Total code entities: ${totalEntities}`);
       console.log(`Average entities per file: ${Math.round(totalEntities / files.length * 10) / 10}`);
 
-      // Verify cleanup
       const cleaned = await waitForCleanup(testRepositoryId, 30000);
       expect(cleaned).toBe(true);
       console.log('✓ Temp directory cleaned up');
-    }, 720000); // 12 minute timeout
+    }, 720000);
   });
 
   describe('Large Repository - Data Integrity', () => {
@@ -160,16 +152,13 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
 
       const files = await db.getRepositoryFiles(testRepositoryId);
 
-      // Verify data integrity for all files
       const seenPaths = new Set<string>();
       const seenNeo4jIds = new Set<string>();
 
       for (const file of files) {
-        // Each file path should be unique
         expect(seenPaths.has(file.filePath)).toBe(false);
         seenPaths.add(file.filePath);
 
-        // Neo4j ID should be unique and properly formatted
         if (file.neo4jNodeId) {
           expect(seenNeo4jIds.has(file.neo4jNodeId)).toBe(false);
           seenNeo4jIds.add(file.neo4jNodeId);
@@ -178,12 +167,10 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
           );
         }
 
-        // File should have valid data
         expect(file.fileName.length).toBeGreaterThan(0);
         expect(file.fileType.length).toBeGreaterThan(0);
         expect(file.linesOfCode).toBeGreaterThan(0);
 
-        // Verify entities if present
         for (const entity of file.codeEntities) {
           expect(entity.name.length).toBeGreaterThan(0);
           expect(entity.startLine).toBeGreaterThan(0);
@@ -205,7 +192,6 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
         repositoryUrl: LARGE_REPO.url,
       });
 
-      // Record initial memory usage
       const initialMemory = process.memoryUsage();
       console.log('Initial memory usage:', {
         heapUsed: Math.round(initialMemory.heapUsed / 1024 / 1024) + 'MB',
@@ -223,7 +209,6 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
           maxWaitMs: 600000,
           intervalMs: 10000,
           onProgress: () => {
-            // Periodically check memory
             const currentMemory = process.memoryUsage();
             if (currentMemory.heapUsed > 500 * 1024 * 1024) {
               console.warn(
@@ -237,21 +222,18 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
 
       expect(job.status).toBe('COMPLETED');
 
-      // Record final memory usage
       const finalMemory = process.memoryUsage();
       console.log('Final memory usage:', {
         heapUsed: Math.round(finalMemory.heapUsed / 1024 / 1024) + 'MB',
         heapTotal: Math.round(finalMemory.heapTotal / 1024 / 1024) + 'MB',
       });
 
-      // Memory increase should be reasonable (less than 500MB)
       const memoryIncrease = finalMemory.heapUsed - initialMemory.heapUsed;
       console.log(
         'Memory increase:',
         Math.round(memoryIncrease / 1024 / 1024) + 'MB',
       );
 
-      // This is a soft check - log warning if memory usage is high
       if (memoryIncrease > 500 * 1024 * 1024) {
         console.warn('⚠️ High memory increase detected');
       }

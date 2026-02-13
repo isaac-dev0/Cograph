@@ -1,4 +1,9 @@
-import type { DependencyGraph, GraphNode, GraphEdge } from "@/lib/types/graph";
+import type {
+  DependencyGraph,
+  GraphNode,
+  GraphEdge,
+} from "@/lib/interfaces/graph.interfaces";
+import { parseFileNodeData } from "@/lib/interfaces/graph.interfaces";
 
 export interface ForceGraphNode {
   id: string;
@@ -67,31 +72,37 @@ function normaliseFileType(type: string): string {
   return FILE_TYPE_NORMALISE[lower] || lower;
 }
 
+const EXTERNAL_PATH_MARKER = "node_modules";
+const SCOPED_PACKAGE_PREFIX = "@";
+
+const NODE_SIZE_MIN = 3;
+const NODE_SIZE_MAX = 15;
+const NODE_SIZE_LOC_CAP = 1_000;
+const NODE_SIZE_DEFAULT = 5;
+
 function isExternalFile(path: string): boolean {
-  return path.includes("node_modules") || path.startsWith("@");
+  return (
+    path.includes(EXTERNAL_PATH_MARKER) ||
+    path.startsWith(SCOPED_PACKAGE_PREFIX)
+  );
 }
 
-/** Maps lines-of-code to a relative node size between 3 and 15. */
+/** Maps lines-of-code to a relative node size between NODE_SIZE_MIN and NODE_SIZE_MAX. */
 function calculateNodeSize(linesOfCode?: number): number {
-  if (!linesOfCode) return 5;
-  const normalised = Math.min(linesOfCode, 1000);
-  return 3 + (normalised / 1000) * 12;
-}
-
-function parseJson(raw: string): Record<string, unknown> {
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
+  if (!linesOfCode) return NODE_SIZE_DEFAULT;
+  const normalised = Math.min(linesOfCode, NODE_SIZE_LOC_CAP);
+  return (
+    NODE_SIZE_MIN +
+    (normalised / NODE_SIZE_LOC_CAP) * (NODE_SIZE_MAX - NODE_SIZE_MIN)
+  );
 }
 
 function transformNode(node: GraphNode): ForceGraphNode {
-  const data = parseJson(node.data);
-  const rawFileType = (data.fileType as string) || extractFileType(node.label);
+  const data = parseFileNodeData(node.data);
+  const rawFileType = data.fileType || extractFileType(node.label);
   const fileType = rawFileType ? normaliseFileType(rawFileType) : undefined;
-  const linesOfCode = (data.linesOfCode as number) || undefined;
-  const path = (data.filePath as string) || (data.path as string) || node.label;
+  const linesOfCode = data.linesOfCode || undefined;
+  const path = data.filePath || data.path || node.label;
   const isExternal = isExternalFile(path);
 
   return {
@@ -107,7 +118,10 @@ function transformNode(node: GraphNode): ForceGraphNode {
   };
 }
 
-function transformEdge(edge: GraphEdge, nodes: ForceGraphNode[]): ForceGraphLink {
+function transformEdge(
+  edge: GraphEdge,
+  nodes: ForceGraphNode[],
+): ForceGraphLink {
   const sourceNode = nodes.find((node) => node.id === edge.source);
   const targetNode = nodes.find((node) => node.id === edge.target);
   const isExternal = sourceNode?.isExternal || targetNode?.isExternal || false;
@@ -123,11 +137,21 @@ function transformEdge(edge: GraphEdge, nodes: ForceGraphNode[]): ForceGraphLink
 
 /**
  * Converts an API dependency graph into the format expected by react-force-graph.
- * Only file nodes are included — entity nodes are available via the file details panel.
+ * Entity nodes (FUNCTION / CLASS / INTERFACE) are excluded: they have no IMPORTS edges
+ * so they would appear as isolated orphan nodes in the force graph. Their details are
+ * surfaced instead through the file details panel when a file node is selected.
  */
 export function transformGraphData(graph: DependencyGraph): ForceGraphData {
-  const fileNodes = graph.nodes.filter((node) => node.type.toLowerCase() === "file");
-  const nodes = fileNodes.map(transformNode);
+  const fileNodes = graph.nodes.filter((node) => node.type === "FILE");
+
+  const seenIds = new Set<string>();
+  const uniqueFileNodes = fileNodes.filter((node) => {
+    if (seenIds.has(node.id)) return false;
+    seenIds.add(node.id);
+    return true;
+  });
+
+  const nodes = uniqueFileNodes.map(transformNode);
   const links = graph.edges.map((edge) => transformEdge(edge, nodes));
   return { nodes, links };
 }

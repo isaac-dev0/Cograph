@@ -1,16 +1,28 @@
 import { Injectable, Scope, UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver, ResolveField, Parent } from '@nestjs/graphql';
+import {
+  Args,
+  ID,
+  Mutation,
+  Query,
+  Resolver,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { SupabaseJwtGuard } from 'src/auth/supabase-jwt.guard';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { AnalysisService } from './analysis.service';
 import { AnalysisLoaders } from './analysis.loaders';
-import { RepositoryFileService } from 'src/repositories/repository-file.service';
-import { AnnotationsService } from 'src/repositories/annotations.service';
+import { RepositoryFileService } from 'src/repositories/services/repository-file.service';
+import { AnnotationsService } from 'src/repositories/services/annotations.service';
 import { MCPSummaryService } from './mcp-summary.service';
 import { AnalysisJob } from './models/analysis-job.model';
 import { RepositoryFile } from './models/repository-file.model';
 import { FileAnnotation } from './models/file-annotation.model';
-import { CreateAnnotationInput, UpdateAnnotationInput } from './dto/annotation-inputs';
+import { DocumentAnnotation } from './models/document-annotation.model';
+import {
+  CreateAnnotationInput,
+  UpdateAnnotationInput,
+} from './dto/annotation-inputs';
 import { Profile as ProfileModel } from 'src/profiles/models/profile.model';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -27,7 +39,8 @@ export class AnalysisResolver {
 
   @Mutation(() => AnalysisJob, {
     name: 'analyseRepository',
-    description: 'Triggers analysis of a repository. Returns the created analysis job.',
+    description:
+      'Triggers analysis of a repository. Returns the created analysis job.',
   })
   async analyseRepository(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
@@ -48,7 +61,8 @@ export class AnalysisResolver {
 
   @Query(() => [RepositoryFile], {
     name: 'repositoryFiles',
-    description: 'Retrieves all files for a repository, sorted alphabetically by path.',
+    description:
+      'Retrieves all files for a repository, sorted alphabetically by path.',
   })
   async repositoryFiles(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
@@ -58,7 +72,8 @@ export class AnalysisResolver {
 
   @Query(() => RepositoryFile, {
     name: 'repositoryFile',
-    description: 'Retrieves a single repository file by its ID, including code entities.',
+    description:
+      'Retrieves a single repository file by its ID, including code entities.',
   })
   async repositoryFile(
     @Args('id', { type: () => ID }) id: string,
@@ -92,7 +107,7 @@ export class AnalysisResolver {
     description: 'Updates the Claude summary for a repository file.',
   })
   async updateFileSummary(
-    @Args('id', { type: () => ID}) id: string,
+    @Args('id', { type: () => ID }) id: string,
     @Args('summary', { type: () => String }) summary: string,
   ): Promise<RepositoryFile> {
     return this.repositoryFileService.updateSummary(id, summary);
@@ -100,11 +115,13 @@ export class AnalysisResolver {
 
   @Mutation(() => RepositoryFile, {
     name: 'generateFileSummary',
-    description: 'Generates an AI summary for a file using Claude. Can regenerate existing summaries.',
+    description:
+      'Generates an AI summary for a file using Claude. Can regenerate existing summaries.',
   })
   async generateFileSummary(
     @Args('fileId', { type: () => ID }) fileId: string,
-    @Args('regenerate', { type: () => Boolean, defaultValue: false }) regenerate: boolean,
+    @Args('regenerate', { type: () => Boolean, defaultValue: false })
+    regenerate: boolean,
   ): Promise<RepositoryFile> {
     const file = await this.repositoryFileService.findById(fileId);
 
@@ -121,30 +138,43 @@ export class AnalysisResolver {
     return this.repositoryFileService.updateSummary(fileId, summary);
   }
 
+  @Query(() => [DocumentAnnotation], {
+    name: 'repositoryAnnotations',
+    description:
+      'Retrieves all annotations across every file in a repository, ordered by creation date descending.',
+  })
+  async repositoryAnnotations(
+    @Args('repositoryId', { type: () => ID }) repositoryId: string,
+  ): Promise<DocumentAnnotation[]> {
+    return this.annotationsService.getRepositoryAnnotations(repositoryId);
+  }
+
   @Mutation(() => FileAnnotation, {
     name: 'createAnnotation',
     description: 'Creates a new annotation on a repository file.',
   })
   async createAnnotation(
     @Args('fileId', { type: () => ID }) fileId: string,
-    @Args('input', { type: () => CreateAnnotationInput }) input: CreateAnnotationInput,
+    @Args('input', { type: () => CreateAnnotationInput })
+    input: CreateAnnotationInput,
     @CurrentUser() profile: ProfileModel,
   ): Promise<FileAnnotation> {
-    return this.annotationsService.createAnnotation(
-      fileId,
-      input,
-      { id: profile.id, name: profile.displayName },
-    );
+    return this.annotationsService.createAnnotation(fileId, input, {
+      id: profile.id,
+      name: profile.displayName,
+    });
   }
 
   @Mutation(() => FileAnnotation, {
     name: 'updateAnnotation',
-    description: 'Updates an existing annotation. Only the author can update it.',
+    description:
+      'Updates an existing annotation. Only the author can update it.',
   })
   async updateAnnotation(
     @Args('fileId', { type: () => ID }) fileId: string,
     @Args('annotationId', { type: () => ID }) annotationId: string,
-    @Args('input', { type: () => UpdateAnnotationInput }) input: UpdateAnnotationInput,
+    @Args('input', { type: () => UpdateAnnotationInput })
+    input: UpdateAnnotationInput,
     @CurrentUser() profile: ProfileModel,
   ): Promise<FileAnnotation> {
     return this.annotationsService.updateAnnotation(
@@ -164,7 +194,11 @@ export class AnalysisResolver {
     @Args('annotationId', { type: () => ID }) annotationId: string,
     @CurrentUser() profile: ProfileModel,
   ): Promise<boolean> {
-    return this.annotationsService.deleteAnnotation(fileId, annotationId, profile.id);
+    return this.annotationsService.deleteAnnotation(
+      fileId,
+      annotationId,
+      profile.id,
+    );
   }
 
   @ResolveField(() => [FileAnnotation], { nullable: true })

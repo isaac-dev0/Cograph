@@ -15,21 +15,49 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Loader2, GitGraph } from "lucide-react";
-import type { ForceGraphNode } from "@/components/graph/utils/graphDataTransform";
-import type { CodeEntity } from "@/lib/queries/GraphQueries";
+import type {
+  ForceGraphNode,
+  ForceGraphData,
+} from "@/components/graph/utils/graphDataTransform";
+import { transformGraphData } from "@/components/graph/utils/graphDataTransform";
+import type { CodeEntity, DependencyGraph } from "@/lib/queries/GraphQueries";
+import { FILE_DEPENDENCIES_QUERY } from "@/lib/queries/GraphQueries";
+import { graphqlRequest } from "@/lib/graphql/client";
 
 export default function GraphPage() {
   const { currentRepository, isLoading } = useRepository();
   const [selectedNode, setSelectedNode] = useState<ForceGraphNode | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [subgraphData, setSubgraphData] = useState<ForceGraphData | null>(null);
 
   const handleNodeClick = useCallback((node: ForceGraphNode) => {
     setSelectedNode(node);
     setPanelOpen(true);
   }, []);
 
-  const handleEntityClick = useCallback((entity: CodeEntity) => {
-    console.log("Entity clicked:", entity);
+  const handleEntityClick = useCallback((_entity: CodeEntity) => {}, []);
+
+  const handleFileSelect = useCallback((fileId: string) => {
+    setSelectedNode(
+      (previous) =>
+        ({
+          ...(previous ?? {}),
+          id: fileId,
+          name: fileId.split("/").pop() ?? fileId,
+        }) as ForceGraphNode,
+    );
+    setPanelOpen(true);
+  }, []);
+
+  const handleFocusSubgraph = useCallback(async (fileId: string) => {
+    try {
+      const result = await graphqlRequest<{
+        fileDependencies: DependencyGraph;
+      }>(FILE_DEPENDENCIES_QUERY, { fileId, options: { maxDepth: 2 } });
+      setSubgraphData(transformGraphData(result.fileDependencies));
+    } catch (err) {
+      console.error("Failed to fetch subgraph:", err);
+    }
   }, []);
 
   if (isLoading) {
@@ -53,7 +81,9 @@ export default function GraphPage() {
               <GitGraph className="size-4 text-muted-foreground/50" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">No repository selected</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                No repository selected
+              </p>
               <p className="text-xs text-muted-foreground/60 mt-1">
                 Select a repository from the sidebar to view its graph
               </p>
@@ -73,6 +103,8 @@ export default function GraphPage() {
           <GraphCanvas
             repositoryId={currentRepository.id}
             onNodeClick={handleNodeClick}
+            overrideData={subgraphData}
+            onExitSubgraphView={() => setSubgraphData(null)}
             showControls={true}
             className="w-full h-full"
           />
@@ -94,6 +126,8 @@ export default function GraphPage() {
               fileId={selectedNode.id}
               repositoryUrl={currentRepository.repositoryUrl}
               onEntityClick={handleEntityClick}
+              onFileSelect={handleFileSelect}
+              onFocusSubgraph={handleFocusSubgraph}
               canEdit={true}
               className="flex-1 overflow-hidden"
             />

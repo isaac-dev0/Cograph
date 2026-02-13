@@ -17,7 +17,10 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
-import type { FileAnnotation, CodeEntity } from "@/lib/types/graph";
+import type {
+  FileAnnotation,
+  CodeEntity,
+} from "@/lib/interfaces/graph.interfaces";
 
 const MarkdownPreview = dynamic(() => import("@uiw/react-markdown-preview"), {
   ssr: false,
@@ -45,10 +48,17 @@ export function AnnotationsList({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
 
-  const allTags = Array.from(new Set(annotations.flatMap((a) => a.tags))).sort();
+  const allTags = Array.from(
+    new Set(annotations.flatMap((annotation) => annotation.tags)),
+  ).sort();
 
   const allAuthors = Array.from(
-    new Map(annotations.map((a) => [a.author.id, a.author])).values(),
+    new Map(
+      annotations.map((annotation) => [
+        annotation.author.id,
+        annotation.author,
+      ]),
+    ).values(),
   );
 
   const filteredAnnotations = annotations.filter((annotation) => {
@@ -78,8 +88,8 @@ export function AnnotationsList({
     );
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -87,7 +97,7 @@ export function AnnotationsList({
   };
 
   const getLinkedEntities = (entityIds: string[]) => {
-    return codeEntities.filter((e) => entityIds.includes(e.id));
+    return codeEntities.filter((entity) => entityIds.includes(entity.id));
   };
 
   return (
@@ -114,7 +124,7 @@ export function AnnotationsList({
           <Input
             placeholder="Search annotations..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(event) => setSearchQuery(event.target.value)}
             className="pl-9"
           />
         </div>
@@ -183,7 +193,9 @@ export function AnnotationsList({
         ) : (
           <div className="space-y-3">
             {filteredAnnotations.map((annotation) => {
-              const linkedEntities = getLinkedEntities(annotation.linkedEntityIds);
+              const linkedEntities = getLinkedEntities(
+                annotation.linkedEntityIds,
+              );
               const isOwner = annotation.author.id === currentUserId;
 
               return (
@@ -238,7 +250,9 @@ export function AnnotationsList({
                   </div>
 
                   <div
-                    data-color-mode={resolvedTheme === "dark" ? "dark" : "light"}
+                    data-color-mode={
+                      resolvedTheme === "dark" ? "dark" : "light"
+                    }
                     className="text-sm"
                   >
                     <MarkdownPreview
@@ -251,7 +265,11 @@ export function AnnotationsList({
                   {annotation.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {annotation.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="text-xs"
+                        >
                           {tag}
                         </Badge>
                       ))}

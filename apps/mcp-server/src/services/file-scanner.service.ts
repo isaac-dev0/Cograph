@@ -46,7 +46,7 @@ export class FileScannerService {
       const fileName = path.basename(relativePath);
 
       if (!absolutePath.startsWith(resolvedRoot + path.sep) && absolutePath !== resolvedRoot) {
-        console.error(`Skipping path-traversal attempt: ${relativePath}`);
+        console.error(`Skipping traversal attempt: ${relativePath}`);
         continue;
       }
 
@@ -80,7 +80,7 @@ export class FileScannerService {
       ignorePatterns = DEFAULT_IGNORE_PATTERNS,
     } = options;
 
-    const patterns = extensions.map((ext) => `**/*${ext}`);
+    const patterns = extensions.map((extension) => `**/*${extension}`);
 
     const files = await fg(patterns, {
       cwd: rootPath,

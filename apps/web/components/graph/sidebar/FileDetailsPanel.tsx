@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useReducer } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,6 @@ import {
   ExternalLink,
   ChevronRight,
   Code,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -26,11 +25,16 @@ import {
   UPDATE_ANNOTATION_MUTATION,
   DELETE_ANNOTATION_MUTATION,
 } from "@/lib/queries/GraphQueries";
-import type { FileDetails, CodeEntity, FileAnnotation } from "@/lib/types/graph";
+import type {
+  FileDetails,
+  CodeEntity,
+  FileAnnotation,
+} from "@/lib/interfaces/graph.interfaces";
 import { AnnotationsList } from "./AnnotationsList";
 import { AnnotationForm } from "./AnnotationForm";
 import { FileContentViewer } from "./FileContentViewer";
 import { SummaryTab } from "./SummaryTab";
+import { DependenciesTab } from "./DependenciesTab";
 import { useUser } from "@/hooks/providers/UserProvider";
 import { toast } from "sonner";
 
@@ -38,18 +42,60 @@ interface FileDetailsPanelProps {
   fileId: string;
   repositoryUrl?: string;
   onEntityClick?: (entity: CodeEntity) => void;
+  onFileSelect?: (fileId: string) => void;
+  onFocusSubgraph?: (fileId: string) => void;
   canEdit?: boolean;
   className?: string;
 }
 
-const ENTITY_STYLES: Record<string, { icon: string; color: string }> = {
-  function:  { icon: "f", color: "text-blue-400 bg-blue-400/10" },
-  class:     { icon: "C", color: "text-purple-400 bg-purple-400/10" },
-  interface: { icon: "I", color: "text-green-400 bg-green-400/10" },
-  type:      { icon: "T", color: "text-orange-400 bg-orange-400/10" },
+interface AnnotationDialogState {
+  isOpen: boolean;
+  editing: FileAnnotation | undefined;
+  isSaving: boolean;
+}
+
+type AnnotationDialogAction =
+  | { type: "OPEN_CREATE" }
+  | { type: "OPEN_EDIT"; annotation: FileAnnotation }
+  | { type: "CLOSE" }
+  | { type: "SAVE_START" }
+  | { type: "SAVE_END" };
+
+const DIALOG_CLOSED: AnnotationDialogState = {
+  isOpen: false,
+  editing: undefined,
+  isSaving: false,
 };
 
-const DEFAULT_ENTITY_STYLE = { icon: "\u2022", color: "text-muted-foreground bg-muted" };
+function annotationDialogReducer(
+  _state: AnnotationDialogState,
+  action: AnnotationDialogAction,
+): AnnotationDialogState {
+  switch (action.type) {
+    case "OPEN_CREATE":
+      return { isOpen: true, editing: undefined, isSaving: false };
+    case "OPEN_EDIT":
+      return { isOpen: true, editing: action.annotation, isSaving: false };
+    case "CLOSE":
+      return DIALOG_CLOSED;
+    case "SAVE_START":
+      return { ..._state, isSaving: true };
+    case "SAVE_END":
+      return { ..._state, isSaving: false };
+  }
+}
+
+const ENTITY_STYLES: Record<string, { icon: string; color: string }> = {
+  function: { icon: "f", color: "text-blue-400 bg-blue-400/10" },
+  class: { icon: "C", color: "text-purple-400 bg-purple-400/10" },
+  interface: { icon: "I", color: "text-green-400 bg-green-400/10" },
+  type: { icon: "T", color: "text-orange-400 bg-orange-400/10" },
+};
+
+const DEFAULT_ENTITY_STYLE = {
+  icon: "\u2022",
+  color: "text-muted-foreground bg-muted",
+};
 
 function getEntityStyle(type: string) {
   return ENTITY_STYLES[type.toLowerCase()] || DEFAULT_ENTITY_STYLE;
@@ -71,11 +117,10 @@ function buildGitHubUrl(repositoryUrl: string, filePath: string): string {
   return `${repositoryUrl.replace(/\.git$/, "")}/blob/main/${filePath}`;
 }
 
-/** Splits a raw annotation string into structured bullet points. */
 function parseAnnotations(raw: string): string[] {
   return raw
     .split(/[\n;]|(?:\.\s)/)
-    .map((s) => s.replace(/^[-•*]\s*/, "").trim())
+    .map((str) => str.replace(/^[-•*]\s*/, "").trim())
     .filter(Boolean);
 }
 
@@ -87,6 +132,8 @@ export function FileDetailsPanel({
   fileId,
   repositoryUrl,
   onEntityClick,
+  onFileSelect,
+  onFocusSubgraph,
   canEdit = false,
   className = "",
 }: FileDetailsPanelProps) {
@@ -97,9 +144,10 @@ export function FileDetailsPanel({
   const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [jumpToLine, setJumpToLine] = useState<number | null>(null);
-  const [isAnnotationDialogOpen, setIsAnnotationDialogOpen] = useState(false);
-  const [editingAnnotation, setEditingAnnotation] = useState<FileAnnotation | undefined>();
-  const [isSaving, setIsSaving] = useState(false);
+  const [dialog, dispatchDialog] = useReducer(
+    annotationDialogReducer,
+    DIALOG_CLOSED,
+  );
 
   const fetchDetails = useCallback(async () => {
     try {
@@ -110,8 +158,10 @@ export function FileDetailsPanel({
         { id: fileId },
       );
       setFileDetails(data.repositoryFile);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load file details");
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to load file details",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -119,6 +169,7 @@ export function FileDetailsPanel({
 
   useEffect(() => {
     fetchDetails();
+    setActiveTab("overview");
   }, [fetchDetails]);
 
   const handleCreateAnnotation = async (data: {
@@ -127,7 +178,7 @@ export function FileDetailsPanel({
     tags: string[];
     linkedEntityIds: string[];
   }) => {
-    setIsSaving(true);
+    dispatchDialog({ type: "SAVE_START" });
     try {
       const result = await graphqlRequest<{ createAnnotation: FileAnnotation }>(
         CREATE_ANNOTATION_MUTATION,
@@ -137,28 +188,31 @@ export function FileDetailsPanel({
         },
       );
 
-      setFileDetails((prev) =>
-        prev
+      setFileDetails((previous) =>
+        previous
           ? {
-              ...prev,
-              annotations: [...(prev.annotations || []), result.createAnnotation],
+              ...previous,
+              annotations: [
+                ...(previous.annotations || []),
+                result.createAnnotation,
+              ],
             }
-          : prev,
+          : previous,
       );
 
-      setIsAnnotationDialogOpen(false);
-      setEditingAnnotation(undefined);
+      dispatchDialog({ type: "CLOSE" });
 
       localStorage.removeItem(`draft-annotation-${fileDetails!.id}`);
       toast.success("Annotation created successfully");
     } catch (error) {
       console.error("Failed to create annotation:", error);
-      const message = error instanceof Error ? error.message : "Unknown error occurred";
+      const message =
+        error instanceof Error ? error.message : "Unknown error occurred";
       toast.error("Failed to create annotation", {
         description: message,
       });
     } finally {
-      setIsSaving(false);
+      dispatchDialog({ type: "SAVE_END" });
     }
   };
 
@@ -168,15 +222,15 @@ export function FileDetailsPanel({
     tags: string[];
     linkedEntityIds: string[];
   }) => {
-    if (!editingAnnotation) return;
+    if (!dialog.editing) return;
 
-    setIsSaving(true);
+    dispatchDialog({ type: "SAVE_START" });
     try {
       const result = await graphqlRequest<{ updateAnnotation: FileAnnotation }>(
         UPDATE_ANNOTATION_MUTATION,
         {
           fileId: fileDetails!.id,
-          annotationId: editingAnnotation.id,
+          annotationId: dialog.editing.id,
           input: data,
         },
       );
@@ -186,27 +240,27 @@ export function FileDetailsPanel({
           ? {
               ...prev,
               annotations: prev.annotations?.map((a) =>
-                a.id === editingAnnotation.id ? result.updateAnnotation : a,
+                a.id === dialog.editing!.id ? result.updateAnnotation : a,
               ),
             }
           : prev,
       );
 
-      setIsAnnotationDialogOpen(false);
-      setEditingAnnotation(undefined);
+      dispatchDialog({ type: "CLOSE" });
 
       localStorage.removeItem(
-        `draft-annotation-${fileDetails!.id}-${editingAnnotation.id}`,
+        `draft-annotation-${fileDetails!.id}-${dialog.editing.id}`,
       );
       toast.success("Annotation updated successfully");
     } catch (error) {
       console.error("Failed to update annotation:", error);
-      const message = error instanceof Error ? error.message : "Unknown error occurred";
+      const message =
+        error instanceof Error ? error.message : "Unknown error occurred";
       toast.error("Failed to update annotation", {
         description: message,
       });
     } finally {
-      setIsSaving(false);
+      dispatchDialog({ type: "SAVE_END" });
     }
   };
 
@@ -220,18 +274,21 @@ export function FileDetailsPanel({
         },
       );
 
-      setFileDetails((prev) =>
-        prev
+      setFileDetails((previous) =>
+        previous
           ? {
-              ...prev,
-              annotations: prev.annotations?.filter((a) => a.id !== annotationId),
+              ...previous,
+              annotations: previous.annotations?.filter(
+                (annotation) => annotation.id !== annotationId,
+              ),
             }
-          : prev,
+          : previous,
       );
       toast.success("Annotation deleted successfully");
     } catch (error) {
       console.error("Failed to delete annotation:", error);
-      const message = error instanceof Error ? error.message : "Unknown error occurred";
+      const message =
+        error instanceof Error ? error.message : "Unknown error occurred";
       toast.error("Failed to delete annotation", {
         description: message,
       });
@@ -239,8 +296,8 @@ export function FileDetailsPanel({
   };
 
   const handleSummaryGenerated = (summary: string, updatedAt: string) => {
-    setFileDetails((prev) =>
-      prev ? { ...prev, claudeSummary: summary, updatedAt } : prev,
+    setFileDetails((previous) =>
+      previous ? { ...previous, claudeSummary: summary, updatedAt } : previous,
     );
   };
 
@@ -278,17 +335,23 @@ export function FileDetailsPanel({
     <div className={className}>
       <ScrollArea className="h-full">
         <div className="animate-fade-in">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex flex-col h-full"
+          >
             <div className="px-5 pt-5">
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
                 <TabsTrigger value="annotations">
                   Annotations
-                  {fileDetails.annotations && fileDetails.annotations.length > 0 && (
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {fileDetails.annotations.length}
-                    </Badge>
-                  )}
+                  {fileDetails.annotations &&
+                    fileDetails.annotations.length > 0 && (
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        {fileDetails.annotations.length}
+                      </Badge>
+                    )}
                 </TabsTrigger>
                 <TabsTrigger value="summary">Summary</TabsTrigger>
                 <TabsTrigger value="content">Content</TabsTrigger>
@@ -297,7 +360,10 @@ export function FileDetailsPanel({
 
             <TabsContent value="overview">
               <div className="p-5 space-y-6">
-                <FileInfoSection fileDetails={fileDetails} githubUrl={githubUrl} />
+                <FileInfoSection
+                  fileDetails={fileDetails}
+                  githubUrl={githubUrl}
+                />
 
                 {!!fileDetails.codeEntities?.length && (
                   <EntitiesSection
@@ -314,6 +380,15 @@ export function FileDetailsPanel({
               </div>
             </TabsContent>
 
+            <TabsContent value="dependencies">
+              <DependenciesTab
+                neo4jFileId={`file-${fileDetails.repositoryId}-${fileDetails.filePath}`}
+                repositoryId={fileDetails.repositoryId}
+                onFileSelect={onFileSelect}
+                onFocusSubgraph={onFocusSubgraph}
+              />
+            </TabsContent>
+
             <TabsContent value="annotations">
               <div className="p-5">
                 {canEdit ? (
@@ -322,13 +397,11 @@ export function FileDetailsPanel({
                     codeEntities={fileDetails.codeEntities || []}
                     currentUserId={profile?.id || ""}
                     onEdit={(annotation) => {
-                      setEditingAnnotation(annotation);
-                      setIsAnnotationDialogOpen(true);
+                      dispatchDialog({ type: "OPEN_EDIT", annotation });
                     }}
                     onDelete={handleDeleteAnnotation}
                     onCreate={() => {
-                      setEditingAnnotation(undefined);
-                      setIsAnnotationDialogOpen(true);
+                      dispatchDialog({ type: "OPEN_CREATE" });
                     }}
                   />
                 ) : (
@@ -363,25 +436,25 @@ export function FileDetailsPanel({
         </div>
       </ScrollArea>
 
-      <Dialog open={isAnnotationDialogOpen} onOpenChange={setIsAnnotationDialogOpen}>
+      <Dialog
+        open={dialog.isOpen}
+        onOpenChange={(open) => !open && dispatchDialog({ type: "CLOSE" })}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingAnnotation ? "Edit Annotation" : "New Annotation"}
+              {dialog.editing ? "Edit Annotation" : "New Annotation"}
             </DialogTitle>
           </DialogHeader>
           <AnnotationForm
             fileId={fileDetails.id}
-            annotation={editingAnnotation}
+            annotation={dialog.editing}
             codeEntities={fileDetails.codeEntities || []}
             onSave={
-              editingAnnotation ? handleUpdateAnnotation : handleCreateAnnotation
+              dialog.editing ? handleUpdateAnnotation : handleCreateAnnotation
             }
-            onCancel={() => {
-              setIsAnnotationDialogOpen(false);
-              setEditingAnnotation(undefined);
-            }}
-            isSaving={isSaving}
+            onCancel={() => dispatchDialog({ type: "CLOSE" })}
+            isSaving={dialog.isSaving}
           />
         </DialogContent>
       </Dialog>
@@ -389,7 +462,15 @@ export function FileDetailsPanel({
   );
 }
 
-function SectionHeader({ icon: Icon, title, count }: { icon: LucideIcon; title: string; count?: number }) {
+function SectionHeader({
+  icon: Icon,
+  title,
+  count,
+}: {
+  icon: LucideIcon;
+  title: string;
+  count?: number;
+}) {
   return (
     <div className="flex items-center gap-2.5 mb-4">
       <Icon className="h-4 w-4 text-muted-foreground" />
@@ -397,7 +478,10 @@ function SectionHeader({ icon: Icon, title, count }: { icon: LucideIcon; title: 
         {title}
       </span>
       {count !== undefined && (
-        <Badge variant="secondary" className="ml-auto text-xs px-2 py-0.5 h-5 font-mono">
+        <Badge
+          variant="secondary"
+          className="ml-auto text-xs px-2 py-0.5 h-5 font-mono"
+        >
           {count}
         </Badge>
       )}
@@ -427,11 +511,15 @@ function FileInfoSection({
         </div>
         <div>
           <p className="text-xs text-muted-foreground/60 mb-1">Lines</p>
-          <p className="text-sm font-medium font-mono">{fileDetails.linesOfCode}</p>
+          <p className="text-sm font-medium font-mono">
+            {fileDetails.linesOfCode}
+          </p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground/60 mb-1">Analyzed</p>
-          <p className="text-sm font-medium">{formatDate(fileDetails.updatedAt)}</p>
+          <p className="text-sm font-medium">
+            {formatDate(fileDetails.updatedAt)}
+          </p>
         </div>
       </div>
 
@@ -475,7 +563,9 @@ function EntitiesSection({
                 onClick={() => onToggle(isExpanded ? null : entity.id)}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-accent/50 transition-colors group"
               >
-                <span className={`flex items-center justify-center size-7 rounded-md text-xs font-mono font-bold shrink-0 ${style.color}`}>
+                <span
+                  className={`flex items-center justify-center size-7 rounded-md text-xs font-mono font-bold shrink-0 ${style.color}`}
+                >
                   {style.icon}
                 </span>
                 <span className="truncate text-left flex-1 font-medium">
@@ -501,12 +591,19 @@ function EntitiesSection({
                   </div>
                   {entity.annotations && (
                     <ul className="space-y-1">
-                      {parseAnnotations(entity.annotations).map((line, index) => (
-                        <li key={index} className="text-sm text-muted-foreground/80 leading-relaxed flex gap-2">
-                          <span className="text-muted-foreground/40 shrink-0">&bull;</span>
-                          {line}
-                        </li>
-                      ))}
+                      {parseAnnotations(entity.annotations).map(
+                        (line, index) => (
+                          <li
+                            key={index}
+                            className="text-sm text-muted-foreground/80 leading-relaxed flex gap-2"
+                          >
+                            <span className="text-muted-foreground/40 shrink-0">
+                              &bull;
+                            </span>
+                            {line}
+                          </li>
+                        ),
+                      )}
                     </ul>
                   )}
                   <button
@@ -524,4 +621,3 @@ function EntitiesSection({
     </div>
   );
 }
-

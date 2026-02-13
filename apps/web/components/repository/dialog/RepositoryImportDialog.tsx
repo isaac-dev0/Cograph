@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { createClient } from "@/lib/supabase/client";
+import { graphqlRequest } from "@/lib/graphql/client";
 import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -29,7 +29,7 @@ import { useProject } from "@/hooks/providers/ProjectProvider";
 import { CheckIcon, Loader, RefreshCw, ChevronDown } from "lucide-react";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
 import { ADD_REPOSITORIES_TO_PROJECT } from "@/lib/queries/RepositoryQueries";
-import { Repository } from "@/lib/shared/Repository";
+import { Repository } from "@/lib/interfaces/repository.interfaces";
 import { cn } from "@/lib/utils";
 
 interface RepositoryImportDialogProps {
@@ -111,38 +111,13 @@ export function RepositoryImportDialog({
       setIsLoading(true);
       setError(null);
 
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+      await graphqlRequest(
+        ADD_REPOSITORIES_TO_PROJECT,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: ADD_REPOSITORIES_TO_PROJECT,
-            variables: {
-              projectId: currentProject.id,
-              repositoryIds: values.repositories,
-            },
-          }),
-        }
+          projectId: currentProject.id,
+          repositoryIds: values.repositories,
+        },
       );
-
-      const { errors } = await response.json();
-
-      if (errors) {
-        throw new Error(errors[0]?.message || "Failed to import repositories");
-      }
 
       await refreshRepositories();
 

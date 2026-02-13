@@ -6,7 +6,10 @@ export type {
   CircularDependency,
   CodeEntity,
   FileDetails,
-} from "@/lib/types/graph";
+  FileAnnotation,
+  DocumentAnnotation,
+  UpdateAnnotationInput,
+} from "@/lib/interfaces/graph.interfaces";
 
 export const REPOSITORY_GRAPH_QUERY = `
   query RepositoryGraph($repositoryId: ID!, $options: GraphOptionsInput) {
@@ -44,7 +47,7 @@ export const REPOSITORY_NODE_COUNT_QUERY = `
 export const CIRCULAR_DEPENDENCIES_QUERY = `
   query CircularDependencies($repositoryId: ID!) {
     circularDependencies(repositoryId: $repositoryId) {
-      cycle paths length
+      cycle paths
     }
   }
 `;
@@ -110,6 +113,17 @@ export const GENERATE_FILE_SUMMARY_MUTATION = `
 export const FILE_CONTENT_QUERY = `
   query FileContent($id: ID!) {
     fileContent(id: $id)
+  }
+`;
+
+export const REPOSITORY_ANNOTATIONS_QUERY = `
+  query RepositoryAnnotations($repositoryId: ID!) {
+    repositoryAnnotations(repositoryId: $repositoryId) {
+      id title content tags linkedEntityIds
+      fileId filePath fileName
+      author { id name }
+      createdAt updatedAt
+    }
   }
 `;
 

@@ -17,7 +17,7 @@ function normalisePath(filePath: string): string {
 
 /**
  * Resolve an import source to an absolute path relative to the importing file.
- * Example: "./utils" from "src/index.ts" -> "src/utils.ts"
+ * Example: "./utils" from "src/index.ts" links to "src/utils.ts"
  */
 function resolveImportPath(importSource: string, fromFile: string): string {
   const fromDirectory = path.dirname(fromFile);
@@ -110,10 +110,7 @@ function processFileImports(
     const resolvedPath = resolveImportPath(importItem.source, file.relativePath);
     const targetFile = findMatchingFile(resolvedPath, knownFiles);
 
-    /* Only create edge if target file exists in the analysis. */
-    if (targetFile) {
-      edges.push(createEdge(sourceFile, targetFile, importItem.specifiers));
-    }
+    if (targetFile) edges.push(createEdge(sourceFile, targetFile, importItem.specifiers));
   }
 
   return edges;
@@ -124,9 +121,7 @@ function processFileImports(
  */
 function buildDependencyGraph(files: FileAnalysisResult[]): DependencyGraph {
   const validFiles = files.filter((file) => file.analysis !== null);
-  const knownFiles = new Set(
-    validFiles.map((file) => normalisePath(file.relativePath)),
-  );
+  const knownFiles = new Set(validFiles.map((file) => normalisePath(file.relativePath)));
 
   const nodes: GraphNode[] = validFiles.map(createNode);
   const edges: GraphEdge[] = [];

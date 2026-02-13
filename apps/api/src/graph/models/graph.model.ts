@@ -1,8 +1,5 @@
 import { ObjectType, Field, registerEnumType, ID, Int } from '@nestjs/graphql';
 
-/**
- * Node types in the dependency graph
- */
 export enum NodeType {
   FILE = 'FILE',
   FUNCTION = 'FUNCTION',
@@ -10,9 +7,6 @@ export enum NodeType {
   INTERFACE = 'INTERFACE',
 }
 
-/**
- * Edge types representing relationships
- */
 export enum EdgeType {
   IMPORTS = 'IMPORTS',
   EXPORTS = 'EXPORTS',
@@ -29,9 +23,6 @@ registerEnumType(EdgeType, {
   description: 'Types of relationships between nodes',
 });
 
-/**
- * Graph node representing a file or code entity
- */
 @ObjectType({ description: 'A node in the dependency graph' })
 export class GraphNode {
   @Field(() => ID, { description: 'Unique identifier for the node' })
@@ -47,9 +38,6 @@ export class GraphNode {
   data: string;
 }
 
-/**
- * Graph edge representing a relationship between nodes
- */
 @ObjectType({ description: 'An edge (relationship) in the dependency graph' })
 export class GraphEdge {
   @Field(() => ID, { description: 'Unique identifier for the edge' })
@@ -71,9 +59,6 @@ export class GraphEdge {
   data?: string;
 }
 
-/**
- * Complete dependency graph with nodes and edges
- */
 @ObjectType({ description: 'A complete dependency graph with nodes and edges' })
 export class DependencyGraph {
   @Field(() => [GraphNode], { description: 'All nodes in the graph' })
@@ -83,9 +68,6 @@ export class DependencyGraph {
   edges: GraphEdge[];
 }
 
-/**
- * Circular dependency detection result
- */
 @ObjectType({ description: 'A detected circular dependency in the import graph' })
 export class CircularDependency {
   @Field(() => [String], { description: 'Array of file IDs forming the cycle' })

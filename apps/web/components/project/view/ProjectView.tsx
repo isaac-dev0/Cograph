@@ -1,7 +1,7 @@
 "use client";
 
-import { Project } from "@/lib/shared/Project";
-import { ProjectStatus } from "@/lib/shared/ProjectStatus";
+import { Project } from "@/lib/interfaces/project.interfaces";
+import { ProjectStatus } from "@/lib/enums/project.enums";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,14 +20,18 @@ import {
   XCircle,
   AlertCircle,
   RefreshCw,
+  type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect, useReducer, useState } from "react";
+import { graphqlRequest } from "@/lib/graphql/client";
 import {
   FIND_PROJECT_MEMBERS,
   REMOVE_PROJECT_MEMBER,
 } from "@/lib/queries/ProjectQueries";
-import { FIND_REPOSITORIES_BY_PROJECT_QUERY } from "@/lib/queries/RepositoryQueries";
+import {
+  FIND_REPOSITORIES_BY_PROJECT_QUERY,
+  REMOVE_REPOSITORY_FROM_PROJECT,
+} from "@/lib/queries/RepositoryQueries";
 import Link from "next/link";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
 import { RepositoryImportDialog } from "@/components/repository/dialog/RepositoryImportDialog";
@@ -39,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import {
   Empty,
   EmptyContent,
@@ -46,8 +51,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { RepositoryImportDialog } from "@/components/repository/dialog/RepositoryImportDialog";
-import { ProjectSettingsDialog } from "@/components/project/dialog/ProjectSettingsDialog";
 
 interface ProjectViewProps {
   project: Project | null;
@@ -86,13 +89,47 @@ interface Repository {
   githubPushedAt: string;
 }
 
+interface MembersState {
+  members: ProjectMember[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+type MembersAction =
+  | { type: 'LOADING' }
+  | { type: 'SUCCESS'; members: ProjectMember[] }
+  | { type: 'ERROR'; error: string };
+
+function membersReducer(state: MembersState, action: MembersAction): MembersState {
+  switch (action.type) {
+    case 'LOADING': return { ...state, isLoading: true, error: null };
+    case 'SUCCESS': return { members: action.members, isLoading: false, error: null };
+    case 'ERROR':   return { ...state, isLoading: false, error: action.error };
+  }
+}
+
+interface ReposState {
+  repositories: Repository[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+type ReposAction =
+  | { type: 'LOADING' }
+  | { type: 'SUCCESS'; repositories: Repository[] }
+  | { type: 'ERROR'; error: string };
+
+function reposReducer(state: ReposState, action: ReposAction): ReposState {
+  switch (action.type) {
+    case 'LOADING': return { ...state, isLoading: true, error: null };
+    case 'SUCCESS': return { repositories: action.repositories, isLoading: false, error: null };
+    case 'ERROR':   return { ...state, isLoading: false, error: action.error };
+  }
+}
+
 export function ProjectView({ project }: ProjectViewProps) {
-  const [members, setMembers] = useState<ProjectMember[]>([]);
-  const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [isLoadingMembers, setIsLoadingMembers] = useState(true);
-  const [isLoadingRepos, setIsLoadingRepos] = useState(true);
-  const [membersError, setMembersError] = useState<string | null>(null);
-  const [reposError, setReposError] = useState<string | null>(null);
+  const [membersState, dispatchMembers] = useReducer(membersReducer, { members: [], isLoading: true, error: null });
+  const [reposState, dispatchRepos] = useReducer(reposReducer, { repositories: [], isLoading: true, error: null });
   const { setCurrentRepository } = useRepository();
 
   useEffect(() => {
@@ -104,92 +141,34 @@ export function ProjectView({ project }: ProjectViewProps) {
 
   const loadMembers = async () => {
     if (!project) return;
-
+    dispatchMembers({ type: 'LOADING' });
     try {
-      setIsLoadingMembers(true);
-      setMembersError(null);
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) return;
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: FIND_PROJECT_MEMBERS,
-            variables: { projectId: project.id },
-          }),
-        }
+      const data = await graphqlRequest<{ findProjectMembers: ProjectMember[] }>(
+        FIND_PROJECT_MEMBERS,
+        { projectId: project.id },
       );
-
-      const { data, errors } = await response.json();
-
-      if (errors) {
-        // Silently treat authorisation failures as an empty member list;
-        // guests may not have permission to enumerate members.
-        const message: string = errors[0]?.message ?? "";
-        if (!message.toLowerCase().includes("forbidden") && !message.toLowerCase().includes("unauthori")) {
-          setMembersError(message || "Failed to load members");
-        }
-        return;
-      }
-
-      setMembers(data.findProjectMembers || []);
+      dispatchMembers({ type: 'SUCCESS', members: data.findProjectMembers || [] });
     } catch (error) {
-      setMembersError(error instanceof Error ? error.message : "Failed to load members");
-    } finally {
-      setIsLoadingMembers(false);
+      const message = error instanceof Error ? error.message : "Failed to load members";
+      if (!message.toLowerCase().includes("forbidden") && !message.toLowerCase().includes("unauthori")) {
+        dispatchMembers({ type: 'ERROR', error: message });
+      } else {
+        dispatchMembers({ type: 'SUCCESS', members: [] });
+      }
     }
   };
 
   const loadRepositories = async () => {
     if (!project) return;
-
+    dispatchRepos({ type: 'LOADING' });
     try {
-      setIsLoadingRepos(true);
-      setReposError(null);
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) return;
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: FIND_REPOSITORIES_BY_PROJECT_QUERY,
-            variables: { projectId: project.id },
-          }),
-        }
+      const data = await graphqlRequest<{ findRepositoriesByProjectId: Repository[] }>(
+        FIND_REPOSITORIES_BY_PROJECT_QUERY,
+        { projectId: project.id },
       );
-
-      const { data, errors } = await response.json();
-
-      if (errors) {
-        setReposError(errors[0]?.message ?? "Failed to load repositories");
-        return;
-      }
-
-      setRepositories(data.findRepositoriesByProjectId || []);
+      dispatchRepos({ type: 'SUCCESS', repositories: data.findRepositoriesByProjectId || [] });
     } catch (error) {
-      setReposError(error instanceof Error ? error.message : "Failed to load repositories");
-    } finally {
-      setIsLoadingRepos(false);
+      dispatchRepos({ type: 'ERROR', error: error instanceof Error ? error.message : "Failed to load repositories" });
     }
   };
 
@@ -197,38 +176,13 @@ export function ProjectView({ project }: ProjectViewProps) {
     if (!project) return;
 
     try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) return;
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: REMOVE_PROJECT_MEMBER,
-            variables: { projectId: project.id, profileId },
-          }),
-        }
-      );
-
-      const { errors } = await response.json();
-
-      if (errors) {
-        console.error("Failed to remove member:", errors);
-        return;
-      }
-
-      setMembers(members.filter((m) => m.profileId !== profileId));
+      await graphqlRequest(REMOVE_PROJECT_MEMBER, { projectId: project.id, profileId });
+      dispatchMembers({ type: 'SUCCESS', members: membersState.members.filter((member) => member.profileId !== profileId) });
     } catch (error) {
       console.error("Failed to remove member:", error);
+      toast.error("Failed to remove member", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+      });
     }
   };
 
@@ -259,7 +213,7 @@ export function ProjectView({ project }: ProjectViewProps) {
     );
   }
 
-  const syncStatusSummary = repositories.reduce(
+  const syncStatusSummary = reposState.repositories.reduce(
     (acc, repo) => {
       if (repo.syncStatus === "completed") acc.completed++;
       else if (repo.syncStatus === "failed") acc.failed++;
@@ -313,12 +267,12 @@ export function ProjectView({ project }: ProjectViewProps) {
         <StatCard
           icon={FolderGit2}
           label="Repositories"
-          value={isLoadingRepos ? "..." : repositories.length.toString()}
+          value={reposState.isLoading ? "..." : reposState.repositories.length.toString()}
         />
         <StatCard
           icon={Users}
           label="Members"
-          value={isLoadingMembers ? "..." : members.length.toString()}
+          value={membersState.isLoading ? "..." : membersState.members.length.toString()}
         />
         <StatCard
           icon={Calendar}
@@ -328,12 +282,12 @@ export function ProjectView({ project }: ProjectViewProps) {
         <StatCard
           icon={Activity}
           label="Sync Status"
-          value={`${syncStatusSummary.completed}/${repositories.length}`}
+          value={`${syncStatusSummary.completed}/${reposState.repositories.length}`}
           valueClass={
             syncStatusSummary.failed > 0
               ? "text-red-400"
-              : syncStatusSummary.completed === repositories.length &&
-                  repositories.length > 0
+              : syncStatusSummary.completed === reposState.repositories.length &&
+                  reposState.repositories.length > 0
                 ? "text-emerald-400"
                 : "text-yellow-400"
           }
@@ -378,15 +332,15 @@ export function ProjectView({ project }: ProjectViewProps) {
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Team Members
         </h2>
-        {isLoadingMembers ? (
+        {membersState.isLoading ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, index) => (
               <Skeleton key={index} className="h-16 w-full" />
             ))}
           </div>
-        ) : membersError ? (
-          <ErrorBanner message={membersError} onRetry={loadMembers} />
-        ) : members.length === 0 ? (
+        ) : membersState.error ? (
+          <ErrorBanner message={membersState.error} onRetry={loadMembers} />
+        ) : membersState.members.length === 0 ? (
           <Empty className="border border-border/50 bg-card/50">
             <EmptyContent>
               <EmptyMedia variant="icon">
@@ -409,7 +363,7 @@ export function ProjectView({ project }: ProjectViewProps) {
         ) : (
           <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
             <div className="divide-y divide-border/50">
-              {members.map((member) => (
+              {membersState.members.map((member) => (
                 <MemberRow
                   key={member.profileId}
                   member={member}
@@ -426,15 +380,15 @@ export function ProjectView({ project }: ProjectViewProps) {
         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Repositories
         </h2>
-        {isLoadingRepos ? (
+        {reposState.isLoading ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, index) => (
               <Skeleton key={index} className="h-24 w-full" />
             ))}
           </div>
-        ) : reposError ? (
-          <ErrorBanner message={reposError} onRetry={loadRepositories} />
-        ) : repositories.length === 0 ? (
+        ) : reposState.error ? (
+          <ErrorBanner message={reposState.error} onRetry={loadRepositories} />
+        ) : reposState.repositories.length === 0 ? (
           <Empty className="border border-border/50 bg-card/50">
             <EmptyContent>
               <EmptyMedia variant="icon">
@@ -456,7 +410,7 @@ export function ProjectView({ project }: ProjectViewProps) {
           </Empty>
         ) : (
           <div className="space-y-3">
-            {repositories.map((repo) => (
+            {reposState.repositories.map((repo) => (
               <RepositoryRow
                 key={repo.id}
                 repository={repo}
@@ -587,42 +541,16 @@ function RepositoryRow({
   const handleRemoveFromProject = async () => {
     setIsRemoving(true);
     try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) return;
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: `
-              mutation RemoveRepositoryFromProject($projectId: ID!, $repositoryId: ID!) {
-                removeRepositoryFromProject(projectId: $projectId, repositoryId: $repositoryId)
-              }
-            `,
-            variables: { projectId, repositoryId: repository.id },
-          }),
-        }
-      );
-
-      const { errors } = await response.json();
-
-      if (errors) {
-        console.error("Failed to remove repository:", errors);
-        return;
-      }
-
+      await graphqlRequest(REMOVE_REPOSITORY_FROM_PROJECT, {
+        projectId,
+        repositoryId: repository.id,
+      });
       onRemove();
     } catch (error) {
       console.error("Failed to remove repository:", error);
+      toast.error("Failed to remove repository from project", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+      });
     } finally {
       setIsRemoving(false);
     }

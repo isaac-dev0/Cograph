@@ -153,10 +153,6 @@ export class ProjectsResolver {
     return this.projectsService.archive(projectId);
   }
 
-  /*
-   *   +---   FIELD RESOLVERS   ---+
-   */
-
   @ResolveField(() => ProfileModel)
   async owner(@Parent() project: ProjectModel) {
     return this.loaders.owner.load(project.ownerId);

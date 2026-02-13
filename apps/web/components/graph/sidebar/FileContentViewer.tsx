@@ -33,6 +33,13 @@ export function FileContentViewer({ fileId, fileName, fileType, jumpToLine }: Fi
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { resolvedTheme } = useTheme();
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+
+  useEffect(() => {
+    if (editorRef.current == null || jumpToLine == null) return;
+    editorRef.current.revealLineInCenter(jumpToLine);
+    editorRef.current.setPosition({ lineNumber: jumpToLine, column: 1 });
+  }, [jumpToLine]);
 
   useEffect(() => {
     const fetchContent = async () => {

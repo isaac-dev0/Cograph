@@ -7,7 +7,6 @@ import { Profile } from '@prisma/client';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { UpdateProfileInput } from './dto/update-profile.input';
 import { DEFAULT_AVATAR_URL } from 'src/common/constants';
-import { CryptoService } from 'src/common/crypto/crypto.service';
 
 interface SupabaseAuthData {
   userId: string;
@@ -17,10 +16,7 @@ interface SupabaseAuthData {
 
 @Injectable()
 export class ProfileService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly crypto: CryptoService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Finds a Profile record by their Supabase Auth UID, or creates it if it doesn't exist.
@@ -88,6 +84,7 @@ export class ProfileService {
     return profile;
   }
 
+  /** Retrieves all profiles ordered alphabetically by display name. */
   async findAll(): Promise<Profile[]> {
     return this.prisma.profile.findMany({
       orderBy: { displayName: 'asc' },
@@ -108,8 +105,7 @@ export class ProfileService {
   }
 
   /**
-   * Updates a profile. If a `githubToken` is provided in the input it is
-   * encrypted at rest before being persisted.
+   * Updates a profile's mutable fields (job, location, avatarUrl).
    *
    * @param authId The internal Profile ID (UUID).
    * @param updateProfileInput Fields to update.
@@ -119,16 +115,10 @@ export class ProfileService {
     authId: string,
     updateProfileInput: UpdateProfileInput,
   ): Promise<Profile> {
-    const data: Record<string, unknown> = { ...updateProfileInput };
-
-    if (updateProfileInput.githubToken) {
-      data.githubToken = this.crypto.encrypt(updateProfileInput.githubToken);
-    }
-
     try {
       return await this.prisma.profile.update({
         where: { id: authId },
-        data,
+        data: updateProfileInput,
       });
     } catch (error) {
       if (error.code === 'P2025') {
@@ -136,18 +126,5 @@ export class ProfileService {
       }
       throw error;
     }
-  }
-
-  /**
-   * Retrieves and decrypts the GitHub personal access token for a profile.
-   * Returns null if no token is stored.
-   *
-   * @param profileId The internal Profile ID (UUID).
-   * @returns The plaintext GitHub PAT, or null.
-   */
-  async getDecryptedGithubToken(profileId: string): Promise<string | null> {
-    const profile = await this.findById(profileId);
-    if (!profile.githubToken) return null;
-    return this.crypto.decrypt(profile.githubToken);
   }
 }

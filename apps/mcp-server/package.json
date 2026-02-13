@@ -16,11 +16,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node build/index.js",
-    "typecheck": "tsc --noEmit",
-    "test:claude": "tsx src/tests/test-claude.ts",
-    "test:git": "tsx src/tests/test-git.ts",
-    "test:analyse-repository": "tsx src/tests/test-analyse-repository.ts",
-    "test:dependency-graph": "tsx src/tests/test-dependency-graph.ts"
+    "typecheck": "tsc --noEmit"
   },
   "bin": {
     "cograph": "./build/index.js"

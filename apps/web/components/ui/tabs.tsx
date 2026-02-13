@@ -10,13 +10,38 @@ interface TabsContextType {
 const TabsContext = createContext<TabsContextType | undefined>(undefined);
 
 interface TabsProps {
-  defaultValue: string;
   children: React.ReactNode;
   className?: string;
+  /** Uncontrolled: starting tab. Use when the parent doesn't need to control the active tab. */
+  defaultValue?: string;
+  /** Controlled: current active tab. Must be paired with onValueChange. */
+  value?: string;
+  /** Controlled: called when the user clicks a different tab. */
+  onValueChange?: (value: string) => void;
 }
 
-export function Tabs({ defaultValue, children, className }: TabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultValue);
+/**
+ * Tabs container. Supports both controlled and uncontrolled usage:
+ *
+ * Uncontrolled (simpler — parent doesn't manage state):
+ *   <Tabs defaultValue="overview">...</Tabs>
+ *
+ * Controlled (parent manages which tab is active):
+ *   <Tabs value={activeTab} onValueChange={setActiveTab}>...</Tabs>
+ */
+export function Tabs({ defaultValue = "", value, onValueChange, children, className }: TabsProps) {
+  const [internalTab, setInternalTab] = useState(defaultValue);
+
+  const isControlled = value !== undefined;
+  const activeTab = isControlled ? value : internalTab;
+
+  const setActiveTab = (next: string) => {
+    if (isControlled) {
+      onValueChange?.(next);
+    } else {
+      setInternalTab(next);
+    }
+  };
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab }}>

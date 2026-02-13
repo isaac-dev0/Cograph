@@ -1,14 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MCPClientService } from '../mcp-client.service';
-import { RepositoryAnalysis } from 'src/common/shared/types/repository-analysis.type';
+import { RepositoryAnalysis } from '../../common/shared/analysis.interfaces';
 
 const BATCH_SIZE = 5;
 
-/**
- * Coordinates batch-based repository analysis through the MCP server.
- * Splits large repositories into batches and optionally invokes a callback
- * after each batch for incremental storage.
- */
 @Injectable()
 export class MCPAnalysisService {
   private readonly logger = new Logger(MCPAnalysisService.name);
@@ -34,6 +29,7 @@ export class MCPAnalysisService {
     let successfulAnalyses = 0;
     let failedAnalyses = 0;
     let totalLines = 0;
+
     const allResults: RepositoryAnalysis['files'] = [];
     const filesByType: Record<string, number> = {};
 
@@ -56,8 +52,10 @@ export class MCPAnalysisService {
         this.logger.error(
           `Batch failed for files ${skip}-${skip + BATCH_SIZE}: ${error instanceof Error ? error.message : error}`,
         );
+
         skip += BATCH_SIZE;
         hasMore = totalFiles > 0 ? skip < totalFiles : false;
+        
         continue;
       }
 

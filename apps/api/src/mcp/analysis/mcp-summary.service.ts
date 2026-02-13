@@ -1,9 +1,10 @@
-import { Injectable, InternalServerErrorException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { MCPClientService } from '../mcp-client.service';
 
-/**
- * Generates AI-powered summaries for code files using Claude via MCP.
- */
 @Injectable()
 export class MCPSummaryService {
   constructor(private readonly mcpClient: MCPClientService) {}
@@ -37,11 +38,17 @@ export class MCPSummaryService {
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('timeout')) {
-          throw new ServiceUnavailableException('Summary generation timed out. Please try again.');
+          throw new ServiceUnavailableException(
+            'Summary generation timed out. Please try again.',
+          );
         }
-        throw new InternalServerErrorException(`Failed to generate summary: ${error.message}`);
+        throw new InternalServerErrorException(
+          `Failed to generate summary: ${error.message}`,
+        );
       }
-      throw new InternalServerErrorException('Failed to generate summary. Please try again.');
+      throw new InternalServerErrorException(
+        'Failed to generate summary. Please try again.',
+      );
     }
   }
 }

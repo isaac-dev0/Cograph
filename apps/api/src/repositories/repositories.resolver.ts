@@ -1,8 +1,8 @@
 import { UseGuards } from '@nestjs/common';
-import { RepositoriesService } from './repositories.service';
+import { RepositoriesService } from './services/repositories.service';
 import { SupabaseJwtGuard } from 'src/auth/supabase-jwt.guard';
 import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { SyncRepositoriesService } from './sync-repositories.service';
+import { SyncRepositoriesService } from './services/sync-repositories.service';
 import { Repository as RepositoryModel } from './models/repository.model';
 import { FindRepositoriesInput } from './dto/find-repositories.input';
 import { SyncRepositoriesInput } from './dto/sync-repositories.input';

@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
+import { graphqlRequest } from "@/lib/graphql/client";
 import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -30,6 +30,7 @@ import { CREATE_PROJECT } from "@/lib/queries/ProjectQueries";
 import { useProject } from "@/hooks/providers/ProjectProvider";
 import { useUser } from "@/hooks/providers/UserProvider";
 import { Loader } from "lucide-react";
+import type { Project } from "@/lib/interfaces/project.interfaces";
 
 interface ProjectCreateDialogProps {
   trigger?: React.ReactNode;
@@ -73,41 +74,16 @@ export function ProjectCreateDialog({ trigger }: ProjectCreateDialogProps) {
       setIsLoading(true);
       setError(null);
 
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+      const data = await graphqlRequest<{ createProject: Project }>(
+        CREATE_PROJECT,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
+          createProjectInput: {
+            name: values.name,
+            description: values.description || null,
+            ownerId: profile.id,
           },
-          body: JSON.stringify({
-            query: CREATE_PROJECT,
-            variables: {
-              createProjectInput: {
-                name: values.name,
-                description: values.description || null,
-                ownerId: profile.id,
-              },
-            },
-          }),
-        }
+        },
       );
-
-      const { data, errors } = await response.json();
-
-      if (errors) {
-        throw new Error(errors[0]?.message || "Failed to create project");
-      }
 
       const newProject = data.createProject;
       await refreshProjects();

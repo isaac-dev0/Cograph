@@ -47,7 +47,10 @@ function toErrorMessage(error: unknown): string {
 
 const MAX_RETRY_ATTEMPTS = 3;
 
-async function withRetry<T>(fn: () => Promise<T>, maxAttempts = MAX_RETRY_ATTEMPTS): Promise<T> {
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = MAX_RETRY_ATTEMPTS,
+): Promise<T> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
@@ -57,7 +60,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxAttempts = MAX_RETRY_ATTEMP
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  throw new Error('unreachable');
+  throw new Error("unreachable");
 }
 
 async function analyseFile(
@@ -123,8 +126,6 @@ async function analyseAllFiles(
   results: FileAnalysisResult[];
   summary: RepositoryAnalysis["summary"];
 }> {
-  // Pre-compute file type distribution and line counts from scan metadata —
-  // these don't require API calls so we can do them up front.
   const filesByType: Record<string, number> = {};
   let totalLines = 0;
   for (const file of files) {
@@ -138,8 +139,6 @@ async function analyseAllFiles(
   let failedAnalyses = 0;
   let cursor = 0;
 
-  // Worker pool: each worker grabs the next file atomically (JS is single-threaded
-  // so cursor++ is safe across concurrent async workers).
   const worker = async () => {
     while (true) {
       const index = cursor++;
@@ -236,7 +235,9 @@ export function registerAnalyseRepositoryTool(server: McpServer): void {
         const skip = skipFiles || 0;
         const limit = maxFiles || allFiles.length;
         const files = allFiles.slice(skip, skip + limit);
-        log(`Analysing batch: ${skip}-${skip + files.length} of ${allFiles.length}`);
+        log(
+          `Analysing batch: ${skip}-${skip + files.length} of ${allFiles.length}`,
+        );
 
         const { results, summary } = await analyseAllFiles(claude, files);
 

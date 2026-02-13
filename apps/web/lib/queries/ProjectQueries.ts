@@ -79,12 +79,30 @@ export const SEARCH_PROFILES = `
   }
 `;
 
+export const ARCHIVE_PROJECT = `
+  mutation ArchiveProject($projectId: ID!) {
+    archiveProject(projectId: $projectId) {
+      id
+      status
+    }
+  }
+`;
+
 export const TRANSFER_PROJECT_OWNERSHIP = `
   mutation TransferProjectOwnership($projectId: ID!, $newOwnerId: ID!) {
     transferProjectOwnership(projectId: $projectId, newOwnerId: $newOwnerId) {
       id
       name
       ownerId
+    }
+  }
+`;
+
+export const UPDATE_PROJECT_MEMBER_ROLE = `
+  mutation UpdateProjectMemberRole($projectId: ID!, $memberId: ID!, $role: ProjectRole!) {
+    updateProjectMemberRole(projectId: $projectId, memberId: $memberId, role: $role) {
+      profileId
+      role
     }
   }
 `;

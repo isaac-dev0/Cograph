@@ -23,9 +23,19 @@ export default function LoginPage() {
 
         <p className="text-center text-xs text-muted-foreground/60">
           By continuing, you agree to our{" "}
-          <a href="#" className="underline underline-offset-4 hover:text-muted-foreground transition-colors">Terms</a>
-          {" "}and{" "}
-          <a href="#" className="underline underline-offset-4 hover:text-muted-foreground transition-colors">Privacy Policy</a>
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-muted-foreground transition-colors"
+          >
+            Terms
+          </a>{" "}
+          and{" "}
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-muted-foreground transition-colors"
+          >
+            Privacy Policy
+          </a>
         </p>
       </div>
     </div>

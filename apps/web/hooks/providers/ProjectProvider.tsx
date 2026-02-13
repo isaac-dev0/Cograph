@@ -1,10 +1,10 @@
 "use client";
 
-import { FIND_PROJECTS_BY_PROFILE_QUERY } from "@/lib/queries/ProjectQueries";
+import { FIND_PROJECTS_BY_PROFILE_QUERY, ARCHIVE_PROJECT } from "@/lib/queries/ProjectQueries";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useUser } from "@/hooks/providers/UserProvider";
-import { createClient } from "@/lib/supabase/client";
-import { Project } from "@/lib/shared/Project";
+import { graphqlRequest } from "@/lib/graphql/client";
+import { Project } from "@/lib/interfaces/project.interfaces";
 
 interface ProjectContextType {
   currentProject: Project | null;
@@ -13,6 +13,9 @@ interface ProjectContextType {
   isLoading: boolean;
   error: string | null;
   refreshProjects: () => Promise<void>;
+  showArchived: boolean;
+  setShowArchived: (show: boolean) => void;
+  archiveProject: (projectId: string) => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -22,6 +25,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState<boolean>(false);
 
   const { profile } = useUser();
 
@@ -34,35 +38,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
 
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: FIND_PROJECTS_BY_PROFILE_QUERY,
-            variables: { profileId: profile.id },
-          }),
-        }
+      const data = await graphqlRequest<{ findProjectsByProfileId: Project[] }>(
+        FIND_PROJECTS_BY_PROFILE_QUERY,
+        { profileId: profile.id },
       );
-
-      const { data, errors } = await response.json();
-
-      if (errors) {
-        throw new Error(errors[0]?.message ?? "Failed to load projects");
-      }
 
       const fetchedProjects = data.findProjectsByProfileId;
       setProjects(fetchedProjects);
@@ -86,6 +65,11 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const archiveProject = async (projectId: string) => {
+    await graphqlRequest(ARCHIVE_PROJECT, { projectId });
+    await loadProjects();
+  };
+
   useEffect(() => {
     loadProjects();
   }, [profile?.id]);
@@ -104,6 +88,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         error,
         refreshProjects: loadProjects,
+        showArchived,
+        setShowArchived,
+        archiveProject,
       }}
     >
       {children}

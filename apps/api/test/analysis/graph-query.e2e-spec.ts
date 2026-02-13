@@ -87,12 +87,13 @@ describe('GraphQueryService', () => {
       });
 
       await neo4jGraphService.createImportRelationship({
-        fromFileId: `file-${testRepositoryId}-src/index.ts`,
-        toFileId: `file-${testRepositoryId}-src/utils.ts`,
+        sourceFileId: `file-${testRepositoryId}-src/index.ts`,
+        targetFileId: `file-${testRepositoryId}-src/utils.ts`,
         specifiers: ['utilFunc'],
       });
 
-      const graph = await graphQueryService.getRepositoryGraph(testRepositoryId);
+      const graph =
+        await graphQueryService.getRepositoryGraph(testRepositoryId);
 
       expect(graph).toBeDefined();
       expect(graph.nodes).toBeDefined();
@@ -100,13 +101,13 @@ describe('GraphQueryService', () => {
       expect(graph.nodes.length).toBeGreaterThan(0);
       expect(graph.edges.length).toBeGreaterThan(0);
 
-      const fileNode = graph.nodes.find((n) => n.data.path === 'src/index.ts');
+      const fileNode = graph.nodes.find((node) => node.data.path === 'src/index.ts');
       expect(fileNode).toBeDefined();
       expect(fileNode?.type).toBe('file');
       expect(fileNode?.data.claudeSummary).toBe('Main entry point file');
       expect(fileNode?.data.annotations).toBeDefined();
 
-      const importEdge = graph.edges.find((e) => e.type === 'imports');
+      const importEdge = graph.edges.find((edge) => edge.type === 'imports');
       expect(importEdge).toBeDefined();
       expect(importEdge?.data?.specifiers).toContain('utilFunc');
     }, 60000);
@@ -140,15 +141,21 @@ describe('GraphQueryService', () => {
         });
       }
 
-      const page1 = await graphQueryService.getRepositoryGraph(testRepositoryId, {
-        limit: 5,
-        offset: 0,
-      });
+      const page1 = await graphQueryService.getRepositoryGraph(
+        testRepositoryId,
+        {
+          limit: 5,
+          offset: 0,
+        },
+      );
 
-      const page2 = await graphQueryService.getRepositoryGraph(testRepositoryId, {
-        limit: 5,
-        offset: 5,
-      });
+      const page2 = await graphQueryService.getRepositoryGraph(
+        testRepositoryId,
+        {
+          limit: 5,
+          offset: 5,
+        },
+      );
 
       expect(page1.nodes.length).toBeLessThanOrEqual(5);
       expect(page2.nodes.length).toBeLessThanOrEqual(5);
@@ -156,7 +163,7 @@ describe('GraphQueryService', () => {
       const page1Ids = new Set(page1.nodes.map((n) => n.id));
       const page2Ids = new Set(page2.nodes.map((n) => n.id));
       const intersection = [...page1Ids].filter((id) => page2Ids.has(id));
-      expect(intersection.length).toBe(0); // No overlap
+      expect(intersection.length).toBe(0);
     }, 60000);
   });
 
@@ -199,24 +206,24 @@ describe('GraphQueryService', () => {
       });
 
       await neo4jGraphService.createImportRelationship({
-        fromFileId: fileAId,
-        toFileId: fileBId,
+        sourceFileId: fileAId,
+        targetFileId: fileBId,
         specifiers: ['funcB'],
       });
 
       await neo4jGraphService.createImportRelationship({
-        fromFileId: fileBId,
-        toFileId: fileCId,
+        sourceFileId: fileBId,
+        targetFileId: fileCId,
         specifiers: ['funcC'],
       });
 
       const depth1 = await graphQueryService.getFileDependencies(fileAId, 1);
-      const depth1Files = depth1.nodes.filter((n) => n.type === 'file');
+      const depth1Files = depth1.nodes.filter((node) => node.type === 'file');
       expect(depth1Files.length).toBe(1);
       expect(depth1Files[0].data.path).toBe('src/b.ts');
 
       const depth2 = await graphQueryService.getFileDependencies(fileAId, 2);
-      const depth2Files = depth2.nodes.filter((n) => n.type === 'file');
+      const depth2Files = depth2.nodes.filter((node) => node.type === 'file');
       expect(depth2Files.length).toBe(2);
       const paths = depth2Files.map((f) => f.data.path).sort();
       expect(paths).toContain('src/b.ts');
@@ -263,22 +270,22 @@ describe('GraphQueryService', () => {
       });
 
       await neo4jGraphService.createImportRelationship({
-        fromFileId: fileAId,
-        toFileId: fileCId,
+        sourceFileId: fileAId,
+        targetFileId: fileCId,
         specifiers: ['funcC'],
       });
 
       await neo4jGraphService.createImportRelationship({
-        fromFileId: fileBId,
-        toFileId: fileCId,
+        sourceFileId: fileBId,
+        targetFileId: fileCId,
         specifiers: ['funcC'],
       });
 
       const dependents = await graphQueryService.getFileDependents(fileCId, 1);
-      const dependentFiles = dependents.nodes.filter((n) => n.type === 'file');
+      const dependentFiles = dependents.nodes.filter((node) => node.type === 'file');
 
       expect(dependentFiles.length).toBe(2);
-      const paths = dependentFiles.map((f) => f.data.path).sort();
+      const paths = dependentFiles.map((file) => file.data.path).sort();
       expect(paths).toContain('src/a.ts');
       expect(paths).toContain('src/b.ts');
     }, 60000);
@@ -313,20 +320,19 @@ describe('GraphQueryService', () => {
       });
 
       await neo4jGraphService.createImportRelationship({
-        fromFileId: fileAId,
-        toFileId: fileBId,
+        sourceFileId: fileAId,
+        targetFileId: fileBId,
         specifiers: ['funcB'],
       });
 
       await neo4jGraphService.createImportRelationship({
-        fromFileId: fileBId,
-        toFileId: fileAId,
+        sourceFileId: fileBId,
+        targetFileId: fileAId,
         specifiers: ['funcA'],
       });
 
-      const cycles = await graphQueryService.findCircularDependencies(
-        testRepositoryId,
-      );
+      const cycles =
+        await graphQueryService.findCircularDependencies(testRepositoryId);
 
       expect(cycles.length).toBeGreaterThan(0);
       const cycle = cycles[0];
@@ -366,14 +372,13 @@ describe('GraphQueryService', () => {
       });
 
       await neo4jGraphService.createImportRelationship({
-        fromFileId: fileAId,
-        toFileId: fileBId,
+        sourceFileId: fileAId,
+        targetFileId: fileBId,
         specifiers: ['funcB'],
       });
 
-      const cycles = await graphQueryService.findCircularDependencies(
-        testRepositoryId,
-      );
+      const cycles =
+        await graphQueryService.findCircularDependencies(testRepositoryId);
 
       expect(cycles).toEqual([]);
     }, 60000);

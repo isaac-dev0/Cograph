@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useReducer } from "react";
 import dynamic from "next/dynamic";
 import { useGraphData } from "@/hooks/useGraphData";
 import { GraphControls } from "./controls/GraphControls";
 import { GraphStatsWidget } from "./GraphStatsWidget";
-import { Loader2, PlayCircle, RefreshCw, Terminal, SlidersHorizontal, X, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  PlayCircle,
+  RefreshCw,
+  Terminal,
+  SlidersHorizontal,
+  X,
+  AlertTriangle,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,38 +23,75 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { GraphOptionsInput } from "@/lib/types/graph";
-import type { ForceGraphData, ForceGraphNode } from "./utils/graphDataTransform";
-import { getFileTypeColor } from "./utils/graphDataTransform";
+import type { GraphOptionsInput } from "@/lib/interfaces/graph.interfaces";
+import type { AnalysisState } from "@/hooks/useGraphData";
+import type { MutableRefObject } from "react";
+import type { ForceGraphMethods, ForceGraphProps } from "react-force-graph-2d";
+import type {
+  ForceGraphData,
+  ForceGraphNode,
+  ForceGraphLink,
+} from "./utils/graphDataTransform";
+import {
+  NODE_HEIGHT,
+  LINK_COLOR,
+  LINK_ARROW_COLOR,
+  D3_CHARGE_STRENGTH,
+  D3_LINK_DISTANCE,
+  drawDotGrid,
+  drawBadgeNode,
+  estimateBadgeWidth,
+} from "./utils/graphCanvasDrawing";
 
-const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center w-full h-full">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-    </div>
-  ),
-});
+type ForceGraph2DProps = ForceGraphProps<ForceGraphNode, ForceGraphLink> & {
+  ref?: MutableRefObject<
+    ForceGraphMethods<ForceGraphNode, ForceGraphLink> | undefined
+  >;
+};
+
+const ForceGraph2D = dynamic<ForceGraph2DProps>(
+  () => import("react-force-graph-2d"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center w-full h-full">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  },
+);
 
 interface GraphCanvasProps {
   repositoryId: string;
   options?: GraphOptionsInput;
   onNodeClick?: (node: ForceGraphNode) => void;
   onNodeHover?: (node: ForceGraphNode | null) => void;
+  overrideData?: ForceGraphData | null;
+  onExitSubgraphView?: () => void;
   width?: number;
   height?: number;
   className?: string;
   showControls?: boolean;
 }
 
-interface AnalysisState {
-  isAnalyzing: boolean;
-  analysisError: string | null;
-  elapsedSeconds: number;
-  progress: number;
-  filesAnalysed: number;
-  totalFiles: number | null;
-  status: string | null;
+interface HoverState {
+  nodeId: string | null;
+  connectedIds: Set<string>;
+}
+
+type HoverAction =
+  | { type: "HOVER"; nodeId: string; connected: Set<string> }
+  | { type: "CLEAR" };
+
+const HOVER_CLEARED: HoverState = { nodeId: null, connectedIds: new Set() };
+
+function hoverReducer(_state: HoverState, action: HoverAction): HoverState {
+  switch (action.type) {
+    case "HOVER":
+      return { nodeId: action.nodeId, connectedIds: action.connected };
+    case "CLEAR":
+      return HOVER_CLEARED;
+  }
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -56,106 +101,6 @@ const STATUS_LABELS: Record<string, string> = {
   COMPLETED: "Completed",
   FAILED: "Failed",
 };
-
-const DOT_SPACING = 24;
-const DOT_RADIUS = 0.6;
-const NODE_HEIGHT = 22;
-const NODE_PADDING_X = 10;
-const FONT_SIZE = 10;
-const FONT_FAMILY = "'Geist Mono', 'SF Mono', 'Fira Code', 'Consolas', monospace";
-const LINK_COLOR = "rgba(59, 130, 246, 0.35)";
-const LINK_ARROW_COLOR = "rgba(59, 130, 246, 0.5)";
-
-/** Draws a subtle dot-grid background across the visible canvas area. */
-function drawDotGrid(ctx: CanvasRenderingContext2D, globalScale: number) {
-  const { width, height } = ctx.canvas;
-
-  const transform = ctx.getTransform();
-  const offsetX = transform.e;
-  const offsetY = transform.f;
-  const scale = transform.a;
-
-  const spacing = DOT_SPACING;
-  const startX = Math.floor(-offsetX / scale / spacing) * spacing - spacing;
-  const startY = Math.floor(-offsetY / scale / spacing) * spacing - spacing;
-  const endX = startX + width / scale + spacing * 2;
-  const endY = startY + height / scale + spacing * 2;
-
-  ctx.save();
-  ctx.fillStyle = "rgba(128, 128, 128, 0.15)";
-
-  for (let x = startX; x < endX; x += spacing) {
-    for (let y = startY; y < endY; y += spacing) {
-      ctx.beginPath();
-      ctx.arc(x, y, DOT_RADIUS / scale, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  ctx.restore();
-}
-
-/** Draws a rounded rectangle (badge shape) for a file node. */
-function drawBadgeNode(
-  node: ForceGraphNode,
-  ctx: CanvasRenderingContext2D,
-  globalScale: number,
-  isHovered: boolean,
-) {
-  const x = node.x ?? 0;
-  const y = node.y ?? 0;
-  const ext = node.fileType?.toUpperCase() || "FILE";
-  const label = node.name;
-  const color = node.color || getFileTypeColor(node.fileType || "");
-
-  ctx.save();
-  ctx.font = `500 ${FONT_SIZE}px ${FONT_FAMILY}`;
-
-  const extWidth = ctx.measureText(ext).width;
-  const labelWidth = ctx.measureText(label).width;
-  const totalWidth = extWidth + labelWidth + NODE_PADDING_X * 3 + 2;
-  const halfWidth = totalWidth / 2;
-  const halfHeight = NODE_HEIGHT / 2;
-  const radius = halfHeight;
-
-  if (isHovered) {
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 12;
-  }
-
-  ctx.beginPath();
-  ctx.roundRect(x - halfWidth, y - halfHeight, totalWidth, NODE_HEIGHT, radius);
-  ctx.fillStyle = isHovered ? "rgba(255, 255, 255, 0.12)" : "rgba(255, 255, 255, 0.06)";
-  ctx.fill();
-  ctx.strokeStyle = isHovered ? `${color}88` : "rgba(255, 255, 255, 0.08)";
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  const extBadgeWidth = extWidth + NODE_PADDING_X;
-  ctx.beginPath();
-  ctx.roundRect(x - halfWidth + 2, y - halfHeight + 2, extBadgeWidth, NODE_HEIGHT - 4, radius - 2);
-  ctx.fillStyle = `${color}22`;
-  ctx.fill();
-
-  ctx.fillStyle = color;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(ext, x - halfWidth + 2 + extBadgeWidth / 2, y + 0.5);
-
-  ctx.fillStyle = isHovered ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.7)";
-  ctx.textAlign = "left";
-  ctx.fillText(label, x - halfWidth + extBadgeWidth + NODE_PADDING_X, y + 0.5);
-
-  ctx.restore();
-}
-
-/** Estimates badge width from character count (avoids measureText in hit-test canvas). */
-function estimateBadgeWidth(node: ForceGraphNode): number {
-  const ext = node.fileType?.toUpperCase() || "FILE";
-  const charWidth = FONT_SIZE * 0.65;
-  return (ext.length + node.name.length) * charWidth + NODE_PADDING_X * 3 + 16;
-}
 
 /**
  * Full-featured graph visualisation canvas with controls, analysis trigger,
@@ -167,6 +112,8 @@ export function GraphCanvas({
   options,
   onNodeClick,
   onNodeHover,
+  overrideData,
+  onExitSubgraphView,
   width,
   height = 600,
   className = "",
@@ -183,14 +130,16 @@ export function GraphCanvas({
     setFileTypeFilter,
     startAnalysis,
     refresh,
+    loadMore,
   } = useGraphData(repositoryId, options);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const graphRef = useRef<ForceGraphMethods<ForceGraphNode, ForceGraphLink>>(null);
+  const graphRef = useRef<
+    ForceGraphMethods<ForceGraphNode, ForceGraphLink> | undefined
+  >(undefined);
   const [dimensions, setDimensions] = useState({ width: 800, height });
-  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [hover, dispatchHover] = useReducer(hoverReducer, HOVER_CLEARED);
   const [isFocused, setIsFocused] = useState(false);
-  const [connectedNodeIds, setConnectedNodeIds] = useState<Set<string>>(new Set());
   const [isControlsOpen, setIsControlsOpen] = useState(true);
   const [isReanalysisConfirmOpen, setIsReanalysisConfirmOpen] = useState(false);
 
@@ -212,8 +161,8 @@ export function GraphCanvas({
 
   useEffect(() => {
     if (!graphRef.current) return;
-    graphRef.current.d3Force("charge")?.strength(-300);
-    graphRef.current.d3Force("link")?.distance(120);
+    graphRef.current.d3Force("charge")?.strength(D3_CHARGE_STRENGTH);
+    graphRef.current.d3Force("link")?.distance(D3_LINK_DISTANCE);
     graphRef.current.d3Force("collide", null);
   }, [graphData]);
 
@@ -234,16 +183,32 @@ export function GraphCanvas({
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        graphRef.current?.centerAt(currentPos.x, currentPos.y - PAN_STEP / currentZoom, 200);
+        graphRef.current?.centerAt(
+          currentPos.x,
+          currentPos.y - PAN_STEP / currentZoom,
+          200,
+        );
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        graphRef.current?.centerAt(currentPos.x, currentPos.y + PAN_STEP / currentZoom, 200);
+        graphRef.current?.centerAt(
+          currentPos.x,
+          currentPos.y + PAN_STEP / currentZoom,
+          200,
+        );
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
-        graphRef.current?.centerAt(currentPos.x - PAN_STEP / currentZoom, currentPos.y, 200);
+        graphRef.current?.centerAt(
+          currentPos.x - PAN_STEP / currentZoom,
+          currentPos.y,
+          200,
+        );
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        graphRef.current?.centerAt(currentPos.x + PAN_STEP / currentZoom, currentPos.y, 200);
+        graphRef.current?.centerAt(
+          currentPos.x + PAN_STEP / currentZoom,
+          currentPos.y,
+          200,
+        );
       } else if (e.key === "f" || e.key === "F") {
         e.preventDefault();
         recenter();
@@ -274,6 +239,16 @@ export function GraphCanvas({
     [onNodeClick],
   );
 
+  /**
+   * Returns the set of all node IDs reachable from `nodeId` via any edge,
+   * regardless of direction. Used to dim unrelated nodes on hover.
+   *
+   * Bidirectional BFS: each iteration checks both `source === current` and
+   * `target === current` so that both outgoing imports and incoming dependents
+   * are highlighted. react-force-graph resolves link endpoints to full node
+   * objects after the simulation starts, so each endpoint is normalised to an
+   * ID string before comparison.
+   */
   const findConnectedNodes = useCallback(
     (nodeId: string, graphData: ForceGraphData): Set<string> => {
       const connected = new Set<string>();
@@ -284,8 +259,10 @@ export function GraphCanvas({
         const current = queue.shift()!;
 
         for (const link of graphData.links) {
-          const sourceId = typeof link.source === "object" ? link.source.id : link.source;
-          const targetId = typeof link.target === "object" ? link.target.id : link.target;
+          const sourceId =
+            typeof link.source === "object" ? link.source.id : link.source;
+          const targetId =
+            typeof link.target === "object" ? link.target.id : link.target;
 
           if (sourceId === current && !connected.has(targetId)) {
             connected.add(targetId);
@@ -304,15 +281,15 @@ export function GraphCanvas({
 
   const handleNodeHover = useCallback(
     (node: ForceGraphNode | null) => {
-      setHoveredNodeId(node?.id ?? null);
-
       if (node && displayData) {
-        const connected = findConnectedNodes(node.id, displayData);
-        setConnectedNodeIds(connected);
+        dispatchHover({
+          type: "HOVER",
+          nodeId: node.id,
+          connected: findConnectedNodes(node.id, displayData),
+        });
       } else {
-        setConnectedNodeIds(new Set());
+        dispatchHover({ type: "CLEAR" });
       }
-
       onNodeHover?.(node);
     },
     [onNodeHover, displayData, findConnectedNodes],
@@ -344,9 +321,13 @@ export function GraphCanvas({
   }, []);
 
   const nodeCanvasObject = useCallback(
-    (node: ForceGraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const isHovered = node.id === hoveredNodeId;
-      const isDimmed = hoveredNodeId && !connectedNodeIds.has(node.id);
+    (
+      node: ForceGraphNode,
+      ctx: CanvasRenderingContext2D,
+      globalScale: number,
+    ) => {
+      const isHovered = node.id === hover.nodeId;
+      const isDimmed = hover.nodeId && !hover.connectedIds.has(node.id);
 
       if (isDimmed) {
         ctx.globalAlpha = 0.15;
@@ -358,7 +339,7 @@ export function GraphCanvas({
         ctx.globalAlpha = 1;
       }
     },
-    [hoveredNodeId, connectedNodeIds],
+    [hover],
   );
 
   const nodePointerAreaPaint = useCallback(
@@ -427,7 +408,8 @@ export function GraphCanvas({
           <div>
             <p className="text-sm font-medium">No graph data</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Run an analysis to map this repository&apos;s dependency structure.
+              Run an analysis to map this repository&apos;s dependency
+              structure.
             </p>
           </div>
 
@@ -501,7 +483,11 @@ export function GraphCanvas({
                 size="icon"
                 className="glass h-9 w-9"
                 onClick={() => setIsControlsOpen((open) => !open)}
-                aria-label={isControlsOpen ? "Close graph controls" : "Open graph controls"}
+                aria-label={
+                  isControlsOpen
+                    ? "Close graph controls"
+                    : "Open graph controls"
+                }
                 aria-expanded={isControlsOpen}
               >
                 {isControlsOpen ? (
@@ -538,13 +524,32 @@ export function GraphCanvas({
         </>
       )}
 
+      {overrideData && onExitSubgraphView && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10">
+          <button
+            onClick={onExitSubgraphView}
+            className="glass flex items-center gap-2 rounded-full px-3 py-1.5 text-xs border border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+          >
+            <X className="h-3 w-3" />
+            Exit subgraph view
+          </button>
+        </div>
+      )}
+
       <AnalysisOverlay
         analysis={analysis}
         onRequestStart={() => setIsReanalysisConfirmOpen(true)}
       />
-      <NodeCountIndicator loaded={loadedCount} total={totalCount} />
+      <NodeCountIndicator
+        loaded={loadedCount}
+        total={totalCount}
+        onLoadMore={loadMore}
+      />
       {!isNarrow && (
-        <GraphStatsWidget graphData={displayData} className="absolute bottom-3 right-3 z-10 max-w-xs" />
+        <GraphStatsWidget
+          graphData={displayData}
+          className="absolute bottom-3 right-3 z-10 max-w-xs"
+        />
       )}
       <KeyboardShortcutsHint isFocused={isFocused} />
 
@@ -560,7 +565,7 @@ export function GraphCanvas({
 
       <ForceGraph2D
         ref={graphRef}
-        graphData={displayData!}
+        graphData={(overrideData ?? displayData)!}
         width={width || dimensions.width}
         height={dimensions.height}
         nodeId="id"
@@ -569,10 +574,14 @@ export function GraphCanvas({
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
         linkColor={(link: ForceGraphLink) => {
-          if (!hoveredNodeId) return LINK_COLOR;
-          const sourceId = typeof link.source === "object" ? link.source.id : link.source;
-          const targetId = typeof link.target === "object" ? link.target.id : link.target;
-          const isConnected = connectedNodeIds.has(sourceId) && connectedNodeIds.has(targetId);
+          if (!hover.nodeId) return LINK_COLOR;
+          const sourceId =
+            typeof link.source === "object" ? link.source.id : link.source;
+          const targetId =
+            typeof link.target === "object" ? link.target.id : link.target;
+          const isConnected =
+            hover.connectedIds.has(sourceId) &&
+            hover.connectedIds.has(targetId);
           return isConnected ? LINK_COLOR : "rgba(59, 130, 246, 0.08)";
         }}
         linkWidth={1.5}
@@ -600,7 +609,6 @@ function AnalysisOverlay({
 }) {
   return (
     <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2 w-56">
-    <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2 w-56">
       <Button
         variant="outline"
         size="sm"
@@ -618,7 +626,9 @@ function AnalysisOverlay({
         <div className="glass rounded-md px-3 py-2 space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
-              {analysis.status ? (STATUS_LABELS[analysis.status] ?? analysis.status) : "Starting..."}
+              {analysis.status
+                ? (STATUS_LABELS[analysis.status] ?? analysis.status)
+                : "Starting..."}
             </span>
             <ElapsedTimer seconds={analysis.elapsedSeconds} />
           </div>
@@ -660,11 +670,18 @@ function ElapsedTimer({ seconds }: { seconds: number }) {
   );
 }
 
-function NodeCountIndicator({ loaded, total }: { loaded: number; total: number }) {
+function NodeCountIndicator({
+  loaded,
+  total,
+  onLoadMore,
+}: {
+  loaded: number;
+  total: number;
+  onLoadMore: () => void;
+}) {
   if (total === 0) return null;
 
-  const showPlus = loaded < total;
-  const displayText = showPlus ? `${loaded}+` : `${loaded}`;
+  const hasMore = loaded < total;
 
   return (
     <div className="absolute top-3 left-3 z-10">
@@ -672,10 +689,16 @@ function NodeCountIndicator({ loaded, total }: { loaded: number; total: number }
         <div className="flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">Nodes</span>
           <span className="font-semibold font-mono text-foreground">
-            {displayText}
+            {loaded}
           </span>
-          {total > 0 && (
-            <span className="text-muted-foreground/60">of {total}</span>
+          <span className="text-muted-foreground/60">of {total}</span>
+          {hasMore && (
+            <button
+              onClick={onLoadMore}
+              className="ml-1 text-primary hover:underline font-medium"
+            >
+              Load more
+            </button>
           )}
         </div>
       </div>

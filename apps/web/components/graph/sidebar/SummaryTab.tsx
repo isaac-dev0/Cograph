@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, Sparkles, Clock, AlertCircle } from "lucide-react";
 import { graphqlRequest } from "@/lib/graphql/client";
 import { GENERATE_FILE_SUMMARY_MUTATION } from "@/lib/queries/GraphQueries";
-import type { FileDetails } from "@/lib/types/graph";
+import type { FileDetails } from "@/lib/interfaces/graph.interfaces";
 
 interface SummaryTabProps {
   fileId: string;

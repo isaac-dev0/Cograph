@@ -1,8 +1,9 @@
 "use client";
 
-import { Repository } from "@/lib/shared/Repository";
+import { Repository } from "@/lib/interfaces/repository.interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useProject } from "./ProjectProvider";
+import { graphqlRequest } from "@/lib/graphql/client";
 import { createClient } from "@/lib/supabase/client";
 import {
   FIND_REPOSITORIES_BY_PROJECT_QUERY,
@@ -28,7 +29,7 @@ interface RepositoryContextType {
 }
 
 const RepositoryContext = createContext<RepositoryContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function RepositoryProvider({
@@ -38,10 +39,10 @@ export function RepositoryProvider({
 }) {
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [accountRepositories, setAccountRepositories] = useState<Repository[]>(
-    []
+    [],
   );
   const [currentRepository, setCurrentRepository] = useState<Repository | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,44 +60,18 @@ export function RepositoryProvider({
     try {
       setIsLoading(true);
 
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: FIND_REPOSITORIES_BY_PROJECT_QUERY,
-            variables: { projectId: currentProject.id },
-          }),
-        }
-      );
-
-      const { data, errors } = await response.json();
-
-      if (errors) {
-        throw new Error("Failed to load repositories:", errors[0]?.message);
-      }
+      const data = await graphqlRequest<{
+        findRepositoriesByProjectId: Repository[];
+      }>(FIND_REPOSITORIES_BY_PROJECT_QUERY, { projectId: currentProject.id });
 
       const fetchedRepositories = data.findRepositoriesByProjectId || [];
       setRepositories(fetchedRepositories);
 
       const savedRepositoryId = localStorage.getItem(
-        `currentRepositoryId-${currentProject.id}`
+        `currentRepositoryId-${currentProject.id}`,
       );
       const savedRepository = fetchedRepositories.find(
-        (repository: Repository) => repository.id === savedRepositoryId
+        (repository: Repository) => repository.id === savedRepositoryId,
       );
 
       if (savedRepository) {
@@ -127,38 +102,10 @@ export function RepositoryProvider({
     try {
       setIsLoading(true);
 
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: FIND_ALL_USER_REPOSITORIES,
-            variables: {},
-          }),
-        }
+      const data = await graphqlRequest<{ findAllRepositories: Repository[] }>(
+        FIND_ALL_USER_REPOSITORIES,
+        {},
       );
-
-      const { data, errors } = await response.json();
-
-      if (errors) {
-        throw new Error(
-          "Failed to load account repositories:",
-          errors[0]?.message
-        );
-      }
 
       const fetchedRepositories = data.findAllRepositories || [];
       setAccountRepositories(fetchedRepositories);
@@ -189,7 +136,7 @@ export function RepositoryProvider({
       }
 
       const githubIdentity = user.identities?.find(
-        (identity) => identity.provider === "github"
+        (identity) => identity.provider === "github",
       );
 
       if (!githubIdentity) {
@@ -200,37 +147,16 @@ export function RepositoryProvider({
 
       if (!githubToken) {
         throw new Error(
-          "GitHub token not found in session. Please log out and log back in."
+          "GitHub token not found in session. Please log out and log back in.",
         );
       }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: SYNC_REPOSITORIES_FROM_GITHUB,
-            variables: { githubToken },
-          }),
-        }
-      );
-
-      const responseData = await response.json();
-
-      if (responseData.errors) {
-        const errorMessage = responseData.errors[0]?.message || "Unknown error";
-        throw new Error(`Failed to sync repositories: ${errorMessage}`);
-      }
-
+      await graphqlRequest(SYNC_REPOSITORIES_FROM_GITHUB, { githubToken });
       await loadAccountRepositories();
     } catch (error) {
       console.error("Failed to sync repositories:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to sync repositories"
+        error instanceof Error ? error.message : "Failed to sync repositories",
       );
       throw error;
     } finally {
@@ -243,36 +169,7 @@ export function RepositoryProvider({
       setIsLoading(true);
       setError(null);
 
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: ARCHIVE_REPOSITORY,
-            variables: { repositoryId },
-          }),
-        }
-      );
-
-      const responseData = await response.json();
-
-      if (responseData.errors) {
-        const errorMessage = responseData.errors[0]?.message || "Unknown error";
-        throw new Error(`Failed to archive repository: ${errorMessage}`);
-      }
+      await graphqlRequest(ARCHIVE_REPOSITORY, { repositoryId });
 
       if (currentRepository?.id === repositoryId) {
         setCurrentRepository(null);
@@ -285,7 +182,7 @@ export function RepositoryProvider({
     } catch (error) {
       console.error("Failed to archive repository:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to archive repository"
+        error instanceof Error ? error.message : "Failed to archive repository",
       );
       throw error;
     } finally {
@@ -299,7 +196,7 @@ export function RepositoryProvider({
     if (repository && currentProject) {
       localStorage.setItem(
         `currentRepositoryId-${currentProject.id}`,
-        repository.id
+        repository.id,
       );
     } else if (currentProject) {
       localStorage.removeItem(`currentRepositoryId-${currentProject.id}`);
@@ -315,39 +212,10 @@ export function RepositoryProvider({
       setIsLoading(true);
       setError(null);
 
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            query: REMOVE_REPOSITORY_FROM_PROJECT,
-            variables: {
-              projectId: currentProject.id,
-              repositoryId,
-            },
-          }),
-        }
-      );
-
-      const responseData = await response.json();
-
-      if (responseData.errors) {
-        const errorMessage = responseData.errors[0]?.message || "Unknown error";
-        throw new Error(`Failed to remove repository: ${errorMessage}`);
-      }
+      await graphqlRequest(REMOVE_REPOSITORY_FROM_PROJECT, {
+        projectId: currentProject.id,
+        repositoryId,
+      });
 
       if (currentRepository?.id === repositoryId) {
         setCurrentRepository(null);
@@ -358,7 +226,7 @@ export function RepositoryProvider({
     } catch (error) {
       console.error("Failed to remove repository from project:", error);
       setError(
-        error instanceof Error ? error.message : "Failed to remove repository"
+        error instanceof Error ? error.message : "Failed to remove repository",
       );
       throw error;
     } finally {

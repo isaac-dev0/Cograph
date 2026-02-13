@@ -1,12 +1,14 @@
+/**
+ * DataLoader definitions for the Analysis domain.
+ * DataLoaders batch and deduplicate PostgreSQL lookups that would otherwise fire once per
+ * node in a GraphQL list field (the N+1 problem). Each loader is request-scoped so its
+ * per-request cache never leaks between concurrent GraphQL operations.
+ */
 import { Injectable, Scope } from '@nestjs/common';
-import * as DataLoader from 'dataloader';
+import DataLoader from 'dataloader';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { FileAnnotation } from './models/file-annotation.model';
 
-/**
- * Request-scoped DataLoaders for the Analysis domain.
- * A new instance is created per GraphQL request to prevent cross-request cache contamination.
- */
 @Injectable({ scope: Scope.REQUEST })
 export class AnalysisLoaders {
   constructor(private readonly prisma: PrismaService) {}
@@ -16,7 +18,7 @@ export class AnalysisLoaders {
    * Replaces the per-file `repositoryFile.findUnique` in the `annotations` field resolver.
    */
   readonly fileAnnotations = new DataLoader<string, FileAnnotation[]>(
-    async (fileIds: readonly string[]) => {
+    async (fileIds: Array<string>) => {
       const rows = await this.prisma.annotation.findMany({
         where: { fileId: { in: [...fileIds] } },
         orderBy: { createdAt: 'asc' },

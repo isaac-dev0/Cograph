@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Neo4jGraphService, FileNodeData, EntityNodeData, ImportRelationshipData } from './neo4j-graph.service';
+import { Neo4jGraphService } from './neo4j-graph.service';
+import { FileNodeData, EntityNodeData, ImportRelationshipData } from '../../common/shared/graph.interfaces';
 import { Neo4jService } from 'nest-neo4j';
 
 describe('Neo4jGraphService', () => {
@@ -132,8 +133,8 @@ describe('Neo4jGraphService', () => {
   describe('createImportRelationship', () => {
     it('should create an import relationship between two files', async () => {
       const importData: ImportRelationshipData = {
-        fromFileId: 'file-123',
-        toFileId: 'file-456',
+        sourceFileId: 'file-123',
+        targetFileId: 'file-456',
         specifiers: ['myFunction', 'myClass'],
       };
 
@@ -156,8 +157,8 @@ describe('Neo4jGraphService', () => {
       expect(neo4jService.write).toHaveBeenCalledWith(
         expect.stringContaining('CREATE (from)-[r:IMPORTS'),
         expect.objectContaining({
-          fromFileId: importData.fromFileId,
-          toFileId: importData.toFileId,
+          sourceFileId: importData.sourceFileId,
+          targetFileId: importData.targetFileId,
           specifiers: importData.specifiers,
         }),
       );
@@ -308,13 +309,13 @@ describe('Neo4jGraphService', () => {
     it('should bulk create multiple import relationships', async () => {
       const imports: ImportRelationshipData[] = [
         {
-          fromFileId: 'file-1',
-          toFileId: 'file-2',
+          sourceFileId: 'file-1',
+          targetFileId: 'file-2',
           specifiers: ['myFunction'],
         },
         {
-          fromFileId: 'file-1',
-          toFileId: 'file-3',
+          sourceFileId: 'file-1',
+          targetFileId: 'file-3',
           specifiers: ['myClass'],
         },
       ];

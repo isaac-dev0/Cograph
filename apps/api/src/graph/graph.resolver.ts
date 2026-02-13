@@ -4,19 +4,13 @@ import { SupabaseJwtGuard } from '../auth/supabase-jwt.guard';
 import { GraphQueryService } from './services/graph-query.service';
 import { DependencyGraph, CircularDependency, GraphNode, GraphEdge, NodeType, EdgeType } from './models/graph.model';
 import { GraphOptionsInput } from './dto/graph-options.input';
-import { TraversalDepth } from './types/graph-query.types';
+import { TraversalDepth } from '../common/shared/graph.interfaces';
 
-/**
- * GraphQL resolver for dependency graph queries
- */
 @UseGuards(SupabaseJwtGuard)
 @Resolver()
 export class GraphResolver {
   constructor(private readonly graphQueryService: GraphQueryService) {}
 
-  /**
-   * Get complete repository dependency graph with nodes and edges
-   */
   @Query(() => DependencyGraph, {
     name: 'repositoryGraph',
     description: 'Returns the complete dependency graph for a repository with all nodes and edges. Supports pagination and filtering.',
@@ -33,9 +27,6 @@ export class GraphResolver {
     return this.convertToGraphQLFormat(result);
   }
 
-  /**
-   * Get N-hop dependencies for a file (outgoing imports)
-   */
   @Query(() => DependencyGraph, {
     name: 'fileDependencies',
     description: 'Returns all files that the specified file depends on (imports). Supports depth control for N-hop traversal.',
@@ -50,9 +41,6 @@ export class GraphResolver {
     return this.convertToGraphQLFormat(result);
   }
 
-  /**
-   * Get N-hop dependents for a file (incoming imports)
-   */
   @Query(() => DependencyGraph, {
     name: 'fileDependents',
     description: 'Returns all files that depend on (import) the specified file. Supports depth control for N-hop traversal.',
@@ -67,9 +55,6 @@ export class GraphResolver {
     return this.convertToGraphQLFormat(result);
   }
 
-  /**
-   * Get total node count for a repository
-   */
   @Query(() => Number, {
     name: 'repositoryNodeCount',
     description: 'Returns the total number of file nodes in the repository.',
@@ -80,9 +65,6 @@ export class GraphResolver {
     return this.graphQueryService.getRepositoryNodeCount(repositoryId);
   }
 
-  /**
-   * Detect circular dependencies in the repository
-   */
   @Query(() => [CircularDependency], {
     name: 'circularDependencies',
     description: 'Detects and returns all circular dependencies (import cycles) in the repository. Limited to 100 results.',
@@ -93,9 +75,6 @@ export class GraphResolver {
     return this.graphQueryService.findCircularDependencies(repositoryId);
   }
 
-  /**
-   * Get files filtered by type/extension
-   */
   @Query(() => DependencyGraph, {
     name: 'filesByType',
     description: 'Returns files filtered by extension (e.g., "ts", "tsx", "js") with their dependencies.',

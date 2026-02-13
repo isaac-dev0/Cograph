@@ -11,7 +11,13 @@ import { GraphModule } from 'src/graph/graph.module';
 
 @Module({
   imports: [PrismaModule, MCPModule, RepositoriesModule, GraphModule],
-  providers: [AnalysisService, AnalysisResolver, AnalysisLoaders, MCPAnalysisService, MCPSummaryService],
+  providers: [
+    AnalysisService,
+    AnalysisResolver,
+    AnalysisLoaders,
+    MCPAnalysisService,
+    MCPSummaryService,
+  ],
   exports: [AnalysisService, MCPAnalysisService, MCPSummaryService],
 })
 export class AnalysisModule {}

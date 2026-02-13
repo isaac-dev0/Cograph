@@ -1,3 +1,10 @@
+/**
+ * 
+ * A large part of this code was taken from a private GitHub 
+ * repository and modified for my usage.
+ * 
+ */
+
 import { Injectable, InternalServerErrorException, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { join } from 'path';
 
@@ -24,6 +31,7 @@ interface MCPClient {
 export class MCPClientService implements OnModuleInit, OnModuleDestroy {
   private client: MCPClient | null = null;
 
+  /** Spawns the MCP server process over stdio and establishes a client connection. */
   async onModuleInit(): Promise<void> {
     const { Client } = await importEsm('@modelcontextprotocol/sdk/client');
     const { StdioClientTransport } = await importEsm(
@@ -43,6 +51,7 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
     await this.client.connect(transport);
   }
 
+  /** Closes the MCP client connection gracefully when the module is torn down. */
   async onModuleDestroy(): Promise<void> {
     await this.client?.close();
   }
@@ -64,7 +73,7 @@ export class MCPClientService implements OnModuleInit, OnModuleDestroy {
     );
 
     const content = result.content as Array<{ type: string; text?: string }>;
-    const textContent = content?.find((c) => c.type === 'text');
+    const textContent = content?.find((content) => content.type === 'text');
 
     if (!textContent?.text) {
       throw new InternalServerErrorException('No text content in MCP response');

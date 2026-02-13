@@ -15,7 +15,7 @@ export class CreateAnnotationInput {
 
   @Field(() => [String], {
     nullable: true,
-    description: 'Tags for organizing the annotation',
+    description: 'Tags for organising the annotation',
   })
   @IsOptional()
   @IsArray()
@@ -49,7 +49,7 @@ export class UpdateAnnotationInput {
 
   @Field(() => [String], {
     nullable: true,
-    description: 'Tags for organizing the annotation',
+    description: 'Tags for organising the annotation',
   })
   @IsOptional()
   @IsArray()

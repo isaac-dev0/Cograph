@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { TrendingUp, Network, Activity, type LucideIcon } from "lucide-react";
-import type { ForceGraphData, ForceGraphNode } from "./utils/graphDataTransform";
+import type { ForceGraphData } from "./utils/graphDataTransform";
 
 interface GraphStatsWidgetProps {
   graphData: ForceGraphData | null;
@@ -16,7 +16,10 @@ interface NodeStats {
   connections: number;
 }
 
-export function GraphStatsWidget({ graphData, className = "" }: GraphStatsWidgetProps) {
+export function GraphStatsWidget({
+  graphData,
+  className = "",
+}: GraphStatsWidgetProps) {
   const stats = useMemo(() => {
     if (!graphData) {
       return {
@@ -29,8 +32,10 @@ export function GraphStatsWidget({ graphData, className = "" }: GraphStatsWidget
     const connectionCount = new Map<string, number>();
 
     for (const link of graphData.links) {
-      const sourceId = typeof link.source === "object" ? link.source.id : link.source;
-      const targetId = typeof link.target === "object" ? link.target.id : link.target;
+      const sourceId =
+        typeof link.source === "object" ? link.source.id : link.source;
+      const targetId =
+        typeof link.target === "object" ? link.target.id : link.target;
 
       connectionCount.set(sourceId, (connectionCount.get(sourceId) || 0) + 1);
       connectionCount.set(targetId, (connectionCount.get(targetId) || 0) + 1);
@@ -44,7 +49,7 @@ export function GraphStatsWidget({ graphData, className = "" }: GraphStatsWidget
     }));
 
     const uniqueNodeStats = Array.from(
-      new Map(nodeStats.map((node) => [node.id, node])).values()
+      new Map(nodeStats.map((node) => [node.id, node])).values(),
     );
 
     const hotspots = uniqueNodeStats
@@ -56,9 +61,10 @@ export function GraphStatsWidget({ graphData, className = "" }: GraphStatsWidget
       (sum, count) => sum + count,
       0,
     );
-    const avgDependencies = graphData.nodes.length > 0
-      ? Math.round((totalConnections / graphData.nodes.length) * 10) / 10
-      : 0;
+    const avgDependencies =
+      graphData.nodes.length > 0
+        ? Math.round((totalConnections / graphData.nodes.length) * 10) / 10
+        : 0;
 
     return {
       totalNodes: graphData.nodes.length,
@@ -133,7 +139,10 @@ function StatItem({
           {label}
         </span>
       </div>
-      <p className="text-lg font-bold font-mono" aria-label={`${label}: ${value}`}>
+      <p
+        className="text-lg font-bold font-mono"
+        aria-label={`${label}: ${value}`}
+      >
         {value}
       </p>
     </div>

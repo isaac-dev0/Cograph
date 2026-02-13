@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Neo4jService } from 'nest-neo4j';
 import { int as neo4jInt } from 'neo4j-driver';
+import type { Record as Neo4jRecord } from 'neo4j-driver';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import {
   DependencyGraph,
@@ -11,7 +12,7 @@ import {
   TraversalDepth,
   Neo4jNode,
   Neo4jRelationship,
-} from '../types/graph-query.types';
+} from '../../common/shared/graph.interfaces';
 
 interface RawGraphComponents {
   fileNodes: Neo4jNode[];
@@ -19,11 +20,13 @@ interface RawGraphComponents {
   relationships: Neo4jRelationship[];
 }
 
-/**
- * Executes complex graph queries against Neo4j: full repository graphs,
- * per-file dependency/dependent traversals, circular dependency detection,
- * and file-type filtering. All results are enriched with PostgreSQL metadata.
- */
+/** Maps Neo4j relationship type strings to the service-level edge type union. */
+const EDGE_TYPE_MAP: Record<string, GraphEdge['type']> = {
+  imports: 'imports',
+  exports: 'exports',
+  contains: 'contains',
+};
+
 @Injectable()
 export class GraphQueryService {
   private readonly logger = new Logger(GraphQueryService.name);
@@ -41,7 +44,9 @@ export class GraphQueryService {
     const limit = Math.floor(options?.limit ?? 500);
     const offset = Math.floor(options?.offset ?? 0);
 
-    this.logger.log(`Fetching repository graph for ${repositoryId} (limit: ${limit}, offset: ${offset})`);
+    this.logger.log(
+      `Fetching repository graph for ${repositoryId} (limit: ${limit}, offset: ${offset})`,
+    );
 
     const result = await this.neo4jService.read(
       `MATCH (f:File {repositoryId: $repositoryId})
@@ -59,16 +64,28 @@ export class GraphQueryService {
       return { nodes: [], edges: [] };
     }
 
-    const components = this.extractCombinedRecords(result.records);
+    const components = this.extractCombinedRecords(
+      result.records as unknown as Neo4jRecord[],
+    );
     return this.buildGraph(components);
   }
 
-  /** Returns N-hop outgoing dependencies for a file. */
+  /**
+   * Returns N-hop outgoing dependencies for a file.
+   *
+   * Two separate Cypher queries are intentional:
+   * collecting entities via `OPTIONAL MATCH` inside the same query that also
+   * traverses multi-hop paths produces a cross product
+   * (every entity row is duplicated for every path row). Splitting into a node query and
+   * an edge query avoids that and keeps `DISTINCT` aggregation cheap.
+   */
   async getFileDependencies(
     fileId: string,
     depth: TraversalDepth = 1,
   ): Promise<DependencyGraph> {
-    this.logger.log(`Fetching dependencies for file ${fileId} (depth: ${depth})`);
+    this.logger.log(
+      `Fetching dependencies for file ${fileId} (depth: ${depth})`,
+    );
 
     const depthPattern = depth === -1 ? '*' : `*1..${depth}`;
 
@@ -93,11 +110,19 @@ export class GraphQueryService {
       ),
     ]);
 
-    const components = this.extractSeparateRecords(nodesResult.records, edgesResult.records);
+    const components = this.extractSeparateRecords(
+      nodesResult.records as unknown as Neo4jRecord[],
+      edgesResult.records as unknown as Neo4jRecord[],
+    );
     return this.buildGraph(components);
   }
 
-  /** Returns N-hop incoming dependents for a file. */
+  /**
+   * Returns N-hop incoming dependents for a file.
+   *
+   * Uses the same split-query pattern as `getFileDependencies` to avoid
+   * cross-product row explosion when collecting entities alongside multi-hop paths.
+   */
   async getFileDependents(
     fileId: string,
     depth: TraversalDepth = 1,
@@ -127,7 +152,10 @@ export class GraphQueryService {
       ),
     ]);
 
-    const components = this.extractSeparateRecords(nodesResult.records, edgesResult.records);
+    const components = this.extractSeparateRecords(
+      nodesResult.records as unknown as Neo4jRecord[],
+      edgesResult.records as unknown as Neo4jRecord[],
+    );
     return this.buildGraph(components);
   }
 
@@ -147,7 +175,9 @@ export class GraphQueryService {
   }
 
   /** Detects circular dependency cycles in the import graph. */
-  async findCircularDependencies(repositoryId: string): Promise<CircularDependency[]> {
+  async findCircularDependencies(
+    repositoryId: string,
+  ): Promise<CircularDependency[]> {
     this.logger.log(`Detecting circular dependencies for ${repositoryId}`);
 
     const result = await this.neo4jService.read(
@@ -170,10 +200,14 @@ export class GraphQueryService {
     const cycles = result.records.map((record) => ({
       cycle: record.get('cycleIds') as string[],
       paths: record.get('cyclePaths') as string[],
-      length: record.get('cycleLength') as number,
+      length: (
+        record.get('cycleLength') as { toNumber: () => number }
+      ).toNumber(),
     }));
 
-    this.logger.log(`Found ${cycles.length} circular dependencies for ${repositoryId}`);
+    this.logger.log(
+      `Found ${cycles.length} circular dependencies for ${repositoryId}`,
+    );
     return cycles;
   }
 
@@ -186,7 +220,9 @@ export class GraphQueryService {
     const limit = Math.floor(options?.limit ?? 500);
     const offset = Math.floor(options?.offset ?? 0);
 
-    this.logger.log(`Fetching ${fileType} files for ${repositoryId} (limit: ${limit}, offset: ${offset})`);
+    this.logger.log(
+      `Fetching ${fileType} files for ${repositoryId} (limit: ${limit}, offset: ${offset})`,
+    );
 
     const result = await this.neo4jService.read(
       `MATCH (f:File {repositoryId: $repositoryId})
@@ -197,7 +233,12 @@ export class GraphQueryService {
             collect(DISTINCT {rel: r, target: target}) as imports
        RETURN f, entities, imports
        ORDER BY f.path SKIP $offset LIMIT $limit`,
-      { repositoryId, fileType, offset: neo4jInt(offset), limit: neo4jInt(limit) },
+      {
+        repositoryId,
+        fileType,
+        offset: neo4jInt(offset),
+        limit: neo4jInt(limit),
+      },
     );
 
     if (!result.records?.length) {
@@ -205,7 +246,9 @@ export class GraphQueryService {
       return { nodes: [], edges: [] };
     }
 
-    const components = this.extractCombinedRecords(result.records);
+    const components = this.extractCombinedRecords(
+      result.records as unknown as Neo4jRecord[],
+    );
     return this.buildGraph(components);
   }
 
@@ -214,7 +257,7 @@ export class GraphQueryService {
    * file nodes, entities, and import relationships in each record.
    * Used by getRepositoryGraph and getFilesByType.
    */
-  private extractCombinedRecords(records: any[]): RawGraphComponents {
+  private extractCombinedRecords(records: Neo4jRecord[]): RawGraphComponents {
     const fileNodes: Neo4jNode[] = [];
     const entityNodes: Neo4jNode[] = [];
     const relationships: Neo4jRelationship[] = [];
@@ -250,8 +293,8 @@ export class GraphQueryService {
    * Used by getFileDependencies and getFileDependents.
    */
   private extractSeparateRecords(
-    nodeRecords: any[],
-    edgeRecords: any[],
+    nodeRecords: Neo4jRecord[],
+    edgeRecords: Neo4jRecord[],
   ): RawGraphComponents {
     const fileNodes: Neo4jNode[] = [];
     const entityNodes: Neo4jNode[] = [];
@@ -267,17 +310,17 @@ export class GraphQueryService {
 
     const relationships: Neo4jRelationship[] = [];
     for (const record of edgeRecords) {
-      const rel = record.get('r');
+      const relationship = record.get('r');
       const source = record.get('source');
       const target = record.get('target');
 
-      if (rel && source && target) {
+      if (relationship && source && target) {
         relationships.push({
-          identity: rel.identity,
-          type: rel.type,
+          identity: relationship.identity,
+          type: relationship.type,
           start: source.properties.id,
           end: target.properties.id,
-          properties: rel.properties,
+          properties: relationship.properties,
         });
       }
     }
@@ -285,6 +328,7 @@ export class GraphQueryService {
     return { fileNodes, entityNodes, relationships };
   }
 
+  /** Normalises a raw Neo4j node record returned by the driver into a typed Neo4jNode. */
   private toNeo4jNode(raw: any): Neo4jNode {
     return {
       identity: raw.identity,
@@ -293,47 +337,69 @@ export class GraphQueryService {
     };
   }
 
-  /** Enriches nodes with PostgreSQL metadata and converts relationships to edges. */
-  private async buildGraph(components: RawGraphComponents): Promise<DependencyGraph> {
+  /** Populates nodes with PostgreSQL metadata and converts relationships to edges. */
+  private async buildGraph(
+    components: RawGraphComponents,
+  ): Promise<DependencyGraph> {
     const allNodes = [...components.fileNodes, ...components.entityNodes];
     const nodes = await this.enrichNodesWithMetadata(allNodes);
     const edges = this.convertRelationships(components.relationships);
 
-    this.logger.log(`Built graph: ${nodes.length} nodes, ${edges.length} edges`);
+    this.logger.log(
+      `Built graph: ${nodes.length} nodes, ${edges.length} edges`,
+    );
     return { nodes, edges };
   }
 
   /**
-   * Enriches Neo4j nodes with PostgreSQL metadata using bulk queries
+   * Populates Neo4j nodes with PostgreSQL metadata using bulk queries
    * to avoid the N+1 problem.
    */
-  private async enrichNodesWithMetadata(neo4jNodes: Neo4jNode[]): Promise<GraphNode[]> {
+  private async enrichNodesWithMetadata(
+    neo4jNodes: Neo4jNode[],
+  ): Promise<GraphNode[]> {
     if (!neo4jNodes.length) return [];
 
-    const neo4jIds = neo4jNodes.map((n) => n.properties.id).filter(Boolean);
-    if (!neo4jIds.length) return neo4jNodes.map((n) => this.toGraphNode(n));
+    const neo4jIds = neo4jNodes.map((node) => node.properties.id).filter(Boolean);
+    if (!neo4jIds.length) return neo4jNodes.map((node) => this.toGraphNode(node));
 
     try {
       const [files, entities] = await Promise.all([
         this.prisma.repositoryFile.findMany({
           where: { neo4jNodeId: { in: neo4jIds } },
-          select: { id: true, neo4jNodeId: true, annotations: true, claudeSummary: true, filePath: true, fileName: true },
+          select: {
+            id: true,
+            neo4jNodeId: true,
+            annotations: true,
+            claudeSummary: true,
+            filePath: true,
+            fileName: true,
+          },
         }),
         this.prisma.codeEntity.findMany({
           where: { repositoryFile: { neo4jNodeId: { in: neo4jIds } } },
-          select: { id: true, name: true, type: true, startLine: true, endLine: true, annotations: true },
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            startLine: true,
+            endLine: true,
+            annotations: true,
+          },
         }),
       ]);
 
-      const fileMap = new Map(files.map((f) => [f.neo4jNodeId, f]));
+      const fileMap = new Map(files.map((file) => [file.neo4jNodeId, file]));
       const entityMap = new Map(
         entities
-          .map((e) => {
+          .map((entity) => {
             try {
-              const annotations = e.annotations ? JSON.parse(e.annotations) : {};
-              return [annotations.neo4jNodeId, e] as const;
+              const annotations = entity.annotations
+                ? JSON.parse(entity.annotations)
+                : {};
+              return [annotations.neo4jNodeId, entity] as const;
             } catch {
-              return [null, e] as const;
+              return [null, entity] as const;
             }
           })
           .filter(([id]) => id !== null),
@@ -347,7 +413,9 @@ export class GraphQueryService {
           const meta = fileMap.get(neo4jId);
           let annotations = {};
           if (meta?.annotations) {
-            try { annotations = JSON.parse(meta.annotations); } catch {}
+            try {
+              annotations = JSON.parse(meta.annotations);
+            } catch {}
           }
 
           return {
@@ -426,11 +494,13 @@ export class GraphQueryService {
   }
 
   /** Converts Neo4j relationships to GraphEdge format. */
-  private convertRelationships(relationships: Neo4jRelationship[]): GraphEdge[] {
-    return relationships.map((rel) => {
-      const edgeType = rel.type.toLowerCase() as 'imports' | 'exports' | 'contains';
-      const sourceId = rel.start.toString();
-      const targetId = rel.end.toString();
+  private convertRelationships(
+    relationships: Neo4jRelationship[],
+  ): GraphEdge[] {
+    return relationships.map((relationship) => {
+      const edgeType = EDGE_TYPE_MAP[relationship.type.toLowerCase()] ?? 'imports';
+      const sourceId = relationship.start.toString();
+      const targetId = relationship.end.toString();
 
       const edge: GraphEdge = {
         id: `${sourceId}-${edgeType}-${targetId}`,
@@ -439,9 +509,9 @@ export class GraphQueryService {
         type: edgeType,
       };
 
-      if (rel.properties && Object.keys(rel.properties).length > 0) {
+      if (relationship.properties && Object.keys(relationship.properties).length > 0) {
         edge.data = {
-          specifiers: rel.properties.specifiers,
+          specifiers: relationship.properties.specifiers,
           label: edgeType,
         };
       }
@@ -452,7 +522,11 @@ export class GraphQueryService {
 
   /** Extracts the entity type label from Neo4j node labels. */
   private getEntityType(labels: string[]): 'function' | 'class' | 'interface' {
-    const match = labels.find((l) => ['Function', 'Class', 'Interface'].includes(l));
-    return (match?.toLowerCase() as 'function' | 'class' | 'interface') || 'function';
+    const match = labels.find((label) =>
+      ['Function', 'Class', 'Interface'].includes(label),
+    );
+    return (
+      (match?.toLowerCase() as 'function' | 'class' | 'interface') || 'function'
+    );
   }
 }

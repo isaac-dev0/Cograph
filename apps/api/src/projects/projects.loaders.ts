@@ -1,13 +1,8 @@
 import { Injectable, Scope } from '@nestjs/common';
-import * as DataLoader from 'dataloader';
+import DataLoader from 'dataloader';
 import { PrismaService } from '../common/prisma/prisma.service';
 import type { Profile, ProjectMember } from '@prisma/client';
 
-/**
- * Request-scoped DataLoaders for the Projects domain.
- * A new instance is created per GraphQL request, which ensures each loader's
- * internal cache is isolated to that request and never bleeds across users.
- */
 @Injectable({ scope: Scope.REQUEST })
 export class ProjectsLoaders {
   constructor(private readonly prisma: PrismaService) {}

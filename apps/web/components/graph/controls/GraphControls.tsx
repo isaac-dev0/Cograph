@@ -36,10 +36,6 @@ const FILE_TYPE_OPTIONS = [
   { value: "md", label: "MD", color: "#22c55e" },
 ];
 
-/**
- * Glass-styled graph controls panel with search, file-type filtering,
- * and navigation actions — styled as a floating command palette.
- */
 export function GraphControls({
   nodes,
   onSearch,
@@ -130,7 +126,7 @@ export function GraphControls({
   };
 
   const availableTypes = FILE_TYPE_OPTIONS.filter(
-    (opt) => (fileTypeCounts[opt.value] || 0) > 0,
+    (option) => (fileTypeCounts[option.value] || 0) > 0,
   );
 
   return (
@@ -150,7 +146,7 @@ export function GraphControls({
             type="text"
             placeholder="Search files..."
             value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(event) => handleSearchChange(event.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)}
             className="w-full h-11 pl-11 pr-20 bg-transparent border border-border/50 rounded-lg text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-colors"
@@ -213,29 +209,29 @@ export function GraphControls({
             role="group"
             aria-label="File type filters"
           >
-            {availableTypes.map((opt) => {
-              const isActive = selectedFileTypes.includes(opt.value);
-              const count = fileTypeCounts[opt.value] || 0;
+            {availableTypes.map((option) => {
+              const isActive = selectedFileTypes.includes(option.value);
+              const count = fileTypeCounts[option.value] || 0;
               return (
                 <button
-                  key={opt.value}
-                  onClick={() => handleFileTypeToggle(opt.value)}
+                  key={option.value}
+                  onClick={() => handleFileTypeToggle(option.value)}
                   className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors ${
                     isActive
                       ? "border-current bg-current/10"
                       : "border-border/40 bg-transparent hover:bg-accent/30"
                   }`}
-                  style={{ color: isActive ? opt.color : undefined }}
+                  style={{ color: isActive ? option.color : undefined }}
                   role="checkbox"
                   aria-checked={isActive}
-                  aria-label={`Filter ${opt.label} files, ${count} available`}
+                  aria-label={`Filter ${option.label} files, ${count} available`}
                 >
                   <span
                     className="size-2.5 rounded-full"
-                    style={{ backgroundColor: opt.color }}
+                    style={{ backgroundColor: option.color }}
                     aria-hidden="true"
                   />
-                  {opt.label}
+                  {option.label}
                   <span className="opacity-50" aria-hidden="true">{count}</span>
                 </button>
               );

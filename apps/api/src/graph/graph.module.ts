@@ -3,10 +3,9 @@ import { GraphResolver } from './graph.resolver';
 import { GraphQueryService } from './services/graph-query.service';
 import { Neo4jGraphService } from './services/neo4j-graph.service';
 import { PrismaModule } from '../common/prisma/prisma.module';
-import { MCPModule } from '../mcp/mcp.module';
 
 @Module({
-  imports: [PrismaModule, MCPModule],
+  imports: [PrismaModule],
   providers: [GraphResolver, GraphQueryService, Neo4jGraphService],
   exports: [GraphQueryService, Neo4jGraphService],
 })

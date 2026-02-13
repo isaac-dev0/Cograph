@@ -17,13 +17,16 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useProject } from "@/hooks/providers/ProjectProvider";
+import { useUser } from "@/hooks/providers/UserProvider";
 import { getProjectIcon } from "@/lib/icons";
-import { ChevronsUpDown, Loader2, Plus, Settings } from "lucide-react";
+import { ChevronsUpDown, Loader2, Plus, Settings, Archive, Eye, EyeOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export function ProjectSwitcher() {
   const { isMobile } = useSidebar();
-  const { currentProject, projects, setCurrentProject, isLoading } =
+  const { currentProject, projects, setCurrentProject, isLoading, showArchived, setShowArchived, archiveProject } =
     useProject();
+  const { profile } = useUser();
 
   if (isLoading) {
     return (
@@ -41,6 +44,14 @@ export function ProjectSwitcher() {
   if (!currentProject) return null;
 
   const ActiveIcon = getProjectIcon(currentProject.icon);
+  const isOwner = currentProject.ownerId === profile?.id;
+  const visibleProjects = showArchived
+    ? projects
+    : projects.filter((project) => project.status !== "ARCHIVED");
+
+  const handleArchive = async () => {
+    await archiveProject(currentProject.id);
+  };
 
   return (
     <SidebarMenu>
@@ -74,9 +85,10 @@ export function ProjectSwitcher() {
             <DropdownMenuLabel className="text-muted-foreground text-xs">
               Projects
             </DropdownMenuLabel>
-            {projects.map((project) => {
+            {visibleProjects.map((project) => {
               const ProjectIcon = getProjectIcon(project.icon);
               const isActive = project.id === currentProject.id;
+              const isArchived = project.status === "ARCHIVED";
 
               return (
                 <DropdownMenuItem
@@ -85,13 +97,32 @@ export function ProjectSwitcher() {
                   className="gap-2 p-2"
                   disabled={isActive}
                 >
-                  <div className={`flex size-6 items-center justify-center rounded-md border ${isActive ? 'bg-sidebar-accent' : ''}`}>
+                  <div className={`flex size-6 items-center justify-center rounded-md border ${isActive ? "bg-sidebar-accent" : ""} ${isArchived ? "opacity-50" : ""}`}>
                     <ProjectIcon className="size-3.5 shrink-0" />
                   </div>
-                  {project.name}
+                  <span className={isArchived ? "text-muted-foreground line-through" : ""}>
+                    {project.name}
+                  </span>
+                  {isArchived && (
+                    <Badge variant="outline" className="ml-auto text-[10px] py-0 px-1">
+                      archived
+                    </Badge>
+                  )}
                 </DropdownMenuItem>
               );
             })}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="gap-2 p-2"
+              onClick={() => setShowArchived(!showArchived)}
+            >
+              <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                {showArchived ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </div>
+              <div className="text-muted-foreground font-medium">
+                {showArchived ? "Hide archived" : "Show archived"}
+              </div>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <ProjectSettingsDialog
               trigger={
@@ -108,6 +139,17 @@ export function ProjectSwitcher() {
                 </DropdownMenuItem>
               }
             />
+            {isOwner && currentProject.status !== "ARCHIVED" && (
+              <DropdownMenuItem
+                className="gap-2 p-2 text-muted-foreground"
+                onClick={handleArchive}
+              >
+                <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                  <Archive className="size-4" />
+                </div>
+                <div className="font-medium">Archive Project</div>
+              </DropdownMenuItem>
+            )}
             <ProjectCreateDialog
               trigger={
                 <DropdownMenuItem
