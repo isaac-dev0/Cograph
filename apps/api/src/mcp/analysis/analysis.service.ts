@@ -65,11 +65,12 @@ export class AnalysisService {
     });
 
     if (recentJob) {
-      const isActive = [
+      const activeStatuses: AnalysisStatus[] = [
         AnalysisStatus.PENDING,
         AnalysisStatus.CLONING,
         AnalysisStatus.ANALYSING,
-      ].includes(recentJob.status);
+      ];
+      const isActive = activeStatuses.includes(recentJob.status);
 
       if (isActive) {
         throw new ConflictException(

@@ -42,7 +42,7 @@ describe('Analysis Flow E2E', () => {
   });
 
   describe('Scenario 1: Happy Path - Small TypeScript Repository', () => {
-    it('should analyze a small repository successfully', async () => {
+    it('should analyse a small repository successfully', async () => {
       testRepositoryId = await db.createTestRepository({
         name: SMALL_TS_REPO.name,
         repositoryUrl: SMALL_TS_REPO.url,
@@ -132,7 +132,7 @@ describe('Analysis Flow E2E', () => {
   });
 
   describe('Scenario 2: Mixed Language Repository (JS + TS)', () => {
-    it('should analyze repository with multiple file types', async () => {
+    it('should analyse repository with multiple file types', async () => {
       testRepositoryId = await db.createTestRepository({
         name: MIXED_LANG_REPO.name,
         repositoryUrl: MIXED_LANG_REPO.url,
@@ -294,7 +294,7 @@ describe('Analysis Flow E2E', () => {
   });
 
   describe('Scenario 5: Re-analysis Clears Previous Data', () => {
-    it('should clear existing files when repository is re-analyzed', async () => {
+    it('should clear existing files when repository is re-analysed', async () => {
       testRepositoryId = await db.createTestRepository({
         name: SMALL_TS_REPO.name,
         repositoryUrl: SMALL_TS_REPO.url,

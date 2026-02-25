@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { Neo4jGraphService } from './neo4j-graph.service';
 import { FileNodeData, EntityNodeData, ImportRelationshipData } from '../../common/shared/graph.interfaces';
 import { Neo4jService } from 'nest-neo4j';
@@ -16,10 +17,7 @@ describe('Neo4jGraphService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         Neo4jGraphService,
-        {
-          provide: Neo4jService,
-          useValue: mockNeo4jService,
-        },
+        { provide: Neo4jService, useValue: mockNeo4jService },
       ],
     }).compile();
 
@@ -47,9 +45,7 @@ describe('Neo4jGraphService', () => {
       const mockResult = {
         records: [
           {
-            get: jest.fn().mockReturnValue({
-              properties: fileData,
-            }),
+            get: jest.fn().mockReturnValue({ properties: fileData }),
           },
         ],
       };
@@ -69,7 +65,6 @@ describe('Neo4jGraphService', () => {
           linesOfCode: fileData.linesOfCode,
         }),
       );
-
       expect(result).toEqual(fileData);
     });
 
@@ -103,9 +98,7 @@ describe('Neo4jGraphService', () => {
       const mockResult = {
         records: [
           {
-            get: jest.fn().mockReturnValue({
-              properties: entityData,
-            }),
+            get: jest.fn().mockReturnValue({ properties: entityData }),
           },
         ],
       };
@@ -125,8 +118,20 @@ describe('Neo4jGraphService', () => {
           endLine: entityData.endLine,
         }),
       );
-
       expect(result).toEqual(entityData);
+    });
+
+    it('should throw BadRequestException when the entity type is not Function, Class, or Interface', async () => {
+      const entityData = {
+        id: 'entity-789',
+        fileId: 'file-123',
+        name: 'myVariable',
+        type: 'Variable' as any,
+        startLine: 5,
+        endLine: 5,
+      };
+
+      await expect(service.createEntityNode(entityData)).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -142,9 +147,7 @@ describe('Neo4jGraphService', () => {
         records: [
           {
             get: jest.fn().mockReturnValue({
-              properties: {
-                specifiers: importData.specifiers,
-              },
+              properties: { specifiers: importData.specifiers },
             }),
           },
         ],
@@ -162,34 +165,57 @@ describe('Neo4jGraphService', () => {
           specifiers: importData.specifiers,
         }),
       );
-
       expect(result.specifiers).toEqual(importData.specifiers);
     });
   });
 
-  describe('deleteRepositoryGraph', () => {
-    it('should delete all nodes for a repository', async () => {
-      const repositoryId = 'repo-456';
-
+  describe('createExportRelationship', () => {
+    it('should create an export relationship between a file and an entity', async () => {
       const mockResult = {
         records: [
           {
-            get: jest.fn().mockReturnValue({
-              toNumber: () => 5,
-            }),
+            get: jest.fn().mockReturnValue({ properties: {} }),
           },
         ],
       };
 
       mockNeo4jService.write.mockResolvedValue(mockResult);
 
-      const result = await service.deleteRepositoryGraph(repositoryId);
+      await service.createExportRelationship('file-123', 'entity-456');
+
+      expect(neo4jService.write).toHaveBeenCalledWith(
+        expect.stringContaining('CREATE (f)-[r:EXPORTS'),
+        { fileId: 'file-123', entityId: 'entity-456' },
+      );
+    });
+
+    it('should throw when the file or entity is not found', async () => {
+      mockNeo4jService.write.mockResolvedValue({ records: [] });
+
+      await expect(service.createExportRelationship('file-123', 'entity-456')).rejects.toThrow(
+        'Failed to create export relationship',
+      );
+    });
+  });
+
+  describe('deleteRepositoryGraph', () => {
+    it('should delete all nodes for a repository', async () => {
+      const mockResult = {
+        records: [
+          {
+            get: jest.fn().mockReturnValue({ toNumber: () => 5 }),
+          },
+        ],
+      };
+
+      mockNeo4jService.write.mockResolvedValue(mockResult);
+
+      const result = await service.deleteRepositoryGraph('repo-456');
 
       expect(neo4jService.write).toHaveBeenCalledWith(
         expect.stringContaining('DETACH DELETE'),
-        { repositoryId },
+        { repositoryId: 'repo-456' },
       );
-
       expect(result).toBe(5);
     });
   });
@@ -235,27 +261,18 @@ describe('Neo4jGraphService', () => {
         expect.stringContaining('MATCH (f:File {id: $fileId})'),
         { fileId },
       );
-
       expect(result).toEqual({
         id: fileId,
         path: 'src/index.ts',
         name: 'index.ts',
-        entities: [
-          {
-            id: 'entity-1',
-            name: 'myFunction',
-            type: 'Function',
-          },
-        ],
+        entities: [{ id: 'entity-1', name: 'myFunction', type: 'Function' }],
       });
     });
 
     it('should return null if file node not found', async () => {
-      const fileId = 'non-existent-file';
-
       mockNeo4jService.read.mockResolvedValue({ records: [] });
 
-      const result = await service.getFileNode(fileId);
+      const result = await service.getFileNode('non-existent-file');
 
       expect(result).toBeNull();
     });
@@ -264,30 +281,14 @@ describe('Neo4jGraphService', () => {
   describe('bulkCreateFileNodes', () => {
     it('should bulk create multiple file nodes', async () => {
       const files: FileNodeData[] = [
-        {
-          id: 'file-1',
-          repositoryId: 'repo-456',
-          path: 'src/index.ts',
-          name: 'index.ts',
-          type: 'ts',
-          linesOfCode: 100,
-        },
-        {
-          id: 'file-2',
-          repositoryId: 'repo-456',
-          path: 'src/utils.ts',
-          name: 'utils.ts',
-          type: 'ts',
-          linesOfCode: 50,
-        },
+        { id: 'file-1', repositoryId: 'repo-456', path: 'src/index.ts', name: 'index.ts', type: 'ts', linesOfCode: 100 },
+        { id: 'file-2', repositoryId: 'repo-456', path: 'src/utils.ts', name: 'utils.ts', type: 'ts', linesOfCode: 50 },
       ];
 
       const mockResult = {
         records: [
           {
-            get: jest.fn().mockReturnValue({
-              toNumber: () => 2,
-            }),
+            get: jest.fn().mockReturnValue({ toNumber: () => 2 }),
           },
         ],
       };
@@ -300,7 +301,6 @@ describe('Neo4jGraphService', () => {
         expect.stringContaining('UNWIND $files'),
         { files },
       );
-
       expect(result).toBe(2);
     });
   });
@@ -308,24 +308,14 @@ describe('Neo4jGraphService', () => {
   describe('bulkCreateImportRelationships', () => {
     it('should bulk create multiple import relationships', async () => {
       const imports: ImportRelationshipData[] = [
-        {
-          sourceFileId: 'file-1',
-          targetFileId: 'file-2',
-          specifiers: ['myFunction'],
-        },
-        {
-          sourceFileId: 'file-1',
-          targetFileId: 'file-3',
-          specifiers: ['myClass'],
-        },
+        { sourceFileId: 'file-1', targetFileId: 'file-2', specifiers: ['myFunction'] },
+        { sourceFileId: 'file-1', targetFileId: 'file-3', specifiers: ['myClass'] },
       ];
 
       const mockResult = {
         records: [
           {
-            get: jest.fn().mockReturnValue({
-              toNumber: () => 2,
-            }),
+            get: jest.fn().mockReturnValue({ toNumber: () => 2 }),
           },
         ],
       };
@@ -338,7 +328,6 @@ describe('Neo4jGraphService', () => {
         expect.stringContaining('UNWIND $imports'),
         { imports },
       );
-
       expect(result).toBe(2);
     });
   });
@@ -352,32 +341,15 @@ describe('Neo4jGraphService', () => {
           {
             get: jest.fn((key: string) => {
               if (key === 'f') {
-                return {
-                  properties: {
-                    id: 'file-1',
-                    path: 'src/index.ts',
-                  },
-                };
+                return { properties: { id: 'file-1', path: 'src/index.ts' } };
               }
               if (key === 'entities') {
-                return [
-                  {
-                    properties: {
-                      id: 'entity-1',
-                      name: 'myFunction',
-                    },
-                  },
-                ];
+                return [{ properties: { id: 'entity-1', name: 'myFunction' } }];
               }
               if (key === 'imports') {
                 return [
                   {
-                    file: {
-                      properties: {
-                        id: 'file-2',
-                        path: 'src/utils.ts',
-                      },
-                    },
+                    file: { properties: { id: 'file-2', path: 'src/utils.ts' } },
                     specifiers: ['utils'],
                   },
                 ];
@@ -395,7 +367,6 @@ describe('Neo4jGraphService', () => {
         expect.stringContaining('MATCH (f:File {repositoryId: $repositoryId})'),
         { repositoryId },
       );
-
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('entities');
       expect(result[0]).toHaveProperty('imports');

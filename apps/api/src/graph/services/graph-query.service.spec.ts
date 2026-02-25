@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { int as neo4jInt } from 'neo4j-driver';
 import { GraphQueryService } from './graph-query.service';
 import { Neo4jService } from 'nest-neo4j';
 import { PrismaService } from '../../common/prisma/prisma.service';
@@ -6,7 +7,6 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 describe('GraphQueryService', () => {
   let service: GraphQueryService;
   let neo4jService: Neo4jService;
-  let prismaService: PrismaService;
 
   const mockNeo4jService = {
     read: jest.fn(),
@@ -26,20 +26,13 @@ describe('GraphQueryService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GraphQueryService,
-        {
-          provide: Neo4jService,
-          useValue: mockNeo4jService,
-        },
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
+        { provide: Neo4jService, useValue: mockNeo4jService },
+        { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
     service = module.get<GraphQueryService>(GraphQueryService);
     neo4jService = module.get<Neo4jService>(Neo4jService);
-    prismaService = module.get<PrismaService>(PrismaService);
 
     jest.clearAllMocks();
   });
@@ -106,14 +99,11 @@ describe('GraphQueryService', () => {
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
 
-      await service.getRepositoryGraph('repo-123', {
-        limit: 100,
-        offset: 50,
-      });
+      await service.getRepositoryGraph('repo-123', { limit: 100, offset: 50 });
 
       expect(mockNeo4jService.read).toHaveBeenCalledWith(
         expect.stringContaining('SKIP $offset'),
-        expect.objectContaining({ offset: 50, limit: 100 }),
+        expect.objectContaining({ offset: neo4jInt(50), limit: neo4jInt(100) }),
       );
     });
 
@@ -126,7 +116,7 @@ describe('GraphQueryService', () => {
 
       expect(mockNeo4jService.read).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({ offset: 0, limit: 500 }),
+        expect.objectContaining({ offset: neo4jInt(0), limit: neo4jInt(500) }),
       );
     });
 
@@ -186,7 +176,7 @@ describe('GraphQueryService', () => {
         records: [
           {
             get: jest.fn((key) => {
-              if (key === 'dep') {
+              if (key === 'node') {
                 return {
                   identity: { low: 2, high: 0 },
                   labels: ['File'],
@@ -218,10 +208,10 @@ describe('GraphQueryService', () => {
                 };
               }
               if (key === 'source') {
-                return { identity: { low: 1, high: 0 } };
+                return { identity: { low: 1, high: 0 }, properties: { id: 'file-123' } };
               }
               if (key === 'target') {
-                return { identity: { low: 2, high: 0 } };
+                return { identity: { low: 2, high: 0 }, properties: { id: 'file-2' } };
               }
             }),
           },
@@ -271,6 +261,36 @@ describe('GraphQueryService', () => {
     });
   });
 
+  describe('getRepositoryNodeCount', () => {
+    it('should return the total number of file nodes for a repository', async () => {
+      const mockResult = {
+        records: [
+          {
+            get: jest.fn().mockReturnValue({ toNumber: () => 42 }),
+          },
+        ],
+      };
+
+      mockNeo4jService.read.mockResolvedValue(mockResult);
+
+      const result = await service.getRepositoryNodeCount('repo-123');
+
+      expect(mockNeo4jService.read).toHaveBeenCalledWith(
+        expect.stringContaining('count(f) as total'),
+        { repositoryId: 'repo-123' },
+      );
+      expect(result).toBe(42);
+    });
+
+    it('should return 0 when there are no files in the repository', async () => {
+      mockNeo4jService.read.mockResolvedValue({ records: [] });
+
+      const result = await service.getRepositoryNodeCount('repo-123');
+
+      expect(result).toBe(0);
+    });
+  });
+
   describe('findCircularDependencies', () => {
     it('should detect circular import cycles', async () => {
       const mockResult = {
@@ -279,7 +299,7 @@ describe('GraphQueryService', () => {
             get: jest.fn((key) => {
               if (key === 'cycleIds') return ['file-1', 'file-2', 'file-1'];
               if (key === 'cyclePaths') return ['a.ts', 'b.ts', 'a.ts'];
-              if (key === 'cycleLength') return 2;
+              if (key === 'cycleLength') return { toNumber: () => 2 };
             }),
           },
         ],
@@ -336,18 +356,15 @@ describe('GraphQueryService', () => {
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
 
-      await service.getFilesByType('repo-123', 'tsx', {
-        limit: 50,
-        offset: 10,
-      });
+      await service.getFilesByType('repo-123', 'tsx', { limit: 50, offset: 10 });
 
       expect(mockNeo4jService.read).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           repositoryId: 'repo-123',
           fileType: 'tsx',
-          offset: 10,
-          limit: 50,
+          offset: neo4jInt(10),
+          limit: neo4jInt(50),
         }),
       );
     });
@@ -425,9 +442,7 @@ describe('GraphQueryService', () => {
       };
 
       mockNeo4jService.read.mockResolvedValue(mockNeo4jResult);
-      mockPrismaService.repositoryFile.findMany.mockRejectedValue(
-        new Error('Database error'),
-      );
+      mockPrismaService.repositoryFile.findMany.mockRejectedValue(new Error('Database error'));
 
       const result = await service.getRepositoryGraph('repo-123');
 

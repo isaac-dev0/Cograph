@@ -124,10 +124,6 @@ function parseAnnotations(raw: string): string[] {
     .filter(Boolean);
 }
 
-/**
- * Flat sidebar panel showing file metadata, code entities, annotations,
- * and AI summary for the selected graph node.
- */
 export function FileDetailsPanel({
   fileId,
   repositoryUrl,
@@ -516,7 +512,7 @@ function FileInfoSection({
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground/60 mb-1">Analyzed</p>
+          <p className="text-xs text-muted-foreground/60 mb-1">Analysed</p>
           <p className="text-sm font-medium">
             {formatDate(fileDetails.updatedAt)}
           </p>

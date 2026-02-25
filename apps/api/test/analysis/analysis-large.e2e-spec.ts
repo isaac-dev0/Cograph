@@ -82,7 +82,7 @@ describe('Analysis Flow E2E - Large Repository Performance', () => {
 
       console.log(`\n=== Large Repository Analysis Complete ===`);
       console.log(`Duration: ${durationSeconds}s (${durationMinutes} min)`);
-      console.log(`Files analyzed: ${job.filesAnalysed}`);
+      console.log(`Files analysed: ${job.filesAnalysed}`);
       console.log(`Status: ${job.status}`);
 
       expect(job.status).toBe('COMPLETED');

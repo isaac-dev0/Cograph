@@ -58,6 +58,7 @@ describe('AnnotationsService', () => {
   describe('getAnnotations', () => {
     it('throws NotFoundException when file does not exist', async () => {
       mockPrismaService.repositoryFile.findUnique.mockResolvedValue(null);
+
       await expect(service.getAnnotations('missing-file')).rejects.toThrow(NotFoundException);
     });
 
@@ -71,6 +72,15 @@ describe('AnnotationsService', () => {
       expect(result[0].id).toBe('ann-1');
       expect(result[0].title).toBe('Test annotation');
       expect(result[0].author).toEqual({ id: 'user-1', name: 'Alice' });
+    });
+
+    it('returns empty array when file exists but has no annotations', async () => {
+      mockPrismaService.repositoryFile.findUnique.mockResolvedValue(baseFileRow);
+      mockPrismaService.annotation.findMany.mockResolvedValue([]);
+
+      const result = await service.getAnnotations('file-1');
+
+      expect(result).toEqual([]);
     });
   });
 
@@ -132,12 +142,13 @@ describe('AnnotationsService', () => {
   describe('createAnnotation', () => {
     it('throws NotFoundException when file does not exist', async () => {
       mockPrismaService.repositoryFile.findUnique.mockResolvedValue(null);
+
       await expect(
         service.createAnnotation('missing', { title: 'T', content: 'C' }, { id: 'u1', name: 'Alice' }),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('creates and returns annotation', async () => {
+    it('creates and returns annotation with correct author mapping', async () => {
       mockPrismaService.repositoryFile.findUnique.mockResolvedValue(baseFileRow);
       mockPrismaService.annotation.create.mockResolvedValue(baseAnnotationRow);
 
@@ -148,19 +159,33 @@ describe('AnnotationsService', () => {
       );
 
       expect(result.id).toBe('ann-1');
+      expect(result.author).toEqual({ id: 'user-1', name: 'Alice' });
     });
   });
 
   describe('updateAnnotation', () => {
     it('throws NotFoundException when annotation does not exist', async () => {
       mockPrismaService.annotation.findUnique.mockResolvedValue(null);
+
       await expect(
         service.updateAnnotation('file-1', 'missing', { title: 'New' }, 'user-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
+    it('throws NotFoundException when annotation belongs to a different file', async () => {
+      mockPrismaService.annotation.findUnique.mockResolvedValue({
+        ...baseAnnotationRow,
+        fileId: 'different-file',
+      });
+
+      await expect(
+        service.updateAnnotation('file-1', 'ann-1', { title: 'New' }, 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
     it('throws ForbiddenException when user is not the author', async () => {
       mockPrismaService.annotation.findUnique.mockResolvedValue(baseAnnotationRow);
+
       await expect(
         service.updateAnnotation('file-1', 'ann-1', { title: 'New' }, 'other-user'),
       ).rejects.toThrow(ForbiddenException);
@@ -179,13 +204,26 @@ describe('AnnotationsService', () => {
   describe('deleteAnnotation', () => {
     it('throws NotFoundException when annotation does not exist', async () => {
       mockPrismaService.annotation.findUnique.mockResolvedValue(null);
+
       await expect(
         service.deleteAnnotation('file-1', 'missing', 'user-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
+    it('throws NotFoundException when annotation belongs to a different file', async () => {
+      mockPrismaService.annotation.findUnique.mockResolvedValue({
+        ...baseAnnotationRow,
+        fileId: 'different-file',
+      });
+
+      await expect(
+        service.deleteAnnotation('file-1', 'ann-1', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
     it('throws ForbiddenException when user is not the author', async () => {
       mockPrismaService.annotation.findUnique.mockResolvedValue(baseAnnotationRow);
+
       await expect(
         service.deleteAnnotation('file-1', 'ann-1', 'other-user'),
       ).rejects.toThrow(ForbiddenException);
