@@ -11,44 +11,27 @@ import { SupabaseJwtGuard } from 'src/auth/supabase-jwt.guard';
 export class ProfilesResolver {
   constructor(private readonly profilesService: ProfileService) {}
 
-  @Mutation(() => ProfileModel, {
-    name: 'syncProfile',
-    description:
-      'Finds or creates a user profile based on Supabase Auth Data (Upsert).',
-  })
+  @Mutation(() => ProfileModel, { name: 'syncProfile' })
   sync(@Args('data') data: SyncProfileInput) {
     return this.profilesService.syncProfile(data);
   }
 
-  @Query(() => ProfileModel, {
-    name: 'findProfileById',
-    description: 'Finds a profile based on Profile ID',
-  })
+  @Query(() => ProfileModel, { name: 'findProfileById' })
   findById(@Args('id', { type: () => String }) id: string) {
     return this.profilesService.findById(id);
   }
 
-  @Query(() => ProfileModel, {
-    name: 'findProfileByUserId',
-    description: 'Finds a profile based on a Supabase Auth ID',
-  })
+  @Query(() => ProfileModel, { name: 'findProfileByUserId' })
   findByUserId(@Args('userId', { type: () => String }) userId: string) {
     return this.profilesService.findByUserId(userId);
   }
 
-  @Query(() => ProfileModel, {
-    name: 'searchProfiles',
-    nullable: true,
-    description: 'Searches for a single profile by exact email address.',
-  })
+  @Query(() => ProfileModel, { name: 'searchProfiles', nullable: true })
   searchByEmail(@Args('query', { type: () => String }) query: string) {
     return this.profilesService.searchByEmail(query);
   }
 
-  @Mutation(() => ProfileModel, {
-    name: 'updateProfile',
-    description: "Updates the authenticated user's profile",
-  })
+  @Mutation(() => ProfileModel, { name: 'updateProfile' })
   update(
     @Args('updateProfileInput') updateProfileInput: UpdateProfileInput,
     @Context('req.user') profile: ProfileModel,

@@ -24,7 +24,7 @@ const mockPrismaService = {
   },
 };
 
-const baseImportInput = {
+const importInput = {
   githubId: 12345,
   nodeId: 'node-abc',
   name: 'my-repo',
@@ -45,7 +45,7 @@ const baseImportInput = {
   githubPushedAt: new Date('2024-01-01T00:00:00Z'),
 };
 
-const baseRepository = {
+const repository = {
   id: 'repo-1',
   githubId: 12345,
   name: 'my-repo',
@@ -79,8 +79,8 @@ describe('RepositoriesService', () => {
 
   describe('import', () => {
     it('sets ownerType to Organization when the URL contains /orgs/', async () => {
-      const orgInput = { ...baseImportInput, ownerType: 'https://api.github.com/orgs/my-org' };
-      mockPrismaService.repository.upsert.mockResolvedValue({ ...baseRepository, ownerType: 'Organization' });
+      const orgInput = { ...importInput, ownerType: 'https://api.github.com/orgs/my-org' };
+      mockPrismaService.repository.upsert.mockResolvedValue({ ...repository, ownerType: 'Organization' });
 
       await service.import(orgInput);
 
@@ -92,9 +92,9 @@ describe('RepositoriesService', () => {
     });
 
     it('sets ownerType to User when the URL does not contain /orgs/', async () => {
-      mockPrismaService.repository.upsert.mockResolvedValue({ ...baseRepository, ownerType: 'User' });
+      mockPrismaService.repository.upsert.mockResolvedValue({ ...repository, ownerType: 'User' });
 
-      await service.import(baseImportInput);
+      await service.import(importInput);
 
       expect(mockPrismaService.repository.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -107,12 +107,12 @@ describe('RepositoriesService', () => {
   describe('bulkImport', () => {
     it('continues processing when one import fails and does not throw', async () => {
       mockPrismaService.repository.upsert
-        .mockResolvedValueOnce(baseRepository)
+        .mockResolvedValueOnce(repository)
         .mockRejectedValueOnce(new Error('DB constraint violation'));
 
-      const failingInput = { ...baseImportInput, githubId: 99999, fullName: 'owner/failing-repo' };
+      const failingInput = { ...importInput, githubId: 99999, fullName: 'owner/failing-repo' };
 
-      await expect(service.bulkImport([baseImportInput, failingInput])).resolves.toBeUndefined();
+      await expect(service.bulkImport([importInput, failingInput])).resolves.toBeUndefined();
       expect(mockPrismaService.repository.upsert).toHaveBeenCalledTimes(2);
     });
   });

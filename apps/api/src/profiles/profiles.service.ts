@@ -18,14 +18,6 @@ interface SupabaseAuthData {
 export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Finds a Profile record by their Supabase Auth UID, or creates it if it doesn't exist.
-   * This handles the critical synchronisation between the external identity (Supabase)
-   * and the internal application data (Prisma Profile table).
-   *
-   * @param data Data extracted from the validated Supabase JWT (userId, email, displayName).
-   * @returns The synchronised Prisma Profile object.
-   */
   async syncProfile(data: SupabaseAuthData): Promise<Profile> {
     if (!data.userId) {
       throw new BadRequestException(
@@ -50,13 +42,6 @@ export class ProfileService {
     });
   }
 
-  /**
-   * Retrieves a profile using the internal Prisma profile ID.
-   *
-   * @param id The internal Profile ID (UUID).
-   * @returns The found Profile object.
-   * @throws NotFoundException if the profile ID does not exist.
-   */
   async findById(id: string): Promise<Profile> {
     const profile = await this.prisma.profile.findUnique({ where: { id: id } });
     if (!profile) {
@@ -65,13 +50,6 @@ export class ProfileService {
     return profile;
   }
 
-  /**
-   * Retrieves a profile using the external Supabase Auth UID.
-   *
-   * @param userId The external Supabase Auth UID.
-   * @returns The found Profile object.
-   * @throws NotFoundException if the profile ID does not exist.
-   */
   async findByUserId(userId: string): Promise<Profile> {
     const profile = await this.prisma.profile.findUnique({
       where: { userId: userId },
@@ -91,26 +69,13 @@ export class ProfileService {
     });
   }
 
-  /**
-   * Searches for a single profile by exact email address.
-   * Returns at most one result to avoid bulk data exposure.
-   *
-   * @param query The email address to search for.
-   * @returns The matching Profile, or null if none found.
-   */
+  /** Returns at most one result to avoid bulk data exposure. */
   async searchByEmail(query: string): Promise<Profile | null> {
     return this.prisma.profile.findUnique({
       where: { email: query.trim().toLowerCase() },
     });
   }
 
-  /**
-   * Updates a profile's mutable fields (job, location, avatarUrl).
-   *
-   * @param authId The internal Profile ID (UUID).
-   * @param updateProfileInput Fields to update.
-   * @returns The updated Profile object.
-   */
   async update(
     authId: string,
     updateProfileInput: UpdateProfileInput,

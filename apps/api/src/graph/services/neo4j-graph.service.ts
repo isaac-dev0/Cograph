@@ -13,10 +13,6 @@ export class Neo4jGraphService implements OnModuleInit {
     await this.ensureIndexes();
   }
 
-  /**
-   * Creates indexes on repositoryId and id properties for performance.
-   * This is called automatically when the module initialises.
-   */
   private async ensureIndexes(): Promise<void> {
     try {
       const indexQueries = [
@@ -34,18 +30,11 @@ export class Neo4jGraphService implements OnModuleInit {
 
       this.logger.log('All indexes ensured');
     } catch (error) {
-      this.logger.error('Failed to create indexes', error);
       throw error;
     }
   }
 
-  /**
-   * Creates a File node in Neo4j with the specified properties.
-   * Uses parameterised queries to prevent Cypher injection.
-   *
-   * @param data - File node data including id, repositoryId, path, name, type, and linesOfCode
-   * @returns The created file node
-   */
+  /** Uses parameterised queries to prevent Cypher injection. */
   async createFileNode(data: FileNodeData) {
     const query = `
       CREATE (f:File {
@@ -89,13 +78,7 @@ export class Neo4jGraphService implements OnModuleInit {
     'Interface',
   ]);
 
-  /**
-   * Creates an Entity node (Function, Class, or Interface) in Neo4j and links it to a file.
-   * Creates a CONTAINS relationship from the file to the entity.
-   *
-   * @param data - Entity node data including id, fileId, name, type, startLine, and endLine
-   * @returns The created entity node
-   */
+  /** Also creates a CONTAINS relationship from the file to the entity. */
   async createEntityNode(data: EntityNodeData) {
     if (!Neo4jGraphService.VALID_ENTITY_TYPES.has(data.type)) {
       throw new BadRequestException(
@@ -144,12 +127,6 @@ export class Neo4jGraphService implements OnModuleInit {
     }
   }
 
-  /**
-   * Creates an IMPORTS relationship between two files with import specifiers.
-   *
-   * @param data - Import relationship data including sourceFileId, targetFileId, and specifiers
-   * @returns The created relationship
-   */
   async createImportRelationship(data: ImportRelationshipData) {
     const query = `
       MATCH (from:File {id: $sourceFileId})
@@ -188,13 +165,6 @@ export class Neo4jGraphService implements OnModuleInit {
     }
   }
 
-  /**
-   * Deletes all nodes and relationships for a specific repository.
-   * This is useful for cleanup or re-analysis of a repository.
-   *
-   * @param repositoryId - The repository ID to delete
-   * @returns The number of nodes deleted
-   */
   async deleteRepositoryGraph(repositoryId: string): Promise<number> {
     const query = `
       MATCH (f:File {repositoryId: $repositoryId})
@@ -221,12 +191,6 @@ export class Neo4jGraphService implements OnModuleInit {
     }
   }
 
-  /**
-   * Retrieves a single file node by its ID, including all connected entities.
-   *
-   * @param fileId - The file ID to retrieve
-   * @returns The file node with its entities, or null if not found
-   */
   async getFileNode(fileId: string): Promise<FileNodeData | null> {
     const query = `
       MATCH (f:File {id: $fileId})
@@ -256,12 +220,6 @@ export class Neo4jGraphService implements OnModuleInit {
     }
   }
 
-  /**
-   * Retrieves all file nodes for a repository, including their relationships.
-   *
-   * @param repositoryId - The repository ID
-   * @returns Array of file nodes
-   */
   async getRepositoryGraph(repositoryId: string): Promise<FileNodeData[]> {
     const query = `
       MATCH (f:File {repositoryId: $repositoryId})
@@ -301,13 +259,6 @@ export class Neo4jGraphService implements OnModuleInit {
     }
   }
 
-  /**
-   * Creates an EXPORTS relationship from a file to an entity it exports.
-   *
-   * @param fileId - The file ID
-   * @param entityId - The entity ID being exported
-   * @returns The created relationship
-   */
   async createExportRelationship(fileId: string, entityId: string) {
     const query = `
       MATCH (f:File {id: $fileId})
@@ -339,12 +290,6 @@ export class Neo4jGraphService implements OnModuleInit {
     }
   }
 
-  /**
-   * Bulk creates file nodes for better performance when creating many files.
-   *
-   * @param files - Array of file node data
-   * @returns Number of files created
-   */
   async bulkCreateFileNodes(files: FileNodeData[]): Promise<number> {
     const query = `
       UNWIND $files AS file
@@ -368,17 +313,10 @@ export class Neo4jGraphService implements OnModuleInit {
       this.logger.log(`Bulk created ${createdCount} file nodes`);
       return createdCount;
     } catch (error) {
-      this.logger.error('Failed to bulk create file nodes', error);
       throw error;
     }
   }
 
-  /**
-   * Bulk creates import relationships for better performance.
-   *
-   * @param imports - Array of import relationship data
-   * @returns Number of relationships created
-   */
   async bulkCreateImportRelationships(
     imports: ImportRelationshipData[],
   ): Promise<number> {
@@ -401,7 +339,6 @@ export class Neo4jGraphService implements OnModuleInit {
       this.logger.log(`Bulk created ${createdCount} import relationships`);
       return createdCount;
     } catch (error) {
-      this.logger.error('Failed to bulk create import relationships', error);
       throw error;
     }
   }

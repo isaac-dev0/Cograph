@@ -16,7 +16,7 @@ const mockPrismaService = {
   },
 };
 
-const baseAnnotationRow = {
+const annotation = {
   id: 'ann-1',
   fileId: 'file-1',
   title: 'Test annotation',
@@ -29,7 +29,7 @@ const baseAnnotationRow = {
   updatedAt: new Date('2024-01-02T00:00:00Z'),
 };
 
-const baseFileRow = {
+const file = {
   id: 'file-1',
   repositoryId: 'repo-1',
   filePath: 'src/auth/auth.service.ts',
@@ -63,8 +63,8 @@ describe('AnnotationsService', () => {
     });
 
     it('returns mapped annotations for a file', async () => {
-      mockPrismaService.repositoryFile.findUnique.mockResolvedValue(baseFileRow);
-      mockPrismaService.annotation.findMany.mockResolvedValue([baseAnnotationRow]);
+      mockPrismaService.repositoryFile.findUnique.mockResolvedValue(file);
+      mockPrismaService.annotation.findMany.mockResolvedValue([annotation]);
 
       const result = await service.getAnnotations('file-1');
 
@@ -75,7 +75,7 @@ describe('AnnotationsService', () => {
     });
 
     it('returns empty array when file exists but has no annotations', async () => {
-      mockPrismaService.repositoryFile.findUnique.mockResolvedValue(baseFileRow);
+      mockPrismaService.repositoryFile.findUnique.mockResolvedValue(file);
       mockPrismaService.annotation.findMany.mockResolvedValue([]);
 
       const result = await service.getAnnotations('file-1');
@@ -100,7 +100,7 @@ describe('AnnotationsService', () => {
 
     it('returns DocumentAnnotation list with file info attached', async () => {
       const rowWithFile = {
-        ...baseAnnotationRow,
+        ...annotation,
         file: { filePath: 'src/auth/auth.service.ts', fileName: 'auth.service.ts' },
       };
       mockPrismaService.annotation.findMany.mockResolvedValue([rowWithFile]);
@@ -149,8 +149,8 @@ describe('AnnotationsService', () => {
     });
 
     it('creates and returns annotation with correct author mapping', async () => {
-      mockPrismaService.repositoryFile.findUnique.mockResolvedValue(baseFileRow);
-      mockPrismaService.annotation.create.mockResolvedValue(baseAnnotationRow);
+      mockPrismaService.repositoryFile.findUnique.mockResolvedValue(file);
+      mockPrismaService.annotation.create.mockResolvedValue(annotation);
 
       const result = await service.createAnnotation(
         'file-1',
@@ -174,7 +174,7 @@ describe('AnnotationsService', () => {
 
     it('throws NotFoundException when annotation belongs to a different file', async () => {
       mockPrismaService.annotation.findUnique.mockResolvedValue({
-        ...baseAnnotationRow,
+        ...annotation,
         fileId: 'different-file',
       });
 
@@ -184,7 +184,7 @@ describe('AnnotationsService', () => {
     });
 
     it('throws ForbiddenException when user is not the author', async () => {
-      mockPrismaService.annotation.findUnique.mockResolvedValue(baseAnnotationRow);
+      mockPrismaService.annotation.findUnique.mockResolvedValue(annotation);
 
       await expect(
         service.updateAnnotation('file-1', 'ann-1', { title: 'New' }, 'other-user'),
@@ -192,8 +192,8 @@ describe('AnnotationsService', () => {
     });
 
     it('updates and returns annotation', async () => {
-      mockPrismaService.annotation.findUnique.mockResolvedValue(baseAnnotationRow);
-      mockPrismaService.annotation.update.mockResolvedValue({ ...baseAnnotationRow, title: 'Updated' });
+      mockPrismaService.annotation.findUnique.mockResolvedValue(annotation);
+      mockPrismaService.annotation.update.mockResolvedValue({ ...annotation, title: 'Updated' });
 
       const result = await service.updateAnnotation('file-1', 'ann-1', { title: 'Updated' }, 'user-1');
 
@@ -212,7 +212,7 @@ describe('AnnotationsService', () => {
 
     it('throws NotFoundException when annotation belongs to a different file', async () => {
       mockPrismaService.annotation.findUnique.mockResolvedValue({
-        ...baseAnnotationRow,
+        ...annotation,
         fileId: 'different-file',
       });
 
@@ -222,7 +222,7 @@ describe('AnnotationsService', () => {
     });
 
     it('throws ForbiddenException when user is not the author', async () => {
-      mockPrismaService.annotation.findUnique.mockResolvedValue(baseAnnotationRow);
+      mockPrismaService.annotation.findUnique.mockResolvedValue(annotation);
 
       await expect(
         service.deleteAnnotation('file-1', 'ann-1', 'other-user'),
@@ -230,8 +230,8 @@ describe('AnnotationsService', () => {
     });
 
     it('deletes annotation and returns true', async () => {
-      mockPrismaService.annotation.findUnique.mockResolvedValue(baseAnnotationRow);
-      mockPrismaService.annotation.delete.mockResolvedValue(baseAnnotationRow);
+      mockPrismaService.annotation.findUnique.mockResolvedValue(annotation);
+      mockPrismaService.annotation.delete.mockResolvedValue(annotation);
 
       const result = await service.deleteAnnotation('file-1', 'ann-1', 'user-1');
 

@@ -129,6 +129,19 @@ export class DatabaseHelper {
     });
   }
 
+  async createRepositoryFile(data: {
+    repositoryId: string;
+    filePath: string;
+    fileName: string;
+    fileType: string;
+    linesOfCode: number;
+    neo4jNodeId: string;
+    annotations?: string;
+    claudeSummary?: string;
+  }): Promise<void> {
+    await this.prisma.repositoryFile.create({ data });
+  }
+
   async repositoryExists(repositoryId: string): Promise<boolean> {
     const count = await this.prisma.repository.count({
       where: { id: repositoryId },

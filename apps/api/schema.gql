@@ -472,79 +472,26 @@ type CircularDependency {
 }
 
 type Query {
-  """Finds a profile based on Profile ID"""
   findProfileById(id: String!): Profile!
-
-  """Finds a profile based on a Supabase Auth ID"""
   findProfileByUserId(userId: String!): Profile!
-
-  """Searches for a single profile by exact email address."""
   searchProfiles(query: String!): Profile
-
-  """Finds a project by its unique ID"""
   findProjectById(projectId: ID!): Project!
-
-  """Finds projects that the specified profile is a member of."""
   findProjectsByProfileId(profileId: ID!): [Project!]!
-
-  """Finds all members of a project. Caller must be a member."""
   findProjectMembers(projectId: ID!): [ProjectMember!]!
-
-  """Finds repositories associated with a specific project."""
   findRepositoriesByProjectId(projectId: ID!): [Repository!]!
-
-  """Finds all repositories with optional filters."""
   findAllRepositories(options: FindRepositoriesInput): [Repository!]!
-
-  """Finds a repository by its GitHub ID."""
   findRepositoryByGithubId(githubId: Int!): Repository
-
-  """Finds a repository by its full name (e.g., "owner/repo")."""
   findRepositoryByFullName(fullName: String!): Repository
-
-  """Retrieves an analysis job by its ID."""
   analysisJob(id: ID!): AnalysisJob!
-
-  """Retrieves all files for a repository, sorted alphabetically by path."""
   repositoryFiles(repositoryId: ID!): [RepositoryFile!]!
-
-  """Retrieves a single repository file by its ID, including code entities."""
   repositoryFile(id: ID!): RepositoryFile!
-
-  """Fetches the raw content of a file from GitHub."""
   fileContent(id: ID!): String!
-
-  """
-  Retrieves all annotations across every file in a repository, ordered by creation date descending.
-  """
   repositoryAnnotations(repositoryId: ID!): [DocumentAnnotation!]!
-
-  """
-  Returns the complete dependency graph for a repository with all nodes and edges. Supports pagination and filtering.
-  """
   repositoryGraph(repositoryId: ID!, options: GraphOptionsInput): DependencyGraph!
-
-  """
-  Returns all files that the specified file depends on (imports). Supports depth control for N-hop traversal.
-  """
   fileDependencies(fileId: ID!, options: GraphOptionsInput): DependencyGraph!
-
-  """
-  Returns all files that depend on (import) the specified file. Supports depth control for N-hop traversal.
-  """
   fileDependents(fileId: ID!, options: GraphOptionsInput): DependencyGraph!
-
-  """Returns the total number of file nodes in the repository."""
   repositoryNodeCount(repositoryId: ID!): Float!
-
-  """
-  Detects and returns all circular dependencies (import cycles) in the repository. Limited to 100 results.
-  """
   circularDependencies(repositoryId: ID!): [CircularDependency!]!
-
-  """
-  Returns files filtered by extension (e.g., "ts", "tsx", "js") with their dependencies.
-  """
   filesByType(repositoryId: ID!, fileType: String!, options: GraphOptionsInput): DependencyGraph!
 }
 
@@ -575,68 +522,25 @@ input GraphOptionsInput {
 }
 
 type Mutation {
-  """Finds or creates a user profile based on Supabase Auth Data (Upsert)."""
   syncProfile(data: SyncProfileInput!): Profile!
-
-  """Updates the authenticated user's profile"""
   updateProfile(updateProfileInput: UpdateProfileInput!): Profile!
-
-  """Creates a project given the specified parameters."""
   createProject(createProjectInput: CreateProjectInput!): Project!
-
-  """Updates an existing project."""
   updateProject(projectId: ID!, updateProjectInput: UpdateProjectInput!): Project!
-
-  """Updates a project member's role."""
   updateProjectMemberRole(projectId: ID!, memberId: ID!, role: ProjectRole!): ProjectMember!
-
-  """Transfers ownership of a project to another member."""
   transferProjectOwnership(projectId: ID!, newOwnerId: ID!): Project!
-
-  """Adds one or more members to a project."""
   addProjectMembers(projectId: ID!, profileIds: [ID!]!): [ProjectMember!]!
-
-  """Removes a member from a project."""
   removeProjectMember(projectId: ID!, profileId: ID!): ProjectMember!
-
-  """Archives a project (soft delete)."""
   archiveProject(projectId: ID!): Project!
-
-  """
-  Fetches repositories from GitHub API and imports them into the database.
-  """
   syncRepositoriesFromGitHub(input: SyncRepositoriesInput!): Boolean!
-
-  """Archives a repository (soft delete)."""
   archiveRepository(repositoryId: ID!): Repository!
-
-  """Adds one or more repositories to a project."""
   addRepositoriesToProject(projectId: ID!, repositoryIds: [ID!]!): Boolean!
-
-  """Removes a repository from a project."""
   removeRepositoryFromProject(projectId: ID!, repositoryId: ID!): Boolean!
-
-  """Triggers analysis of a repository. Returns the created analysis job."""
   analyseRepository(repositoryId: ID!): AnalysisJob!
-
-  """Updates the user annotation for a repository file."""
   updateFileAnnotation(id: ID!, annotation: String!): RepositoryFile!
-
-  """Updates the Claude summary for a repository file."""
   updateFileSummary(id: ID!, summary: String!): RepositoryFile!
-
-  """
-  Generates an AI summary for a file using Claude. Can regenerate existing summaries.
-  """
   generateFileSummary(fileId: ID!, regenerate: Boolean! = false): RepositoryFile!
-
-  """Creates a new annotation on a repository file."""
   createAnnotation(fileId: ID!, input: CreateAnnotationInput!): FileAnnotation!
-
-  """Updates an existing annotation. Only the author can update it."""
   updateAnnotation(fileId: ID!, annotationId: ID!, input: UpdateAnnotationInput!): FileAnnotation!
-
-  """Deletes an annotation. Only the author can delete it."""
   deleteAnnotation(fileId: ID!, annotationId: ID!): Boolean!
 }
 

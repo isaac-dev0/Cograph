@@ -42,7 +42,7 @@ describe('GraphQueryService', () => {
   });
 
   describe('getRepositoryGraph', () => {
-    it('should return nodes and edges in React Flow format', async () => {
+    it('returns nodes and edges with Prisma metadata merged', async () => {
       const mockNeo4jResult = {
         records: [
           {
@@ -94,7 +94,7 @@ describe('GraphQueryService', () => {
       expect(result.nodes[0].data.claudeSummary).toBe('Test file summary');
     });
 
-    it('should apply pagination limits', async () => {
+    it('applies SKIP and LIMIT to the Cypher query', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -107,7 +107,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should use default pagination when options not provided', async () => {
+    it('uses offset 0 and limit 500 when no options are given', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -120,7 +120,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should return empty graph when no files found', async () => {
+    it('returns an empty graph when Neo4j has no records', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
 
       const result = await service.getRepositoryGraph('repo-123');
@@ -131,7 +131,7 @@ describe('GraphQueryService', () => {
   });
 
   describe('getFileDependencies', () => {
-    it('should traverse dependencies with specified depth', async () => {
+    it('builds an IMPORTS*1..N pattern for the specified depth', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -145,7 +145,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should handle unlimited depth', async () => {
+    it('uses an unbounded IMPORTS* pattern when depth is -1', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -158,7 +158,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should use default depth of 1 when not specified', async () => {
+    it('defaults to IMPORTS*1..1 when depth is omitted', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -171,7 +171,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should return dependency nodes and edges', async () => {
+    it('returns the resolved dependency nodes and edges', async () => {
       const mockNodesResult = {
         records: [
           {
@@ -233,7 +233,7 @@ describe('GraphQueryService', () => {
   });
 
   describe('getFileDependents', () => {
-    it('should traverse dependents in reverse direction', async () => {
+    it('queries incoming IMPORTS edges in reverse direction', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -247,7 +247,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should handle unlimited depth for dependents', async () => {
+    it('uses an unbounded pattern for dependents when depth is -1', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -262,7 +262,7 @@ describe('GraphQueryService', () => {
   });
 
   describe('getRepositoryNodeCount', () => {
-    it('should return the total number of file nodes for a repository', async () => {
+    it('returns the total file node count', async () => {
       const mockResult = {
         records: [
           {
@@ -282,7 +282,7 @@ describe('GraphQueryService', () => {
       expect(result).toBe(42);
     });
 
-    it('should return 0 when there are no files in the repository', async () => {
+    it('returns 0 when Neo4j has no records', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
 
       const result = await service.getRepositoryNodeCount('repo-123');
@@ -292,7 +292,7 @@ describe('GraphQueryService', () => {
   });
 
   describe('findCircularDependencies', () => {
-    it('should detect circular import cycles', async () => {
+    it('detects cycles and maps them to the expected shape', async () => {
       const mockResult = {
         records: [
           {
@@ -317,7 +317,7 @@ describe('GraphQueryService', () => {
       expect(result[0].length).toBe(2);
     });
 
-    it('should return empty array when no cycles found', async () => {
+    it('returns an empty array when Neo4j has no records', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
 
       const result = await service.findCircularDependencies('repo-123');
@@ -325,7 +325,7 @@ describe('GraphQueryService', () => {
       expect(result).toEqual([]);
     });
 
-    it('should limit results to 100 cycles', async () => {
+    it('passes a LIMIT 100 clause to the Cypher query', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
 
       await service.findCircularDependencies('repo-123');
@@ -338,7 +338,7 @@ describe('GraphQueryService', () => {
   });
 
   describe('getFilesByType', () => {
-    it('should filter files by extension', async () => {
+    it('filters nodes by fileType in the Cypher query', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -351,7 +351,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should apply pagination to file type query', async () => {
+    it('applies pagination to the file type query', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
       mockPrismaService.repositoryFile.findMany.mockResolvedValue([]);
       mockPrismaService.codeEntity.findMany.mockResolvedValue([]);
@@ -369,7 +369,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should return filtered files with entities and imports', async () => {
+    it('returns nodes with the matching file type', async () => {
       const mockNeo4jResult = {
         records: [
           {
@@ -407,7 +407,7 @@ describe('GraphQueryService', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle Neo4j query errors gracefully', async () => {
+    it('propagates Neo4j errors', async () => {
       mockNeo4jService.read.mockRejectedValue(new Error('Neo4j connection failed'));
 
       await expect(service.getRepositoryGraph('repo-123')).rejects.toThrow(
@@ -415,7 +415,7 @@ describe('GraphQueryService', () => {
       );
     });
 
-    it('should handle Prisma query errors and fallback to non-enriched data', async () => {
+    it('returns nodes without enrichment when Prisma fails', async () => {
       const mockNeo4jResult = {
         records: [
           {

@@ -177,7 +177,6 @@ export class AnalysisService {
     }
   }
 
-  /** Returns an analysis job with its associated repository. */
   async getAnalysisJob(jobId: string) {
     const job = await this.prisma.analysisJob.findUnique({
       where: { id: jobId },
@@ -195,7 +194,6 @@ export class AnalysisService {
     return job;
   }
 
-  /** Returns all repository files ordered by path, including code entities. */
   async getRepositoryFiles(repositoryId: string) {
     return this.prisma.repositoryFile.findMany({
       where: { repositoryId },
@@ -223,23 +221,23 @@ export class AnalysisService {
     const files = this.filterSuccessful(batch.files);
 
     let storedCount = 0;
-    let pgFailedCount = 0;
+    let failedCount = 0;
 
     for (const file of files) {
       try {
         await this.storeFileToPg(repositoryId, file);
         storedCount++;
       } catch (error) {
-        pgFailedCount++;
+        failedCount++;
         this.logger.error(
           `[${jobId}] Failed to store ${file.relativePath}: ${error instanceof Error ? error.message : error}`,
         );
       }
     }
 
-    if (pgFailedCount > 0) {
+    if (failedCount > 0) {
       this.logger.warn(
-        `[${jobId}] Batch complete: ${storedCount} stored, ${pgFailedCount} failed (PG)`,
+        `[${jobId}] Batch complete: ${storedCount} stored, ${failedCount} failed`,
       );
     }
 
@@ -251,14 +249,13 @@ export class AnalysisService {
       );
     }
 
-    await this.updateBatchProgress(
+    await this.updateProgress(
       jobId,
       storedCount,
       batch.summary.totalFiles,
     );
   }
 
-  /** Creates a RepositoryFile row and its CodeEntity rows in PostgreSQL. */
   private async storeFileToPg(
     repositoryId: string,
     file: SuccessfulFile,
@@ -298,7 +295,6 @@ export class AnalysisService {
     }
   }
 
-  /** Creates File and Entity nodes in Neo4j for a batch of files. */
   private async storeFilesToNeo4j(
     jobId: string,
     repositoryId: string,
@@ -429,7 +425,6 @@ export class AnalysisService {
     return null;
   }
 
-  /** Resolves a relative import path against the importing file's directory. */
   private resolveRelativePath(
     source: string,
     importingFilePath: string,
@@ -464,12 +459,10 @@ export class AnalysisService {
     return null;
   }
 
-  /** Narrows a list of file analysis results to only those with a non-null analysis payload. */
   private filterSuccessful(files: FileAnalysisResult[]): SuccessfulFile[] {
     return files.filter((f): f is SuccessfulFile => f.analysis !== null);
   }
 
-  /** Persists a new status value to the analysis job record. */
   private async updateJobStatus(
     jobId: string,
     status: AnalysisStatus,
@@ -484,7 +477,7 @@ export class AnalysisService {
    * Increments the job's `filesAnalysed` counter by `batchCount` and recomputes the
    * percentage progress. Uses `fallbackTotal` when the job's stored total is not yet set.
    */
-  private async updateBatchProgress(
+  private async updateProgress(
     jobId: string,
     batchCount: number,
     fallbackTotal: number,

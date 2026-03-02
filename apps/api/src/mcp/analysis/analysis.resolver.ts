@@ -37,11 +37,7 @@ export class AnalysisResolver {
     private readonly mcpSummaryService: MCPSummaryService,
   ) {}
 
-  @Mutation(() => AnalysisJob, {
-    name: 'analyseRepository',
-    description:
-      'Triggers analysis of a repository. Returns the created analysis job.',
-  })
+  @Mutation(() => AnalysisJob, { name: 'analyseRepository' })
   async analyseRepository(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
   ): Promise<AnalysisJob> {
@@ -49,52 +45,35 @@ export class AnalysisResolver {
     return this.analysisService.getAnalysisJob(jobId);
   }
 
-  @Query(() => AnalysisJob, {
-    name: 'analysisJob',
-    description: 'Retrieves an analysis job by its ID.',
-  })
+  @Query(() => AnalysisJob, { name: 'analysisJob' })
   async analysisJob(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<AnalysisJob> {
     return this.analysisService.getAnalysisJob(id);
   }
 
-  @Query(() => [RepositoryFile], {
-    name: 'repositoryFiles',
-    description:
-      'Retrieves all files for a repository, sorted alphabetically by path.',
-  })
+  @Query(() => [RepositoryFile], { name: 'repositoryFiles' })
   async repositoryFiles(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
   ): Promise<RepositoryFile[]> {
     return this.repositoryFileService.findByRepositoryId(repositoryId);
   }
 
-  @Query(() => RepositoryFile, {
-    name: 'repositoryFile',
-    description:
-      'Retrieves a single repository file by its ID, including code entities.',
-  })
+  @Query(() => RepositoryFile, { name: 'repositoryFile' })
   async repositoryFile(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<RepositoryFile> {
     return this.repositoryFileService.findById(id);
   }
 
-  @Query(() => String, {
-    name: 'fileContent',
-    description: 'Fetches the raw content of a file from GitHub.',
-  })
+  @Query(() => String, { name: 'fileContent' })
   async fileContent(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<string> {
     return this.repositoryFileService.getFileContent(id);
   }
 
-  @Mutation(() => RepositoryFile, {
-    name: 'updateFileAnnotation',
-    description: 'Updates the user annotation for a repository file.',
-  })
+  @Mutation(() => RepositoryFile, { name: 'updateFileAnnotation' })
   async updateFileAnnotation(
     @Args('id', { type: () => ID }) id: string,
     @Args('annotation', { type: () => String }) annotation: string,
@@ -102,10 +81,7 @@ export class AnalysisResolver {
     return this.repositoryFileService.updateAnnotation(id, annotation);
   }
 
-  @Mutation(() => RepositoryFile, {
-    name: 'updateFileSummary',
-    description: 'Updates the Claude summary for a repository file.',
-  })
+  @Mutation(() => RepositoryFile, { name: 'updateFileSummary' })
   async updateFileSummary(
     @Args('id', { type: () => ID }) id: string,
     @Args('summary', { type: () => String }) summary: string,
@@ -113,11 +89,7 @@ export class AnalysisResolver {
     return this.repositoryFileService.updateSummary(id, summary);
   }
 
-  @Mutation(() => RepositoryFile, {
-    name: 'generateFileSummary',
-    description:
-      'Generates an AI summary for a file using Claude. Can regenerate existing summaries.',
-  })
+  @Mutation(() => RepositoryFile, { name: 'generateFileSummary' })
   async generateFileSummary(
     @Args('fileId', { type: () => ID }) fileId: string,
     @Args('regenerate', { type: () => Boolean, defaultValue: false })
@@ -130,7 +102,7 @@ export class AnalysisResolver {
     }
 
     const fileContent = await this.repositoryFileService.getFileContent(fileId);
-    const summary = await this.mcpSummaryService.generateFileSummary(
+    const summary = await this.mcpSummaryService.summariseFile(
       fileContent,
       file.filePath,
     );
@@ -138,21 +110,14 @@ export class AnalysisResolver {
     return this.repositoryFileService.updateSummary(fileId, summary);
   }
 
-  @Query(() => [DocumentAnnotation], {
-    name: 'repositoryAnnotations',
-    description:
-      'Retrieves all annotations across every file in a repository, ordered by creation date descending.',
-  })
+  @Query(() => [DocumentAnnotation], { name: 'repositoryAnnotations' })
   async repositoryAnnotations(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
   ): Promise<DocumentAnnotation[]> {
     return this.annotationsService.getRepositoryAnnotations(repositoryId);
   }
 
-  @Mutation(() => FileAnnotation, {
-    name: 'createAnnotation',
-    description: 'Creates a new annotation on a repository file.',
-  })
+  @Mutation(() => FileAnnotation, { name: 'createAnnotation' })
   async createAnnotation(
     @Args('fileId', { type: () => ID }) fileId: string,
     @Args('input', { type: () => CreateAnnotationInput })
@@ -165,11 +130,7 @@ export class AnalysisResolver {
     });
   }
 
-  @Mutation(() => FileAnnotation, {
-    name: 'updateAnnotation',
-    description:
-      'Updates an existing annotation. Only the author can update it.',
-  })
+  @Mutation(() => FileAnnotation, { name: 'updateAnnotation' })
   async updateAnnotation(
     @Args('fileId', { type: () => ID }) fileId: string,
     @Args('annotationId', { type: () => ID }) annotationId: string,
@@ -185,10 +146,7 @@ export class AnalysisResolver {
     );
   }
 
-  @Mutation(() => Boolean, {
-    name: 'deleteAnnotation',
-    description: 'Deletes an annotation. Only the author can delete it.',
-  })
+  @Mutation(() => Boolean, { name: 'deleteAnnotation' })
   async deleteAnnotation(
     @Args('fileId', { type: () => ID }) fileId: string,
     @Args('annotationId', { type: () => ID }) annotationId: string,

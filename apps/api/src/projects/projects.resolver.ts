@@ -28,10 +28,7 @@ export class ProjectsResolver {
     private readonly loaders: ProjectsLoaders,
   ) {}
 
-  @Mutation(() => ProjectModel, {
-    name: 'createProject',
-    description: 'Creates a project given the specified parameters.',
-  })
+  @Mutation(() => ProjectModel, { name: 'createProject' })
   create(
     @Args('createProjectInput') createProjectInput: CreateProjectInput,
     @CurrentUser() profile: ProfileModel,
@@ -42,26 +39,17 @@ export class ProjectsResolver {
     });
   }
 
-  @Query(() => ProjectModel, {
-    name: 'findProjectById',
-    description: 'Finds a project by its unique ID',
-  })
+  @Query(() => ProjectModel, { name: 'findProjectById' })
   findById(@Args('projectId', { type: () => ID }) projectId: string) {
     return this.projectsService.findById(projectId);
   }
 
-  @Query(() => [ProjectModel], {
-    name: 'findProjectsByProfileId',
-    description: 'Finds projects that the specified profile is a member of.',
-  })
+  @Query(() => [ProjectModel], { name: 'findProjectsByProfileId' })
   findByProfileId(@Args('profileId', { type: () => ID }) profileId: string) {
     return this.projectsService.findByProfileId(profileId);
   }
 
-  @Query(() => [ProjectMemberModel], {
-    name: 'findProjectMembers',
-    description: 'Finds all members of a project. Caller must be a member.',
-  })
+  @Query(() => [ProjectMemberModel], { name: 'findProjectMembers' })
   findProjectMembers(
     @Args('projectId', { type: () => ID }) projectId: string,
     @CurrentUser() profile: ProfileModel,
@@ -69,10 +57,7 @@ export class ProjectsResolver {
     return this.projectsService.findProjectMembers(projectId, profile.id);
   }
 
-  @Mutation(() => ProjectModel, {
-    name: 'updateProject',
-    description: 'Updates an existing project.',
-  })
+  @Mutation(() => ProjectModel, { name: 'updateProject' })
   update(
     @Args('projectId', { type: () => ID }) projectId: string,
     @Args('updateProjectInput') updateProjectInput: UpdateProjectInput,
@@ -85,10 +70,7 @@ export class ProjectsResolver {
     );
   }
 
-  @Mutation(() => ProjectMemberModel, {
-    name: 'updateProjectMemberRole',
-    description: "Updates a project member's role.",
-  })
+  @Mutation(() => ProjectMemberModel, { name: 'updateProjectMemberRole' })
   updateMemberRole(
     @Args('projectId', { type: () => ID }) projectId: string,
     @Args('memberId', { type: () => ID }) memberId: string,
@@ -97,10 +79,7 @@ export class ProjectsResolver {
     return this.projectsService.updateMemberRole(projectId, memberId, role);
   }
 
-  @Mutation(() => ProjectModel, {
-    name: 'transferProjectOwnership',
-    description: 'Transfers ownership of a project to another member.',
-  })
+  @Mutation(() => ProjectModel, { name: 'transferProjectOwnership' })
   transferOwnership(
     @Args('projectId', { type: () => ID }) projectId: string,
     @Args('newOwnerId', { type: () => ID }) newOwnerId: string,
@@ -113,10 +92,7 @@ export class ProjectsResolver {
     );
   }
 
-  @Mutation(() => [ProjectMemberModel], {
-    name: 'addProjectMembers',
-    description: 'Adds one or more members to a project.',
-  })
+  @Mutation(() => [ProjectMemberModel], { name: 'addProjectMembers' })
   addMembers(
     @Args('projectId', { type: () => ID }) projectId: string,
     @Args('profileIds', { type: () => [ID] }) profileIds: string[],
@@ -129,10 +105,7 @@ export class ProjectsResolver {
     );
   }
 
-  @Mutation(() => ProjectMemberModel, {
-    name: 'removeProjectMember',
-    description: 'Removes a member from a project.',
-  })
+  @Mutation(() => ProjectMemberModel, { name: 'removeProjectMember' })
   removeMember(
     @Args('projectId', { type: () => ID }) projectId: string,
     @Args('profileId', { type: () => ID }) profileId: string,
@@ -145,10 +118,7 @@ export class ProjectsResolver {
     );
   }
 
-  @Mutation(() => ProjectModel, {
-    name: 'archiveProject',
-    description: 'Archives a project (soft delete).',
-  })
+  @Mutation(() => ProjectModel, { name: 'archiveProject' })
   archive(@Args('projectId', { type: () => ID }) projectId: string) {
     return this.projectsService.archive(projectId);
   }

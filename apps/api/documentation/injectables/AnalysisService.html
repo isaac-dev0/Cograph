@@ -1,0 +1,2178 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>api documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+          <script>
+              // --- Iframe navigation tracking for Template Playground ---
+              function sendCurrentUrlToParent() {
+                  if (window.parent && window.parent !== window) {
+                      window.parent.postMessage({
+                          type: 'compodoc-iframe-navigate',
+                          url: window.location.pathname + window.location.hash
+                      }, '*');
+                  }
+              }
+              window.addEventListener('hashchange', sendCurrentUrlToParent, false);
+              window.addEventListener('popstate', sendCurrentUrlToParent, false);
+              window.addEventListener('DOMContentLoaded', sendCurrentUrlToParent, false);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">api documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content injectable">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Injectables</li>
+  <li class="breadcrumb-item" >AnalysisService</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" 
+                class="nav-link"
+                class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" 
+                class="nav-link"
+                
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info">
+        <p class="comment">
+            <h3>File</h3>
+        </p>
+        <p class="comment">
+            <code>src/mcp/analysis/analysis.service.ts</code>
+        </p>
+
+
+
+
+
+            <section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Properties</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Readonly</span>
+                                <a href="#logger" >logger</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Methods</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#createImportRelationships" >createImportRelationships</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#filterSuccessful" >filterSuccessful</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#findWithExtensions" >findWithExtensions</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getAnalysisJob" >getAnalysisJob</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getRepositoryFiles" >getRepositoryFiles</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#resolveImportSource" >resolveImportSource</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                <a href="#resolveRelativePath" >resolveRelativePath</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#runAnalysis" >runAnalysis</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#startAnalysis" >startAnalysis</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#storeBatch" >storeBatch</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#storeFilesToNeo4j" >storeFilesToNeo4j</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#storeFileToPg" >storeFileToPg</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateBatchProgress" >updateBatchProgress</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateJobStatus" >updateJobStatus</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+            <section data-compodoc="block-constructor">
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(prisma: <a href="../injectables/PrismaService.html" target="_self">PrismaService</a>, mcpAnalysis: <a href="../injectables/MCPAnalysisService.html" target="_self">MCPAnalysisService</a>, neo4jGraph: <a href="../injectables/Neo4jGraphService.html" target="_self">Neo4jGraphService</a>)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="26" class="link-to-prism">src/mcp/analysis/analysis.service.ts:26</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>prisma</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/PrismaService.html" target="_self" >PrismaService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>mcpAnalysis</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/MCPAnalysisService.html" target="_self" >MCPAnalysisService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>neo4jGraph</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/Neo4jGraphService.html" target="_self" >Neo4jGraphService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
+
+            <section data-compodoc="block-methods">
+    
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createImportRelationships"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>createImportRelationships</b></span>
+                        <a href="#createImportRelationships"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createImportRelationships(jobId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, analysis: <a href="../interfaces/RepositoryAnalysis.html" target="_self">RepositoryAnalysis</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="351"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:351</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates IMPORTS relationships in Neo4j between all analysed files.
+Called once after all batches are stored so every file is available
+for resolution.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>jobId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>analysis</td>
+                                            <td>
+                                                            <code><a href="../interfaces/RepositoryAnalysis.html" target="_self" >RepositoryAnalysis</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="filterSuccessful"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>filterSuccessful</b></span>
+                        <a href="#filterSuccessful"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>filterSuccessful(files: FileAnalysisResult[])</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="468"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:468</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Narrows a list of file analysis results to only those with a non-null analysis payload.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>files</td>
+                                            <td>
+                                                        <code>FileAnalysisResult[]</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../miscellaneous/typealiases.html#SuccessfulFile" target="_self" >SuccessfulFile[]</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="findWithExtensions"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>findWithExtensions</b></span>
+                        <a href="#findWithExtensions"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>findWithExtensions(base: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, pathIndex: Map<string | string>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="449"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:449</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Tries exact match, then with extensions, then as an index file.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>base</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>pathIndex</td>
+                                            <td>
+                                                        <code>Map&lt;string | string&gt;</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>string | null</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getAnalysisJob"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getAnalysisJob</b></span>
+                        <a href="#getAnalysisJob"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getAnalysisJob(jobId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="181"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:181</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Returns an analysis job with its associated repository.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>jobId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getRepositoryFiles"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getRepositoryFiles</b></span>
+                        <a href="#getRepositoryFiles"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getRepositoryFiles(repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="199"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:199</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Returns all repository files ordered by path, including code entities.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="resolveImportSource"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>resolveImportSource</b></span>
+                        <a href="#resolveImportSource"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>resolveImportSource(source: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, importingFilePath: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, pathIndex: Map<string | string>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="408"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:408</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Resolves an import source string to a file path present in <code>pathIndex</code>.
+Returns <code>null</code> if the source is external (no <code>.</code> or <code>@/</code> prefix).</p>
+<p>Three-step fallback strategy:</p>
+<ol>
+<li>Expand <code>@/</code> to <code>src/</code> (the project&#39;s tsconfig path alias) and search
+with common extensions / index variants via <code>findWithExtensions</code>.</li>
+<li>For relative paths, resolve against the importing file&#39;s directory first.</li>
+<li>If the <code>@/</code>-prefixed lookup failed, retry without any prefix — covers
+projects where <code>@/</code> maps to the repo root rather than <code>src/</code>.</li>
+</ol>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>source</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>importingFilePath</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>pathIndex</td>
+                                            <td>
+                                                        <code>Map&lt;string | string&gt;</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>string | null</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="resolveRelativePath"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                        <span ><b>resolveRelativePath</b></span>
+                        <a href="#resolveRelativePath"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>resolveRelativePath(source: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, importingFilePath: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="433"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:433</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Resolves a relative import path against the importing file&#39;s directory.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>source</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>importingFilePath</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="runAnalysis"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>runAnalysis</b></span>
+                        <a href="#runAnalysis"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>runAnalysis(jobId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, repositoryUrl: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="114"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:114</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Runs the full analysis pipeline: clone, analyse in batches, store each
+batch, then create import relationships once all files are processed.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>jobId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>repositoryUrl</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="startAnalysis"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>startAnalysis</b></span>
+                        <a href="#startAnalysis"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>startAnalysis(repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="35"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:35</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates an analysis job and begins asynchronous processing.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;literal type&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="storeBatch"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>storeBatch</b></span>
+                        <a href="#storeBatch"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>storeBatch(jobId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, batch: <a href="../interfaces/RepositoryAnalysis.html" target="_self">RepositoryAnalysis</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="218"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:218</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Persists a batch of analysed files to both PostgreSQL and Neo4j,
+then updates the job progress counter.</p>
+<p>Partial failure is designed intentionally. A single malformed file must not abort
+the entire batch. Failures are logged individually, and a summary line
+is emitted at the end so they are easy to spot in job logs.</p>
+<p>Progress is incremented by the number of files successfully stored to
+PostgreSQL - failed files are excluded from the count.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>jobId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>batch</td>
+                                            <td>
+                                                            <code><a href="../interfaces/RepositoryAnalysis.html" target="_self" >RepositoryAnalysis</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="storeFilesToNeo4j"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>storeFilesToNeo4j</b></span>
+                        <a href="#storeFilesToNeo4j"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>storeFilesToNeo4j(jobId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, files: <a href="../miscellaneous/typealiases.html#SuccessfulFile" target="_self">SuccessfulFile[]</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="302"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:302</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates File and Entity nodes in Neo4j for a batch of files.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>jobId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>files</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#SuccessfulFile" target="_self" >SuccessfulFile[]</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="storeFileToPg"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>storeFileToPg</b></span>
+                        <a href="#storeFileToPg"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>storeFileToPg(repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, file: <a href="../miscellaneous/typealiases.html#SuccessfulFile" target="_self">SuccessfulFile</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="262"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:262</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates a RepositoryFile row and its CodeEntity rows in PostgreSQL.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>file</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#SuccessfulFile" target="_self" >SuccessfulFile</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateBatchProgress"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>updateBatchProgress</b></span>
+                        <a href="#updateBatchProgress"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateBatchProgress(jobId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, batchCount: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, fallbackTotal: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="487"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:487</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Increments the job&#39;s <code>filesAnalysed</code> counter by <code>batchCount</code> and recomputes the
+percentage progress. Uses <code>fallbackTotal</code> when the job&#39;s stored total is not yet set.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>jobId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>batchCount</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>fallbackTotal</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateJobStatus"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>updateJobStatus</b></span>
+                        <a href="#updateJobStatus"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateJobStatus(jobId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, status: <a href="../miscellaneous/typealiases.html#AnalysisStatus" target="_self">AnalysisStatus</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="473"
+                                    class="link-to-prism">src/mcp/analysis/analysis.service.ts:473</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Persists a new status value to the analysis job record.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>jobId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>status</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#AnalysisStatus" target="_self" >AnalysisStatus</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+            <section data-compodoc="block-properties">
+    
+    <h3 id="inputs">
+        Properties
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="logger"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Readonly</span>
+                        <span ><b>logger</b></span>
+                        <a href="#logger"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>new Logger(AnalysisService.name)</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="26" class="link-to-prism">src/mcp/analysis/analysis.service.ts:26</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+</section>
+
+    </div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import {
+  Injectable,
+  Logger,
+  ConflictException,
+  NotFoundException,
+} from &#x27;@nestjs/common&#x27;;
+import { PrismaService } from &#x27;../../common/prisma/prisma.service&#x27;;
+import { AnalysisStatus } from &#x27;@prisma/client&#x27;;
+import { MCPAnalysisService } from &#x27;./mcp-analysis.service&#x27;;
+import { Neo4jGraphService } from &#x27;../../graph/services/neo4j-graph.service&#x27;;
+import { ImportRelationshipData } from &#x27;../../common/shared/graph.interfaces&#x27;;
+import {
+  RepositoryAnalysis,
+  FileAnalysisResult,
+} from &#x27;../../common/shared/analysis.interfaces&#x27;;
+
+type SuccessfulFile &#x3D; FileAnalysisResult &amp; {
+  analysis: NonNullable&lt;FileAnalysisResult[&#x27;analysis&#x27;]&gt;;
+};
+
+const EXTENSIONS &#x3D; [&#x27;.ts&#x27;, &#x27;.tsx&#x27;, &#x27;.js&#x27;, &#x27;.jsx&#x27;];
+const ANALYSIS_COOLDOWN_MS &#x3D; 5 * 60 * 1_000;
+
+@Injectable()
+export class AnalysisService {
+  private readonly logger &#x3D; new Logger(AnalysisService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mcpAnalysis: MCPAnalysisService,
+    private readonly neo4jGraph: Neo4jGraphService,
+  ) {}
+
+  /** Creates an analysis job and begins asynchronous processing. */
+  async startAnalysis(repositoryId: string): Promise&lt;{ jobId: string }&gt; {
+    const repository &#x3D; await this.prisma.repository.findUnique({
+      where: { id: repositoryId },
+    });
+
+    if (!repository) {
+      throw new NotFoundException(&#x60;Repository not found: ${repositoryId}&#x60;);
+    }
+
+    const cooldownCutoff &#x3D; new Date(Date.now() - ANALYSIS_COOLDOWN_MS);
+    const recentJob &#x3D; await this.prisma.analysisJob.findFirst({
+      where: {
+        repositoryId,
+        OR: [
+          {
+            status: {
+              in: [
+                AnalysisStatus.PENDING,
+                AnalysisStatus.CLONING,
+                AnalysisStatus.ANALYSING,
+              ],
+            },
+          },
+          {
+            status: AnalysisStatus.COMPLETED,
+            createdAt: { gte: cooldownCutoff },
+          },
+        ],
+      },
+      orderBy: { createdAt: &#x27;desc&#x27; },
+    });
+
+    if (recentJob) {
+      const activeStatuses: AnalysisStatus[] &#x3D; [
+        AnalysisStatus.PENDING,
+        AnalysisStatus.CLONING,
+        AnalysisStatus.ANALYSING,
+      ];
+      const isActive &#x3D; activeStatuses.includes(recentJob.status);
+
+      if (isActive) {
+        throw new ConflictException(
+          &#x27;An analysis job is already running for this repository.&#x27;,
+        );
+      }
+
+      const secondsRemaining &#x3D; Math.ceil(
+        (recentJob.createdAt.getTime() + ANALYSIS_COOLDOWN_MS - Date.now()) /
+          1_000,
+      );
+      throw new ConflictException(
+        &#x60;Analysis was run recently. Please wait ${secondsRemaining} seconds before re-analysing.&#x60;,
+      );
+    }
+
+    const job &#x3D; await this.prisma.analysisJob.create({
+      data: {
+        repositoryId,
+        status: AnalysisStatus.PENDING,
+        startedAt: new Date(),
+      },
+    });
+
+    this.logger.log(&#x60;Created analysis job: ${job.id}&#x60;);
+
+    this.runAnalysis(job.id, repository.id, repository.repositoryUrl).catch(
+      (error) &#x3D;&gt;
+        this.logger.error(
+          &#x60;Analysis failed for job ${job.id}: ${error.message}&#x60;,
+        ),
+    );
+
+    return { jobId: job.id };
+  }
+
+  /**
+   * Runs the full analysis pipeline: clone, analyse in batches, store each
+   * batch, then create import relationships once all files are processed.
+   */
+  async runAnalysis(
+    jobId: string,
+    repositoryId: string,
+    repositoryUrl: string,
+  ): Promise&lt;void&gt; {
+    try {
+      await this.updateJobStatus(jobId, AnalysisStatus.CLONING);
+      await this.updateJobStatus(jobId, AnalysisStatus.ANALYSING);
+
+      await this.prisma.repositoryFile.deleteMany({ where: { repositoryId } });
+      await this.neo4jGraph.deleteRepositoryGraph(repositoryId);
+
+      const analysis &#x3D; await this.mcpAnalysis.analyseRepository(
+        repositoryUrl,
+        repositoryId,
+        undefined,
+        async (batch) &#x3D;&gt; {
+          this.logger.log(
+            &#x60;[${jobId}] Storing batch of ${batch.files.length} files&#x60;,
+          );
+          await this.storeBatch(jobId, repositoryId, batch);
+        },
+      );
+
+      this.logger.log(
+        &#x60;[${jobId}] Analysis complete: ${analysis.files.length} files&#x60;,
+      );
+
+      await this.prisma.analysisJob.update({
+        where: { id: jobId },
+        data: { totalFiles: analysis.summary.totalFiles },
+      });
+
+      this.logger.log(&#x60;[${jobId}] Creating import relationships&#x60;);
+      await this.createImportRelationships(jobId, repositoryId, analysis);
+
+      await this.prisma.analysisJob.update({
+        where: { id: jobId },
+        data: {
+          status: AnalysisStatus.COMPLETED,
+          completedAt: new Date(),
+          filesAnalysed: analysis.summary.successfulAnalyses,
+          progress: 100,
+        },
+      });
+
+      this.logger.log(&#x60;[${jobId}] Analysis completed successfully&#x60;);
+    } catch (error) {
+      const errorMessage &#x3D;
+        error instanceof Error ? error.message : String(error);
+      const errorDetails &#x3D;
+        error instanceof Error ? error.stack : JSON.stringify(error);
+      this.logger.error(&#x60;[${jobId}] Analysis failed: ${errorMessage}&#x60;);
+
+      await this.prisma.analysisJob.update({
+        where: { id: jobId },
+        data: {
+          status: AnalysisStatus.FAILED,
+          completedAt: new Date(),
+          errorMessage,
+          errorDetails,
+        },
+      });
+    }
+  }
+
+  /** Returns an analysis job with its associated repository. */
+  async getAnalysisJob(jobId: string) {
+    const job &#x3D; await this.prisma.analysisJob.findUnique({
+      where: { id: jobId },
+      include: {
+        repository: {
+          select: { id: true, name: true, fullName: true, repositoryUrl: true },
+        },
+      },
+    });
+
+    if (!job) {
+      throw new NotFoundException(&#x60;Analysis job not found: ${jobId}&#x60;);
+    }
+
+    return job;
+  }
+
+  /** Returns all repository files ordered by path, including code entities. */
+  async getRepositoryFiles(repositoryId: string) {
+    return this.prisma.repositoryFile.findMany({
+      where: { repositoryId },
+      include: { codeEntities: true },
+      orderBy: { filePath: &#x27;asc&#x27; },
+    });
+  }
+
+  /**
+   * Persists a batch of analysed files to both PostgreSQL and Neo4j,
+   * then updates the job progress counter.
+   *
+   * Partial failure is designed intentionally. A single malformed file must not abort
+   * the entire batch. Failures are logged individually, and a summary line
+   * is emitted at the end so they are easy to spot in job logs.
+   * 
+   * Progress is incremented by the number of files successfully stored to
+   * PostgreSQL - failed files are excluded from the count.
+   */
+  private async storeBatch(
+    jobId: string,
+    repositoryId: string,
+    batch: RepositoryAnalysis,
+  ): Promise&lt;void&gt; {
+    const files &#x3D; this.filterSuccessful(batch.files);
+
+    let storedCount &#x3D; 0;
+    let pgFailedCount &#x3D; 0;
+
+    for (const file of files) {
+      try {
+        await this.storeFileToPg(repositoryId, file);
+        storedCount++;
+      } catch (error) {
+        pgFailedCount++;
+        this.logger.error(
+          &#x60;[${jobId}] Failed to store ${file.relativePath}: ${error instanceof Error ? error.message : error}&#x60;,
+        );
+      }
+    }
+
+    if (pgFailedCount &gt; 0) {
+      this.logger.warn(
+        &#x60;[${jobId}] Batch complete: ${storedCount} stored, ${pgFailedCount} failed (PG)&#x60;,
+      );
+    }
+
+    try {
+      await this.storeFilesToNeo4j(jobId, repositoryId, files);
+    } catch (error) {
+      this.logger.error(
+        &#x60;[${jobId}] Failed to write batch to Neo4j: ${error instanceof Error ? error.message : error}&#x60;,
+      );
+    }
+
+    await this.updateBatchProgress(
+      jobId,
+      storedCount,
+      batch.summary.totalFiles,
+    );
+  }
+
+  /** Creates a RepositoryFile row and its CodeEntity rows in PostgreSQL. */
+  private async storeFileToPg(
+    repositoryId: string,
+    file: SuccessfulFile,
+  ): Promise&lt;void&gt; {
+    const { analysis } &#x3D; file;
+
+    const neo4jNodeId &#x3D; &#x60;file-${repositoryId}-${file.relativePath}&#x60;;
+
+    const repositoryFile &#x3D; await this.prisma.repositoryFile.create({
+      data: {
+        repositoryId,
+        filePath: file.relativePath,
+        fileName: analysis.fileName,
+        fileType: analysis.fileType,
+        linesOfCode: analysis.lines,
+        neo4jNodeId,
+        annotations: JSON.stringify({
+          imports: analysis.imports,
+          exports: analysis.exports,
+        }),
+      },
+    });
+
+    if (analysis.entities?.length) {
+      await this.prisma.codeEntity.createMany({
+        data: analysis.entities.map((entity) &#x3D;&gt; ({
+          repositoryFileId: repositoryFile.id,
+          name: entity.name,
+          type: entity.type,
+          startLine: entity.startLine,
+          endLine: entity.endLine,
+          annotations: JSON.stringify({
+            neo4jNodeId: &#x60;entity-${repositoryId}-${file.relativePath}-${entity.name}&#x60;,
+          }),
+        })),
+      });
+    }
+  }
+
+  /** Creates File and Entity nodes in Neo4j for a batch of files. */
+  private async storeFilesToNeo4j(
+    jobId: string,
+    repositoryId: string,
+    files: SuccessfulFile[],
+  ): Promise&lt;void&gt; {
+    const fileNodes &#x3D; files.map((file) &#x3D;&gt; ({
+      id: &#x60;file-${repositoryId}-${file.relativePath}&#x60;,
+      repositoryId,
+      path: file.relativePath,
+      name: file.analysis.fileName,
+      type: file.analysis.fileType,
+      linesOfCode: file.analysis.lines,
+    }));
+
+    await this.neo4jGraph.bulkCreateFileNodes(fileNodes);
+
+    const entityTasks &#x3D; files.flatMap((file) &#x3D;&gt; {
+      if (!file.analysis.entities?.length) return [];
+
+      const fileNodeId &#x3D; &#x60;file-${repositoryId}-${file.relativePath}&#x60;;
+      
+      return file.analysis.entities.map((entity) &#x3D;&gt;
+        this.neo4jGraph
+          .createEntityNode({
+            id: &#x60;entity-${repositoryId}-${file.relativePath}-${entity.name}&#x60;,
+            fileId: fileNodeId,
+            name: entity.name,
+            type: entity.type as &#x27;Function&#x27; | &#x27;Class&#x27; | &#x27;Interface&#x27;,
+            startLine: entity.startLine,
+            endLine: entity.endLine,
+          })
+          .catch((error) &#x3D;&gt; {
+            this.logger.error(
+              &#x60;[${jobId}] Failed to create entity ${entity.name}: ${error instanceof Error ? error.message : error}&#x60;,
+            );
+          }),
+      );
+    });
+
+    await Promise.all(entityTasks);
+
+    this.logger.log(&#x60;[${jobId}] Wrote ${files.length} files to Neo4j&#x60;);
+  }
+
+  /**
+   * Creates IMPORTS relationships in Neo4j between all analysed files.
+   * Called once after all batches are stored so every file is available
+   * for resolution.
+   */
+  private async createImportRelationships(
+    jobId: string,
+    repositoryId: string,
+    analysis: RepositoryAnalysis,
+  ): Promise&lt;void&gt; {
+    const files &#x3D; this.filterSuccessful(analysis.files);
+
+    const pathIndex &#x3D; new Map&lt;string, string&gt;();
+    for (const file of files) {
+      pathIndex.set(file.relativePath, file.relativePath);
+    }
+
+    const imports: ImportRelationshipData[] &#x3D; [];
+
+    for (const file of files) {
+      if (!file.analysis.imports?.length) continue;
+
+      const sourceFileId &#x3D; &#x60;file-${repositoryId}-${file.relativePath}&#x60;;
+
+      for (const importStatement of file.analysis.imports) {
+        if (importStatement.isExternal) continue;
+
+        const resolvedPath &#x3D; this.resolveImportSource(
+          importStatement.source,
+          file.relativePath,
+          pathIndex,
+        );
+        if (!resolvedPath) continue;
+
+        imports.push({
+          sourceFileId,
+          targetFileId: &#x60;file-${repositoryId}-${resolvedPath}&#x60;,
+          specifiers: importStatement.specifiers || [],
+        });
+      }
+    }
+
+    if (imports.length &gt; 0) {
+      const created &#x3D;
+        await this.neo4jGraph.bulkCreateImportRelationships(imports);
+      this.logger.log(&#x60;[${jobId}] Created ${created} import relationships&#x60;);
+    } else {
+      this.logger.log(&#x60;[${jobId}] No import relationships to create&#x60;);
+    }
+  }
+
+  /**
+   * Resolves an import source string to a file path present in &#x60;pathIndex&#x60;.
+   * Returns &#x60;null&#x60; if the source is external (no &#x60;.&#x60; or &#x60;@/&#x60; prefix).
+   *
+   * Three-step fallback strategy:
+   * 1. Expand &#x60;@/&#x60; to &#x60;src/&#x60; (the project&#x27;s tsconfig path alias) and search
+   *    with common extensions / index variants via &#x60;findWithExtensions&#x60;.
+   * 2. For relative paths, resolve against the importing file&#x27;s directory first.
+   * 3. If the &#x60;@/&#x60;-prefixed lookup failed, retry without any prefix — covers
+   *    projects where &#x60;@/&#x60; maps to the repo root rather than &#x60;src/&#x60;.
+   */
+  private resolveImportSource(
+    source: string,
+    importingFilePath: string,
+    pathIndex: Map&lt;string, string&gt;,
+  ): string | null {
+    if (!source.startsWith(&#x27;.&#x27;) &amp;&amp; !source.startsWith(&#x27;@/&#x27;)) {
+      return null;
+    }
+
+    const resolvedBase &#x3D; source.startsWith(&#x27;@/&#x27;)
+      ? source.replace(&#x27;@/&#x27;, &#x27;src/&#x27;)
+      : this.resolveRelativePath(source, importingFilePath);
+
+    const match &#x3D; this.findWithExtensions(resolvedBase, pathIndex);
+    if (match) return match;
+
+    if (source.startsWith(&#x27;@/&#x27;)) {
+      const withoutPrefix &#x3D; source.replace(&#x27;@/&#x27;, &#x27;&#x27;);
+      return this.findWithExtensions(withoutPrefix, pathIndex);
+    }
+
+    return null;
+  }
+
+  /** Resolves a relative import path against the importing file&#x27;s directory. */
+  private resolveRelativePath(
+    source: string,
+    importingFilePath: string,
+  ): string {
+    const dirParts &#x3D; importingFilePath.replace(/\/[^/]+$/, &#x27;&#x27;).split(&#x27;/&#x27;);
+
+    for (const part of source.split(&#x27;/&#x27;)) {
+      if (part &#x3D;&#x3D;&#x3D; &#x27;.&#x27;) continue;
+      if (part &#x3D;&#x3D;&#x3D; &#x27;..&#x27;) dirParts.pop();
+      else dirParts.push(part);
+    }
+
+    return dirParts.join(&#x27;/&#x27;);
+  }
+
+  /** Tries exact match, then with extensions, then as an index file. */
+  private findWithExtensions(
+    base: string,
+    pathIndex: Map&lt;string, string&gt;,
+  ): string | null {
+    if (pathIndex.has(base)) return pathIndex.get(base)!;
+
+    for (const ext of EXTENSIONS) {
+      if (pathIndex.has(base + ext)) return pathIndex.get(base + ext)!;
+    }
+
+    for (const ext of EXTENSIONS) {
+      const indexPath &#x3D; &#x60;${base}/index${ext}&#x60;;
+      if (pathIndex.has(indexPath)) return pathIndex.get(indexPath)!;
+    }
+
+    return null;
+  }
+
+  /** Narrows a list of file analysis results to only those with a non-null analysis payload. */
+  private filterSuccessful(files: FileAnalysisResult[]): SuccessfulFile[] {
+    return files.filter((f): f is SuccessfulFile &#x3D;&gt; f.analysis !&#x3D;&#x3D; null);
+  }
+
+  /** Persists a new status value to the analysis job record. */
+  private async updateJobStatus(
+    jobId: string,
+    status: AnalysisStatus,
+  ): Promise&lt;void&gt; {
+    await this.prisma.analysisJob.update({
+      where: { id: jobId },
+      data: { status },
+    });
+  }
+
+  /**
+   * Increments the job&#x27;s &#x60;filesAnalysed&#x60; counter by &#x60;batchCount&#x60; and recomputes the
+   * percentage progress. Uses &#x60;fallbackTotal&#x60; when the job&#x27;s stored total is not yet set.
+   */
+  private async updateBatchProgress(
+    jobId: string,
+    batchCount: number,
+    fallbackTotal: number,
+  ): Promise&lt;void&gt; {
+    const job &#x3D; await this.prisma.analysisJob.findUnique({
+      where: { id: jobId },
+      select: { filesAnalysed: true, totalFiles: true },
+    });
+
+    const filesAnalysed &#x3D; (job?.filesAnalysed || 0) + batchCount;
+    const totalFiles &#x3D; job?.totalFiles || fallbackTotal;
+    const progress &#x3D;
+      totalFiles &gt; 0 ? Math.round((filesAnalysed / totalFiles) * 100) : 0;
+
+    await this.prisma.analysisJob.update({
+      where: { id: jobId },
+      data: { filesAnalysed, progress },
+    });
+
+    this.logger.log(
+      &#x60;[${jobId}] Batch stored: ${filesAnalysed}/${totalFiles} files (${progress}%)&#x60;,
+    );
+  }
+}
+</code></pre>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
+            var COMPODOC_CURRENT_PAGE_URL = 'AnalysisService.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

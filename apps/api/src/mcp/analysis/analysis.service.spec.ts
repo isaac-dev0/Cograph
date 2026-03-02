@@ -36,14 +36,14 @@ const mockNeo4jGraphService = {
   bulkCreateImportRelationships: jest.fn(),
 };
 
-const baseRepository = {
+const repository = {
   id: 'repo-1',
   repositoryUrl: 'https://github.com/test/repo',
   name: 'repo',
   fullName: 'test/repo',
 };
 
-const baseJob = {
+const job = {
   id: 'job-1',
   repositoryId: 'repo-1',
   status: AnalysisStatus.PENDING,
@@ -117,9 +117,9 @@ describe('AnalysisService', () => {
     });
 
     it('throws ConflictException when an active job is already running', async () => {
-      mockPrismaService.repository.findUnique.mockResolvedValue(baseRepository);
+      mockPrismaService.repository.findUnique.mockResolvedValue(repository);
       mockPrismaService.analysisJob.findFirst.mockResolvedValue({
-        ...baseJob,
+        ...job,
         status: AnalysisStatus.ANALYSING,
       });
 
@@ -127,9 +127,9 @@ describe('AnalysisService', () => {
     });
 
     it('throws ConflictException when a completed job exists within the cooldown window', async () => {
-      mockPrismaService.repository.findUnique.mockResolvedValue(baseRepository);
+      mockPrismaService.repository.findUnique.mockResolvedValue(repository);
       mockPrismaService.analysisJob.findFirst.mockResolvedValue({
-        ...baseJob,
+        ...job,
         status: AnalysisStatus.COMPLETED,
         createdAt: new Date(Date.now() - 60_000),
       });
@@ -138,9 +138,9 @@ describe('AnalysisService', () => {
     });
 
     it('creates a job and fires runAnalysis asynchronously when no conflict exists', async () => {
-      mockPrismaService.repository.findUnique.mockResolvedValue(baseRepository);
+      mockPrismaService.repository.findUnique.mockResolvedValue(repository);
       mockPrismaService.analysisJob.findFirst.mockResolvedValue(null);
-      mockPrismaService.analysisJob.create.mockResolvedValue(baseJob);
+      mockPrismaService.analysisJob.create.mockResolvedValue(job);
 
       const result = await service.startAnalysis('repo-1');
 
@@ -209,8 +209,8 @@ describe('AnalysisService', () => {
 
     it('returns the job with its repository when found', async () => {
       mockPrismaService.analysisJob.findUnique.mockResolvedValue({
-        ...baseJob,
-        repository: baseRepository,
+        ...job,
+        repository: repository,
       });
 
       const result = await service.getAnalysisJob('job-1');
@@ -244,53 +244,4 @@ describe('AnalysisService', () => {
     });
   });
 
-  describe('resolveImportSource (private)', () => {
-    let pathIndex: Map<string, string>;
-
-    beforeEach(() => {
-      pathIndex = new Map([
-        ['src/utils.ts', 'src/utils.ts'],
-        ['src/components/Button.tsx', 'src/components/Button.tsx'],
-        ['components/Button.tsx', 'components/Button.tsx'],
-      ]);
-    });
-
-    it('returns null for external imports that have no . or @/ prefix', () => {
-      const result = (service as any).resolveImportSource('react', 'src/index.ts', pathIndex);
-
-      expect(result).toBeNull();
-    });
-
-    it('resolves a relative import to its indexed file path', () => {
-      const result = (service as any).resolveImportSource('./utils', 'src/index.ts', pathIndex);
-
-      expect(result).toBe('src/utils.ts');
-    });
-
-    it('resolves an @/ alias by expanding it to src/', () => {
-      const result = (service as any).resolveImportSource('@/utils', 'src/index.ts', pathIndex);
-
-      expect(result).toBe('src/utils.ts');
-    });
-
-    it('falls back to the path without src/ when the @/ alias does not match inside src/', () => {
-      const fallbackIndex = new Map([
-        ['components/Button.tsx', 'components/Button.tsx'],
-      ]);
-
-      const result = (service as any).resolveImportSource(
-        '@/components/Button',
-        'src/index.ts',
-        fallbackIndex,
-      );
-
-      expect(result).toBe('components/Button.tsx');
-    });
-
-    it('returns null when the import path cannot be resolved in the index', () => {
-      const result = (service as any).resolveImportSource('./nonexistent', 'src/index.ts', pathIndex);
-
-      expect(result).toBeNull();
-    });
-  });
 });

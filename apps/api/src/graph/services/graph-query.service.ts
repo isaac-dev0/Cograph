@@ -399,6 +399,7 @@ export class GraphQueryService {
                 : {};
               return [annotations.neo4jNodeId, entity] as const;
             } catch {
+              // Corrupt annotations JSON — exclude from map, entity renders without PG metadata.
               return [null, entity] as const;
             }
           })
@@ -415,7 +416,9 @@ export class GraphQueryService {
           if (meta?.annotations) {
             try {
               annotations = JSON.parse(meta.annotations);
-            } catch {}
+            } catch {
+              // Corrupt annotations JSON — node renders without annotations.
+            }
           }
 
           return {

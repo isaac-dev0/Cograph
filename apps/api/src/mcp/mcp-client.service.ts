@@ -1,15 +1,9 @@
-/**
- * 
- * A large part of this code was taken from a private GitHub 
- * repository and modified for my usage.
- * 
- */
-
 import { Injectable, InternalServerErrorException, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { join } from 'path';
 
 const MCP_SERVER_PATH = join(__dirname, '../../../mcp-server/build/index.js');
 
+// Dynamic import via Function constructor bypasses the CJS static analyser so ESM-only packages load at runtime.
 const importEsm = (specifier: string) =>
   new Function('specifier', 'return import(specifier)')(specifier);
 

@@ -32,7 +32,7 @@ describe('Neo4jGraphService', () => {
   });
 
   describe('createFileNode', () => {
-    it('should create a file node with correct parameters', async () => {
+    it('creates a file node with the correct Cypher parameters', async () => {
       const fileData: FileNodeData = {
         id: 'file-123',
         repositoryId: 'repo-456',
@@ -68,7 +68,7 @@ describe('Neo4jGraphService', () => {
       expect(result).toEqual(fileData);
     });
 
-    it('should throw error if file creation fails', async () => {
+    it('throws InternalServerErrorException when Neo4j returns no records', async () => {
       const fileData: FileNodeData = {
         id: 'file-123',
         repositoryId: 'repo-456',
@@ -85,7 +85,7 @@ describe('Neo4jGraphService', () => {
   });
 
   describe('createEntityNode', () => {
-    it('should create an entity node and link it to a file', async () => {
+    it('creates an entity node and a CONTAINS relationship', async () => {
       const entityData: EntityNodeData = {
         id: 'entity-789',
         fileId: 'file-123',
@@ -121,22 +121,22 @@ describe('Neo4jGraphService', () => {
       expect(result).toEqual(entityData);
     });
 
-    it('should throw BadRequestException when the entity type is not Function, Class, or Interface', async () => {
+    it('throws BadRequestException for invalid entity types', async () => {
       const entityData = {
         id: 'entity-789',
         fileId: 'file-123',
         name: 'myVariable',
-        type: 'Variable' as any,
+        type: 'Variable',
         startLine: 5,
         endLine: 5,
       };
 
-      await expect(service.createEntityNode(entityData)).rejects.toThrow(BadRequestException);
+      await expect(service.createEntityNode(entityData as unknown as EntityNodeData)).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('createImportRelationship', () => {
-    it('should create an import relationship between two files', async () => {
+    it('creates an IMPORTS relationship between two file nodes', async () => {
       const importData: ImportRelationshipData = {
         sourceFileId: 'file-123',
         targetFileId: 'file-456',
@@ -170,7 +170,7 @@ describe('Neo4jGraphService', () => {
   });
 
   describe('createExportRelationship', () => {
-    it('should create an export relationship between a file and an entity', async () => {
+    it('creates an EXPORTS relationship', async () => {
       const mockResult = {
         records: [
           {
@@ -189,7 +189,7 @@ describe('Neo4jGraphService', () => {
       );
     });
 
-    it('should throw when the file or entity is not found', async () => {
+    it('throws InternalServerErrorException when no records are returned', async () => {
       mockNeo4jService.write.mockResolvedValue({ records: [] });
 
       await expect(service.createExportRelationship('file-123', 'entity-456')).rejects.toThrow(
@@ -199,7 +199,7 @@ describe('Neo4jGraphService', () => {
   });
 
   describe('deleteRepositoryGraph', () => {
-    it('should delete all nodes for a repository', async () => {
+    it('deletes all file nodes and returns the count', async () => {
       const mockResult = {
         records: [
           {
@@ -221,7 +221,7 @@ describe('Neo4jGraphService', () => {
   });
 
   describe('getFileNode', () => {
-    it('should retrieve a file node with entities', async () => {
+    it('returns the file node with its nested entities', async () => {
       const fileId = 'file-123';
 
       const mockResult = {
@@ -269,7 +269,7 @@ describe('Neo4jGraphService', () => {
       });
     });
 
-    it('should return null if file node not found', async () => {
+    it('returns null when no matching node exists', async () => {
       mockNeo4jService.read.mockResolvedValue({ records: [] });
 
       const result = await service.getFileNode('non-existent-file');
@@ -279,7 +279,7 @@ describe('Neo4jGraphService', () => {
   });
 
   describe('bulkCreateFileNodes', () => {
-    it('should bulk create multiple file nodes', async () => {
+    it('bulk creates file nodes via UNWIND and returns the count', async () => {
       const files: FileNodeData[] = [
         { id: 'file-1', repositoryId: 'repo-456', path: 'src/index.ts', name: 'index.ts', type: 'ts', linesOfCode: 100 },
         { id: 'file-2', repositoryId: 'repo-456', path: 'src/utils.ts', name: 'utils.ts', type: 'ts', linesOfCode: 50 },
@@ -306,7 +306,7 @@ describe('Neo4jGraphService', () => {
   });
 
   describe('bulkCreateImportRelationships', () => {
-    it('should bulk create multiple import relationships', async () => {
+    it('bulk creates import relationships via UNWIND and returns the count', async () => {
       const imports: ImportRelationshipData[] = [
         { sourceFileId: 'file-1', targetFileId: 'file-2', specifiers: ['myFunction'] },
         { sourceFileId: 'file-1', targetFileId: 'file-3', specifiers: ['myClass'] },
@@ -333,7 +333,7 @@ describe('Neo4jGraphService', () => {
   });
 
   describe('getRepositoryGraph', () => {
-    it('should retrieve all files and relationships for a repository', async () => {
+    it('returns all files with their entities and imports', async () => {
       const repositoryId = 'repo-456';
 
       const mockResult = {

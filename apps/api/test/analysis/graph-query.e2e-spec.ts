@@ -41,31 +41,26 @@ describe('GraphQueryService', () => {
         repositoryUrl: SMALL_TS_REPO.url,
       });
 
-      const prisma = (db as any).prisma;
-      await prisma.repositoryFile.create({
-        data: {
-          repositoryId: testRepositoryId,
-          filePath: 'src/index.ts',
-          fileName: 'index.ts',
-          fileType: 'ts',
-          linesOfCode: 100,
-          neo4jNodeId: `file-${testRepositoryId}-src/index.ts`,
-          annotations: JSON.stringify({ imports: [] }),
-          claudeSummary: 'Main entry point file',
-        },
+      await db.createRepositoryFile({
+        repositoryId: testRepositoryId,
+        filePath: 'src/index.ts',
+        fileName: 'index.ts',
+        fileType: 'ts',
+        linesOfCode: 100,
+        neo4jNodeId: `file-${testRepositoryId}-src/index.ts`,
+        annotations: JSON.stringify({ imports: [] }),
+        claudeSummary: 'Main entry point file',
       });
 
-      await prisma.repositoryFile.create({
-        data: {
-          repositoryId: testRepositoryId,
-          filePath: 'src/utils.ts',
-          fileName: 'utils.ts',
-          fileType: 'ts',
-          linesOfCode: 50,
-          neo4jNodeId: `file-${testRepositoryId}-src/utils.ts`,
-          annotations: JSON.stringify({ imports: [] }),
-          claudeSummary: 'Utility functions',
-        },
+      await db.createRepositoryFile({
+        repositoryId: testRepositoryId,
+        filePath: 'src/utils.ts',
+        fileName: 'utils.ts',
+        fileType: 'ts',
+        linesOfCode: 50,
+        neo4jNodeId: `file-${testRepositoryId}-src/utils.ts`,
+        annotations: JSON.stringify({ imports: [] }),
+        claudeSummary: 'Utility functions',
       });
 
       await neo4jGraphService.createFileNode({
@@ -118,17 +113,14 @@ describe('GraphQueryService', () => {
         repositoryUrl: SMALL_TS_REPO.url,
       });
 
-      const prisma = (db as any).prisma;
       for (let i = 0; i < 10; i++) {
-        await prisma.repositoryFile.create({
-          data: {
-            repositoryId: testRepositoryId,
-            filePath: `src/file${i}.ts`,
-            fileName: `file${i}.ts`,
-            fileType: 'ts',
-            linesOfCode: 10,
-            neo4jNodeId: `file-${testRepositoryId}-src/file${i}.ts`,
-          },
+        await db.createRepositoryFile({
+          repositoryId: testRepositoryId,
+          filePath: `src/file${i}.ts`,
+          fileName: `file${i}.ts`,
+          fileType: 'ts',
+          linesOfCode: 10,
+          neo4jNodeId: `file-${testRepositoryId}-src/file${i}.ts`,
         });
 
         await neo4jGraphService.createFileNode({

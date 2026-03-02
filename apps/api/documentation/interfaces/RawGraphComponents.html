@@ -1,0 +1,907 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>api documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+          <script>
+              // --- Iframe navigation tracking for Template Playground ---
+              function sendCurrentUrlToParent() {
+                  if (window.parent && window.parent !== window) {
+                      window.parent.postMessage({
+                          type: 'compodoc-iframe-navigate',
+                          url: window.location.pathname + window.location.hash
+                      }, '*');
+                  }
+              }
+              window.addEventListener('hashchange', sendCurrentUrlToParent, false);
+              window.addEventListener('popstate', sendCurrentUrlToParent, false);
+              window.addEventListener('DOMContentLoaded', sendCurrentUrlToParent, false);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">api documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content interface">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Interfaces</li>
+  <li class="breadcrumb-item"
+  >
+  RawGraphComponents</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" 
+                class="nav-link"
+                class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" 
+                class="nav-link"
+                
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info">
+        <p class="comment">
+            <h3>File</h3>
+        </p>
+        <p class="comment">
+            <code>src/graph/services/graph-query.service.ts</code>
+        </p>
+
+
+
+
+        <section data-compodoc="block-index">
+            <h3 id="index">Index</h3>
+            <table class="table table-sm table-bordered index-table">
+                <tbody>
+                    <tr>
+                        <td class="col-md-4">
+                            <h6><b>Properties</b></h6>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-md-4">
+                            <ul class="index-list">
+                                <li>
+                                        <a href="#entityNodes" 
+>
+                                            entityNodes
+                                        </a>
+                                </li>
+                                <li>
+                                        <a href="#fileNodes" 
+>
+                                            fileNodes
+                                        </a>
+                                </li>
+                                <li>
+                                        <a href="#relationships" 
+>
+                                            relationships
+                                        </a>
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+
+            <section data-compodoc="block-properties">
+                <h3 id="inputs">Properties</h3>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                                <tr>
+                                    <td class="col-md-4">
+                                        <a name="entityNodes"></a>
+                                        <span class="name "><b>entityNodes</b>
+                                            <a href="#entityNodes">
+                                                <span class="icon ion-ios-link"></span>
+                                            </a>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-md-4">
+                                        <code>entityNodes:         <code><a href="../interfaces/Neo4jNode.html" target="_self" >Neo4jNode[]</a></code>
+</code>
+                                    </td>
+                                </tr>
+
+
+                                    <tr>
+                                        <td class="col-md-4">
+                                            <i>Type : </i>        <code><a href="../interfaces/Neo4jNode.html" target="_self" >Neo4jNode[]</a></code>
+
+                                        </td>
+                                    </tr>
+
+
+
+
+
+                        </tbody>
+                    </table>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                                <tr>
+                                    <td class="col-md-4">
+                                        <a name="fileNodes"></a>
+                                        <span class="name "><b>fileNodes</b>
+                                            <a href="#fileNodes">
+                                                <span class="icon ion-ios-link"></span>
+                                            </a>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-md-4">
+                                        <code>fileNodes:         <code><a href="../interfaces/Neo4jNode.html" target="_self" >Neo4jNode[]</a></code>
+</code>
+                                    </td>
+                                </tr>
+
+
+                                    <tr>
+                                        <td class="col-md-4">
+                                            <i>Type : </i>        <code><a href="../interfaces/Neo4jNode.html" target="_self" >Neo4jNode[]</a></code>
+
+                                        </td>
+                                    </tr>
+
+
+
+
+
+                        </tbody>
+                    </table>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                                <tr>
+                                    <td class="col-md-4">
+                                        <a name="relationships"></a>
+                                        <span class="name "><b>relationships</b>
+                                            <a href="#relationships">
+                                                <span class="icon ion-ios-link"></span>
+                                            </a>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="col-md-4">
+                                        <code>relationships:         <code><a href="../interfaces/Neo4jRelationship.html" target="_self" >Neo4jRelationship[]</a></code>
+</code>
+                                    </td>
+                                </tr>
+
+
+                                    <tr>
+                                        <td class="col-md-4">
+                                            <i>Type : </i>        <code><a href="../interfaces/Neo4jRelationship.html" target="_self" >Neo4jRelationship[]</a></code>
+
+                                        </td>
+                                    </tr>
+
+
+
+
+
+                        </tbody>
+                    </table>
+            </section>
+    </div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable, Logger } from &#x27;@nestjs/common&#x27;;
+import { Neo4jService } from &#x27;nest-neo4j&#x27;;
+import { int as neo4jInt } from &#x27;neo4j-driver&#x27;;
+import type { Record as Neo4jRecord } from &#x27;neo4j-driver&#x27;;
+import { PrismaService } from &#x27;../../common/prisma/prisma.service&#x27;;
+import {
+  DependencyGraph,
+  GraphNode,
+  GraphEdge,
+  CircularDependency,
+  PaginationOptions,
+  TraversalDepth,
+  Neo4jNode,
+  Neo4jRelationship,
+} from &#x27;../../common/shared/graph.interfaces&#x27;;
+
+interface RawGraphComponents {
+  fileNodes: Neo4jNode[];
+  entityNodes: Neo4jNode[];
+  relationships: Neo4jRelationship[];
+}
+
+/** Maps Neo4j relationship type strings to the service-level edge type union. */
+const EDGE_TYPE_MAP: Record&lt;string, GraphEdge[&#x27;type&#x27;]&gt; &#x3D; {
+  imports: &#x27;imports&#x27;,
+  exports: &#x27;exports&#x27;,
+  contains: &#x27;contains&#x27;,
+};
+
+@Injectable()
+export class GraphQueryService {
+  private readonly logger &#x3D; new Logger(GraphQueryService.name);
+
+  constructor(
+    private readonly neo4jService: Neo4jService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  /** Returns all nodes and edges for a repository. */
+  async getRepositoryGraph(
+    repositoryId: string,
+    options?: PaginationOptions,
+  ): Promise&lt;DependencyGraph&gt; {
+    const limit &#x3D; Math.floor(options?.limit ?? 500);
+    const offset &#x3D; Math.floor(options?.offset ?? 0);
+
+    this.logger.log(
+      &#x60;Fetching repository graph for ${repositoryId} (limit: ${limit}, offset: ${offset})&#x60;,
+    );
+
+    const result &#x3D; await this.neo4jService.read(
+      &#x60;MATCH (f:File {repositoryId: $repositoryId})
+       OPTIONAL MATCH (f)-[:CONTAINS]-&gt;(e)
+       OPTIONAL MATCH (f)-[r:IMPORTS]-&gt;(target:File)
+       WITH f, collect(DISTINCT e) as entities,
+            collect(DISTINCT {rel: r, target: target}) as imports
+       RETURN f, entities, imports
+       ORDER BY f.path SKIP $offset LIMIT $limit&#x60;,
+      { repositoryId, offset: neo4jInt(offset), limit: neo4jInt(limit) },
+    );
+
+    if (!result.records?.length) {
+      this.logger.warn(&#x60;No files found for repository ${repositoryId}&#x60;);
+      return { nodes: [], edges: [] };
+    }
+
+    const components &#x3D; this.extractCombinedRecords(
+      result.records as unknown as Neo4jRecord[],
+    );
+    return this.buildGraph(components);
+  }
+
+  /**
+   * Returns N-hop outgoing dependencies for a file.
+   *
+   * Two separate Cypher queries are intentional:
+   * collecting entities via &#x60;OPTIONAL MATCH&#x60; inside the same query that also
+   * traverses multi-hop paths produces a cross product
+   * (every entity row is duplicated for every path row). Splitting into a node query and
+   * an edge query avoids that and keeps &#x60;DISTINCT&#x60; aggregation cheap.
+   */
+  async getFileDependencies(
+    fileId: string,
+    depth: TraversalDepth &#x3D; 1,
+  ): Promise&lt;DependencyGraph&gt; {
+    this.logger.log(
+      &#x60;Fetching dependencies for file ${fileId} (depth: ${depth})&#x60;,
+    );
+
+    const depthPattern &#x3D; depth &#x3D;&#x3D;&#x3D; -1 ? &#x27;*&#x27; : &#x60;*1..${depth}&#x60;;
+
+    const [nodesResult, edgesResult] &#x3D; await Promise.all([
+      this.neo4jService.read(
+        &#x60;MATCH (f:File {id: $fileId})
+         OPTIONAL MATCH path &#x3D; (f)-[:IMPORTS${depthPattern}]-&gt;(dep:File)
+         OPTIONAL MATCH (dep)-[:CONTAINS]-&gt;(e)
+         WITH DISTINCT dep, collect(DISTINCT e) as entities
+         WHERE dep IS NOT NULL
+         RETURN dep as node, entities&#x60;,
+        { fileId },
+      ),
+      this.neo4jService.read(
+        &#x60;MATCH (f:File {id: $fileId})
+         MATCH path &#x3D; (f)-[:IMPORTS${depthPattern}]-&gt;(dep:File)
+         WITH relationships(path) as rels
+         UNWIND rels as r
+         WITH DISTINCT r, startNode(r) as source, endNode(r) as target
+         RETURN r, source, target&#x60;,
+        { fileId },
+      ),
+    ]);
+
+    const components &#x3D; this.extractSeparateRecords(
+      nodesResult.records as unknown as Neo4jRecord[],
+      edgesResult.records as unknown as Neo4jRecord[],
+    );
+    return this.buildGraph(components);
+  }
+
+  /**
+   * Returns N-hop incoming dependents for a file.
+   *
+   * Uses the same split-query pattern as &#x60;getFileDependencies&#x60; to avoid
+   * cross-product row explosion when collecting entities alongside multi-hop paths.
+   */
+  async getFileDependents(
+    fileId: string,
+    depth: TraversalDepth &#x3D; 1,
+  ): Promise&lt;DependencyGraph&gt; {
+    this.logger.log(&#x60;Fetching dependents for file ${fileId} (depth: ${depth})&#x60;);
+
+    const depthPattern &#x3D; depth &#x3D;&#x3D;&#x3D; -1 ? &#x27;*&#x27; : &#x60;*1..${depth}&#x60;;
+
+    const [nodesResult, edgesResult] &#x3D; await Promise.all([
+      this.neo4jService.read(
+        &#x60;MATCH (f:File {id: $fileId})
+         OPTIONAL MATCH path &#x3D; (dependent:File)-[:IMPORTS${depthPattern}]-&gt;(f)
+         OPTIONAL MATCH (dependent)-[:CONTAINS]-&gt;(e)
+         WITH DISTINCT dependent, collect(DISTINCT e) as entities
+         WHERE dependent IS NOT NULL
+         RETURN dependent as node, entities&#x60;,
+        { fileId },
+      ),
+      this.neo4jService.read(
+        &#x60;MATCH (f:File {id: $fileId})
+         MATCH path &#x3D; (dependent:File)-[:IMPORTS${depthPattern}]-&gt;(f)
+         WITH relationships(path) as rels
+         UNWIND rels as r
+         WITH DISTINCT r, startNode(r) as source, endNode(r) as target
+         RETURN r, source, target&#x60;,
+        { fileId },
+      ),
+    ]);
+
+    const components &#x3D; this.extractSeparateRecords(
+      nodesResult.records as unknown as Neo4jRecord[],
+      edgesResult.records as unknown as Neo4jRecord[],
+    );
+    return this.buildGraph(components);
+  }
+
+  /** Returns the total count of file nodes in a repository. */
+  async getRepositoryNodeCount(repositoryId: string): Promise&lt;number&gt; {
+    this.logger.log(&#x60;Counting nodes for repository ${repositoryId}&#x60;);
+
+    const result &#x3D; await this.neo4jService.read(
+      &#x60;MATCH (f:File {repositoryId: $repositoryId})
+       RETURN count(f) as total&#x60;,
+      { repositoryId },
+    );
+
+    const total &#x3D; result.records[0]?.get(&#x27;total&#x27;)?.toNumber() ?? 0;
+    this.logger.log(&#x60;Repository ${repositoryId} has ${total} nodes&#x60;);
+    return total;
+  }
+
+  /** Detects circular dependency cycles in the import graph. */
+  async findCircularDependencies(
+    repositoryId: string,
+  ): Promise&lt;CircularDependency[]&gt; {
+    this.logger.log(&#x60;Detecting circular dependencies for ${repositoryId}&#x60;);
+
+    const result &#x3D; await this.neo4jService.read(
+      &#x60;MATCH (f:File {repositoryId: $repositoryId})
+       MATCH path &#x3D; (f)-[:IMPORTS*]-&gt;(f)
+       WITH [node IN nodes(path) | node.id] as cycleIds,
+            [node IN nodes(path) | node.path] as cyclePaths,
+            length(path) as cycleLength
+       WHERE cycleLength &gt; 0
+       RETURN DISTINCT cycleIds, cyclePaths, cycleLength
+       ORDER BY cycleLength ASC LIMIT 100&#x60;,
+      { repositoryId },
+    );
+
+    if (!result.records?.length) {
+      this.logger.log(&#x60;No circular dependencies found for ${repositoryId}&#x60;);
+      return [];
+    }
+
+    const cycles &#x3D; result.records.map((record) &#x3D;&gt; ({
+      cycle: record.get(&#x27;cycleIds&#x27;) as string[],
+      paths: record.get(&#x27;cyclePaths&#x27;) as string[],
+      length: (
+        record.get(&#x27;cycleLength&#x27;) as { toNumber: () &#x3D;&gt; number }
+      ).toNumber(),
+    }));
+
+    this.logger.log(
+      &#x60;Found ${cycles.length} circular dependencies for ${repositoryId}&#x60;,
+    );
+    return cycles;
+  }
+
+  /** Returns files filtered by extension with their relationships. */
+  async getFilesByType(
+    repositoryId: string,
+    fileType: string,
+    options?: PaginationOptions,
+  ): Promise&lt;DependencyGraph&gt; {
+    const limit &#x3D; Math.floor(options?.limit ?? 500);
+    const offset &#x3D; Math.floor(options?.offset ?? 0);
+
+    this.logger.log(
+      &#x60;Fetching ${fileType} files for ${repositoryId} (limit: ${limit}, offset: ${offset})&#x60;,
+    );
+
+    const result &#x3D; await this.neo4jService.read(
+      &#x60;MATCH (f:File {repositoryId: $repositoryId})
+       WHERE f.type &#x3D; $fileType
+       OPTIONAL MATCH (f)-[:CONTAINS]-&gt;(e)
+       OPTIONAL MATCH (f)-[r:IMPORTS]-&gt;(target:File)
+       WITH f, collect(DISTINCT e) as entities,
+            collect(DISTINCT {rel: r, target: target}) as imports
+       RETURN f, entities, imports
+       ORDER BY f.path SKIP $offset LIMIT $limit&#x60;,
+      {
+        repositoryId,
+        fileType,
+        offset: neo4jInt(offset),
+        limit: neo4jInt(limit),
+      },
+    );
+
+    if (!result.records?.length) {
+      this.logger.warn(&#x60;No ${fileType} files found for ${repositoryId}&#x60;);
+      return { nodes: [], edges: [] };
+    }
+
+    const components &#x3D; this.extractCombinedRecords(
+      result.records as unknown as Neo4jRecord[],
+    );
+    return this.buildGraph(components);
+  }
+
+  /**
+   * Extracts graph components from combined queries that return
+   * file nodes, entities, and import relationships in each record.
+   * Used by getRepositoryGraph and getFilesByType.
+   */
+  private extractCombinedRecords(records: Neo4jRecord[]): RawGraphComponents {
+    const fileNodes: Neo4jNode[] &#x3D; [];
+    const entityNodes: Neo4jNode[] &#x3D; [];
+    const relationships: Neo4jRelationship[] &#x3D; [];
+
+    for (const record of records) {
+      const fileNode &#x3D; record.get(&#x27;f&#x27;);
+      if (fileNode) {
+        fileNodes.push(this.toNeo4jNode(fileNode));
+      }
+
+      for (const entity of record.get(&#x27;entities&#x27;) ?? []) {
+        if (entity) entityNodes.push(this.toNeo4jNode(entity));
+      }
+
+      for (const imp of record.get(&#x27;imports&#x27;) ?? []) {
+        if (imp.rel &amp;&amp; imp.target) {
+          relationships.push({
+            identity: imp.rel.identity,
+            type: imp.rel.type,
+            start: fileNode.properties.id,
+            end: imp.target.properties.id,
+            properties: imp.rel.properties,
+          });
+        }
+      }
+    }
+
+    return { fileNodes, entityNodes, relationships };
+  }
+
+  /**
+   * Extracts graph components from separate node and edge queries.
+   * Used by getFileDependencies and getFileDependents.
+   */
+  private extractSeparateRecords(
+    nodeRecords: Neo4jRecord[],
+    edgeRecords: Neo4jRecord[],
+  ): RawGraphComponents {
+    const fileNodes: Neo4jNode[] &#x3D; [];
+    const entityNodes: Neo4jNode[] &#x3D; [];
+
+    for (const record of nodeRecords) {
+      const node &#x3D; record.get(&#x27;node&#x27;);
+      if (node) fileNodes.push(this.toNeo4jNode(node));
+
+      for (const entity of record.get(&#x27;entities&#x27;) ?? []) {
+        if (entity) entityNodes.push(this.toNeo4jNode(entity));
+      }
+    }
+
+    const relationships: Neo4jRelationship[] &#x3D; [];
+    for (const record of edgeRecords) {
+      const relationship &#x3D; record.get(&#x27;r&#x27;);
+      const source &#x3D; record.get(&#x27;source&#x27;);
+      const target &#x3D; record.get(&#x27;target&#x27;);
+
+      if (relationship &amp;&amp; source &amp;&amp; target) {
+        relationships.push({
+          identity: relationship.identity,
+          type: relationship.type,
+          start: source.properties.id,
+          end: target.properties.id,
+          properties: relationship.properties,
+        });
+      }
+    }
+
+    return { fileNodes, entityNodes, relationships };
+  }
+
+  /** Normalises a raw Neo4j node record returned by the driver into a typed Neo4jNode. */
+  private toNeo4jNode(raw: any): Neo4jNode {
+    return {
+      identity: raw.identity,
+      labels: raw.labels,
+      properties: raw.properties,
+    };
+  }
+
+  /** Populates nodes with PostgreSQL metadata and converts relationships to edges. */
+  private async buildGraph(
+    components: RawGraphComponents,
+  ): Promise&lt;DependencyGraph&gt; {
+    const allNodes &#x3D; [...components.fileNodes, ...components.entityNodes];
+    const nodes &#x3D; await this.enrichNodesWithMetadata(allNodes);
+    const edges &#x3D; this.convertRelationships(components.relationships);
+
+    this.logger.log(
+      &#x60;Built graph: ${nodes.length} nodes, ${edges.length} edges&#x60;,
+    );
+    return { nodes, edges };
+  }
+
+  /**
+   * Populates Neo4j nodes with PostgreSQL metadata using bulk queries
+   * to avoid the N+1 problem.
+   */
+  private async enrichNodesWithMetadata(
+    neo4jNodes: Neo4jNode[],
+  ): Promise&lt;GraphNode[]&gt; {
+    if (!neo4jNodes.length) return [];
+
+    const neo4jIds &#x3D; neo4jNodes.map((node) &#x3D;&gt; node.properties.id).filter(Boolean);
+    if (!neo4jIds.length) return neo4jNodes.map((node) &#x3D;&gt; this.toGraphNode(node));
+
+    try {
+      const [files, entities] &#x3D; await Promise.all([
+        this.prisma.repositoryFile.findMany({
+          where: { neo4jNodeId: { in: neo4jIds } },
+          select: {
+            id: true,
+            neo4jNodeId: true,
+            annotations: true,
+            claudeSummary: true,
+            filePath: true,
+            fileName: true,
+          },
+        }),
+        this.prisma.codeEntity.findMany({
+          where: { repositoryFile: { neo4jNodeId: { in: neo4jIds } } },
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            startLine: true,
+            endLine: true,
+            annotations: true,
+          },
+        }),
+      ]);
+
+      const fileMap &#x3D; new Map(files.map((file) &#x3D;&gt; [file.neo4jNodeId, file]));
+      const entityMap &#x3D; new Map(
+        entities
+          .map((entity) &#x3D;&gt; {
+            try {
+              const annotations &#x3D; entity.annotations
+                ? JSON.parse(entity.annotations)
+                : {};
+              return [annotations.neo4jNodeId, entity] as const;
+            } catch {
+              return [null, entity] as const;
+            }
+          })
+          .filter(([id]) &#x3D;&gt; id !&#x3D;&#x3D; null),
+      );
+
+      return neo4jNodes.map((node) &#x3D;&gt; {
+        const isFile &#x3D; node.labels.includes(&#x27;File&#x27;);
+        const neo4jId &#x3D; node.properties.id;
+
+        if (isFile) {
+          const meta &#x3D; fileMap.get(neo4jId);
+          let annotations &#x3D; {};
+          if (meta?.annotations) {
+            try {
+              annotations &#x3D; JSON.parse(meta.annotations);
+            } catch {}
+          }
+
+          return {
+            id: neo4jId,
+            label: node.properties.name || node.properties.path || &#x27;Unknown&#x27;,
+            type: &#x27;file&#x27; as const,
+            data: {
+              neo4jNodeId: neo4jId,
+              path: node.properties.path,
+              name: node.properties.name,
+              fileType: node.properties.type,
+              linesOfCode: node.properties.linesOfCode,
+              repositoryFileId: meta?.id,
+              annotations,
+              claudeSummary: meta?.claudeSummary || undefined,
+            },
+          };
+        }
+
+        const entityType &#x3D; this.getEntityType(node.labels);
+        const entityMeta &#x3D; entityMap.get(neo4jId);
+
+        return {
+          id: neo4jId,
+          label: node.properties.name || &#x27;Unknown&#x27;,
+          type: entityType,
+          data: {
+            neo4jNodeId: neo4jId,
+            name: node.properties.name,
+            startLine: node.properties.startLine,
+            endLine: node.properties.endLine,
+            entityType,
+            repositoryFileId: entityMeta?.id,
+          },
+        };
+      });
+    } catch (error) {
+      this.logger.error(&#x27;Failed to enrich nodes with metadata&#x27;, error);
+      return neo4jNodes.map((n) &#x3D;&gt; this.toGraphNode(n));
+    }
+  }
+
+  /** Converts a Neo4j node to a GraphNode without PostgreSQL metadata. */
+  private toGraphNode(node: Neo4jNode): GraphNode {
+    const isFile &#x3D; node.labels.includes(&#x27;File&#x27;);
+    const neo4jId &#x3D; node.properties.id;
+
+    if (isFile) {
+      return {
+        id: neo4jId,
+        label: node.properties.name || node.properties.path || &#x27;Unknown&#x27;,
+        type: &#x27;file&#x27;,
+        data: {
+          neo4jNodeId: neo4jId,
+          path: node.properties.path,
+          name: node.properties.name,
+          fileType: node.properties.type,
+          linesOfCode: node.properties.linesOfCode,
+        },
+      };
+    }
+
+    const entityType &#x3D; this.getEntityType(node.labels);
+    return {
+      id: neo4jId,
+      label: node.properties.name || &#x27;Unknown&#x27;,
+      type: entityType,
+      data: {
+        neo4jNodeId: neo4jId,
+        name: node.properties.name,
+        startLine: node.properties.startLine,
+        endLine: node.properties.endLine,
+        entityType,
+      },
+    };
+  }
+
+  /** Converts Neo4j relationships to GraphEdge format. */
+  private convertRelationships(
+    relationships: Neo4jRelationship[],
+  ): GraphEdge[] {
+    return relationships.map((relationship) &#x3D;&gt; {
+      const edgeType &#x3D; EDGE_TYPE_MAP[relationship.type.toLowerCase()] ?? &#x27;imports&#x27;;
+      const sourceId &#x3D; relationship.start.toString();
+      const targetId &#x3D; relationship.end.toString();
+
+      const edge: GraphEdge &#x3D; {
+        id: &#x60;${sourceId}-${edgeType}-${targetId}&#x60;,
+        source: sourceId,
+        target: targetId,
+        type: edgeType,
+      };
+
+      if (relationship.properties &amp;&amp; Object.keys(relationship.properties).length &gt; 0) {
+        edge.data &#x3D; {
+          specifiers: relationship.properties.specifiers,
+          label: edgeType,
+        };
+      }
+
+      return edge;
+    });
+  }
+
+  /** Extracts the entity type label from Neo4j node labels. */
+  private getEntityType(labels: string[]): &#x27;function&#x27; | &#x27;class&#x27; | &#x27;interface&#x27; {
+    const match &#x3D; labels.find((label) &#x3D;&gt;
+      [&#x27;Function&#x27;, &#x27;Class&#x27;, &#x27;Interface&#x27;].includes(label),
+    );
+    return (
+      (match?.toLowerCase() as &#x27;function&#x27; | &#x27;class&#x27; | &#x27;interface&#x27;) || &#x27;function&#x27;
+    );
+  }
+}
+</code></pre>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'interface';
+            var COMPODOC_CURRENT_PAGE_URL = 'RawGraphComponents.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

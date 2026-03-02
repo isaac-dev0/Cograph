@@ -9,13 +9,7 @@ import { MCPClientService } from '../mcp-client.service';
 export class MCPSummaryService {
   constructor(private readonly mcpClient: MCPClientService) {}
 
-  /**
-   * Generates a summary for a file using the MCP generate-summary tool.
-   * @param fileContent The raw content of the file
-   * @param filePath The path of the file (for context)
-   * @returns The generated summary text
-   */
-  async generateFileSummary(
+  async summariseFile(
     fileContent: string,
     filePath: string,
   ): Promise<string> {

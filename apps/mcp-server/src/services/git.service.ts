@@ -10,13 +10,13 @@ export class GitService {
   }
 
   async cleanupStaleClones(repositoryId: string, maxAgeMs = 24 * 60 * 60 * 1000): Promise<void> {
-    const dir = path.join(os.tmpdir(), 'cograph', 'repos', repositoryId);
-    const entries = await fs.readdir(dir).catch(() => []);
+    const directory = path.join(os.tmpdir(), 'cograph', 'repos', repositoryId);
+    const entries = await fs.readdir(directory).catch(() => []);
     const cutoff = Date.now() - maxAgeMs;
     await Promise.all(
       entries
         .filter((entry) => parseInt(entry) < cutoff)
-        .map((entry) => this.deleteDirectory(path.join(dir, entry))),
+        .map((entry) => this.deleteDirectory(path.join(directory, entry))),
     );
   }
 

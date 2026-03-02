@@ -9,6 +9,13 @@ import type { CreateAnnotationInput, UpdateAnnotationInput } from 'src/mcp/analy
 export class AnnotationsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async assertFileExists(fileId: string): Promise<void> {
+    const file = await this.prisma.repositoryFile.findUnique({ where: { id: fileId } });
+    if (!file) {
+      throw new NotFoundException(`RepositoryFile with id ${fileId} not found`);
+    }
+  }
+
   /** Maps a Prisma Annotation row to the FileAnnotation GraphQL type. */
   private toFileAnnotation(row: Annotation): FileAnnotation {
     const author: AnnotationAuthor = { id: row.authorId, name: row.authorName };
@@ -24,7 +31,6 @@ export class AnnotationsService {
     };
   }
 
-  /** Retrieves all annotations for every file in a repository, ordered by creation date descending. */
   async getRepositoryAnnotations(repositoryId: string): Promise<DocumentAnnotation[]> {
     const rows = await this.prisma.annotation.findMany({
       where: { file: { repositoryId } },
@@ -40,13 +46,8 @@ export class AnnotationsService {
     }));
   }
 
-  /** Retrieves all annotations for a file. */
   async getAnnotations(fileId: string): Promise<FileAnnotation[]> {
-    const file = await this.prisma.repositoryFile.findUnique({ where: { id: fileId } });
-
-    if (!file) {
-      throw new NotFoundException(`RepositoryFile with id ${fileId} not found`);
-    }
+    await this.assertFileExists(fileId);
 
     const rows = await this.prisma.annotation.findMany({
       where: { fileId },
@@ -56,17 +57,12 @@ export class AnnotationsService {
     return rows.map((row) => this.toFileAnnotation(row));
   }
 
-  /** Creates a new annotation on a file. */
   async createAnnotation(
     fileId: string,
     input: CreateAnnotationInput,
     author: AnnotationAuthor,
   ): Promise<FileAnnotation> {
-    const file = await this.prisma.repositoryFile.findUnique({ where: { id: fileId } });
-
-    if (!file) {
-      throw new NotFoundException(`RepositoryFile with id ${fileId} not found`);
-    }
+    await this.assertFileExists(fileId);
 
     const row = await this.prisma.annotation.create({
       data: {

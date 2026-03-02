@@ -1,0 +1,1035 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>api documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+          <script>
+              // --- Iframe navigation tracking for Template Playground ---
+              function sendCurrentUrlToParent() {
+                  if (window.parent && window.parent !== window) {
+                      window.parent.postMessage({
+                          type: 'compodoc-iframe-navigate',
+                          url: window.location.pathname + window.location.hash
+                      }, '*');
+                  }
+              }
+              window.addEventListener('hashchange', sendCurrentUrlToParent, false);
+              window.addEventListener('popstate', sendCurrentUrlToParent, false);
+              window.addEventListener('DOMContentLoaded', sendCurrentUrlToParent, false);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">api documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content miscellaneous-variables">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Miscellaneous</li>
+  <li class="breadcrumb-item">Variables</li>
+</ol>
+
+<section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <ul class="index-list">
+                        <li>
+                            <a href="#ANALYSE_REPOSITORY_MUTATION" title="test/helpers/graphql-client.ts" ><b>ANALYSE_REPOSITORY_MUTATION</b>&nbsp;&nbsp;&nbsp;(test/.../graphql-client.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#ANALYSIS_COOLDOWN_MS" title="src/mcp/analysis/analysis.service.ts" ><b>ANALYSIS_COOLDOWN_MS</b>&nbsp;&nbsp;&nbsp;(src/.../analysis.service.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#BATCH_SIZE" title="src/mcp/analysis/mcp-analysis.service.ts" ><b>BATCH_SIZE</b>&nbsp;&nbsp;&nbsp;(src/.../mcp-analysis.service.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#cachedApp" title="test/helpers/test-app.ts" ><b>cachedApp</b>&nbsp;&nbsp;&nbsp;(test/.../test-app.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#CurrentUser" title="src/auth/current-user.decorator.ts" ><b>CurrentUser</b>&nbsp;&nbsp;&nbsp;(src/.../current-user.decorator.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#DEFAULT_AVATAR_URL" title="src/common/constants.ts" ><b>DEFAULT_AVATAR_URL</b>&nbsp;&nbsp;&nbsp;(src/.../constants.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#EDGE_TYPE_MAP" title="src/graph/services/graph-query.service.ts" ><b>EDGE_TYPE_MAP</b>&nbsp;&nbsp;&nbsp;(src/.../graph-query.service.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#EXTENSIONS" title="src/mcp/analysis/analysis.service.ts" ><b>EXTENSIONS</b>&nbsp;&nbsp;&nbsp;(src/.../analysis.service.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#GET_ANALYSIS_JOB_QUERY" title="test/helpers/graphql-client.ts" ><b>GET_ANALYSIS_JOB_QUERY</b>&nbsp;&nbsp;&nbsp;(test/.../graphql-client.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#GET_REPOSITORY_FILE_QUERY" title="test/helpers/graphql-client.ts" ><b>GET_REPOSITORY_FILE_QUERY</b>&nbsp;&nbsp;&nbsp;(test/.../graphql-client.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#GET_REPOSITORY_FILES_QUERY" title="test/helpers/graphql-client.ts" ><b>GET_REPOSITORY_FILES_QUERY</b>&nbsp;&nbsp;&nbsp;(test/.../graphql-client.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#importEsm" title="src/mcp/mcp-client.service.ts" ><b>importEsm</b>&nbsp;&nbsp;&nbsp;(src/.../mcp-client.service.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#INVALID_REPO" title="test/fixtures/test-repositories.ts" ><b>INVALID_REPO</b>&nbsp;&nbsp;&nbsp;(test/.../test-repositories.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#LARGE_REPO" title="test/fixtures/test-repositories.ts" ><b>LARGE_REPO</b>&nbsp;&nbsp;&nbsp;(test/.../test-repositories.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#MALFORMED_URL_REPO" title="test/fixtures/test-repositories.ts" ><b>MALFORMED_URL_REPO</b>&nbsp;&nbsp;&nbsp;(test/.../test-repositories.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#MCP_SERVER_PATH" title="src/mcp/mcp-client.service.ts" ><b>MCP_SERVER_PATH</b>&nbsp;&nbsp;&nbsp;(src/.../mcp-client.service.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#MIXED_LANG_REPO" title="test/fixtures/test-repositories.ts" ><b>MIXED_LANG_REPO</b>&nbsp;&nbsp;&nbsp;(test/.../test-repositories.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#SMALL_TS_REPO" title="test/fixtures/test-repositories.ts" ><b>SMALL_TS_REPO</b>&nbsp;&nbsp;&nbsp;(test/.../test-repositories.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#SMALL_TS_REPO_ALT" title="test/fixtures/test-repositories.ts" ><b>SMALL_TS_REPO_ALT</b>&nbsp;&nbsp;&nbsp;(test/.../test-repositories.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#TERMINAL_STATUSES" title="test/helpers/polling-helper.ts" ><b>TERMINAL_STATUSES</b>&nbsp;&nbsp;&nbsp;(test/.../polling-helper.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#UUID_PATTERN" title="src/repositories/services/repository-file.service.ts" ><b>UUID_PATTERN</b>&nbsp;&nbsp;&nbsp;(src/.../repository-file.service.ts)</a>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+    <h3>test/helpers/graphql-client.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="ANALYSE_REPOSITORY_MUTATION"></a>
+                    <span class="name">
+                        <span ><b>ANALYSE_REPOSITORY_MUTATION</b></span>
+                        <a href="#ANALYSE_REPOSITORY_MUTATION"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&#x60;
+  mutation AnalyseRepository($repositoryId: ID!) {
+    analyseRepository(repositoryId: $repositoryId) {
+      id
+      repositoryId
+      status
+      progress
+      filesAnalysed
+      totalFiles
+      errorMessage
+      errorDetails
+      startedAt
+      completedAt
+      createdAt
+      updatedAt
+    }
+  }
+&#x60;</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="GET_ANALYSIS_JOB_QUERY"></a>
+                    <span class="name">
+                        <span ><b>GET_ANALYSIS_JOB_QUERY</b></span>
+                        <a href="#GET_ANALYSIS_JOB_QUERY"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&#x60;
+  query GetAnalysisJob($id: ID!) {
+    analysisJob(id: $id) {
+      id
+      repositoryId
+      status
+      progress
+      filesAnalysed
+      totalFiles
+      errorMessage
+      errorDetails
+      startedAt
+      completedAt
+      createdAt
+      updatedAt
+    }
+  }
+&#x60;</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="GET_REPOSITORY_FILE_QUERY"></a>
+                    <span class="name">
+                        <span ><b>GET_REPOSITORY_FILE_QUERY</b></span>
+                        <a href="#GET_REPOSITORY_FILE_QUERY"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&#x60;
+  query GetRepositoryFile($id: ID!) {
+    repositoryFile(id: $id) {
+      id
+      repositoryId
+      filePath
+      fileName
+      fileType
+      linesOfCode
+      neo4jNodeId
+      annotations
+      claudeSummary
+      createdAt
+      updatedAt
+      codeEntities {
+        id
+        repositoryFileId
+        name
+        type
+        startLine
+        endLine
+        annotations
+        createdAt
+        updatedAt
+      }
+    }
+  }
+&#x60;</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="GET_REPOSITORY_FILES_QUERY"></a>
+                    <span class="name">
+                        <span ><b>GET_REPOSITORY_FILES_QUERY</b></span>
+                        <a href="#GET_REPOSITORY_FILES_QUERY"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&#x60;
+  query GetRepositoryFiles($repositoryId: ID!) {
+    repositoryFiles(repositoryId: $repositoryId) {
+      id
+      repositoryId
+      filePath
+      fileName
+      fileType
+      linesOfCode
+      neo4jNodeId
+      annotations
+      claudeSummary
+      createdAt
+      updatedAt
+      codeEntities {
+        id
+        repositoryFileId
+        name
+        type
+        startLine
+        endLine
+        annotations
+        createdAt
+        updatedAt
+      }
+    }
+  }
+&#x60;</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/mcp/analysis/analysis.service.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="ANALYSIS_COOLDOWN_MS"></a>
+                    <span class="name">
+                        <span ><b>ANALYSIS_COOLDOWN_MS</b></span>
+                        <a href="#ANALYSIS_COOLDOWN_MS"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>5 * 60 * 1_000</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="EXTENSIONS"></a>
+                    <span class="name">
+                        <span ><b>EXTENSIONS</b></span>
+                        <a href="#EXTENSIONS"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>[]</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>[&#x27;.ts&#x27;, &#x27;.tsx&#x27;, &#x27;.js&#x27;, &#x27;.jsx&#x27;]</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/mcp/analysis/mcp-analysis.service.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="BATCH_SIZE"></a>
+                    <span class="name">
+                        <span ><b>BATCH_SIZE</b></span>
+                        <a href="#BATCH_SIZE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>miscellaneous</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>5</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>test/helpers/test-app.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="cachedApp"></a>
+                    <span class="name">
+                        <span ><b>cachedApp</b></span>
+                        <a href="#cachedApp"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>INestApplication | null</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>null</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/auth/current-user.decorator.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="CurrentUser"></a>
+                    <span class="name">
+                        <span ><b>CurrentUser</b></span>
+                        <a href="#CurrentUser"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>createParamDecorator(
+  (_data: unknown, context: ExecutionContext) &#x3D;&gt; {
+    const ctx &#x3D; GqlExecutionContext.create(context);
+    return ctx.getContext().req.user;
+  },
+)</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/common/constants.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="DEFAULT_AVATAR_URL"></a>
+                    <span class="name">
+                        <span ><b>DEFAULT_AVATAR_URL</b></span>
+                        <a href="#DEFAULT_AVATAR_URL"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&#x27;https://notion-avatar.app/api/svg/eyJmYWNlIjowLCJub3NlIjoxMCwibW91dGgiOjgsImV5ZXMiOjgsImV5ZWJyb3dzIjo2LCJnbGFzc2VzIjo4LCJoYWlyIjo0LCJhY2Nlc3NvcmllcyI6MCwiZGV0YWlscyI6MCwiYmVhcmQiOjAsImhhbGxvd2VlbiI6MywiZmxpcCI6MCwiY29sb3IiOiJyZ2JhKDI1NSwgMCwgMCwgMCkiLCJzaGFwZSI6Im5vbmUifQ&#x3D;&#x3D;&#x27;</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/graph/services/graph-query.service.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="EDGE_TYPE_MAP"></a>
+                    <span class="name">
+                        <span ><b>EDGE_TYPE_MAP</b></span>
+                        <a href="#EDGE_TYPE_MAP"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>Record&lt;string, unknown&gt;</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+  imports: &#x27;imports&#x27;,
+  exports: &#x27;exports&#x27;,
+  contains: &#x27;contains&#x27;,
+}</code>
+                    </td>
+                </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-description"><p>Maps Neo4j relationship type strings to the service-level edge type union.</p>
+</div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/mcp/mcp-client.service.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="importEsm"></a>
+                    <span class="name">
+                        <span ><b>importEsm</b></span>
+                        <a href="#importEsm"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(specifier: string) &#x3D;&gt;
+  new Function(&#x27;specifier&#x27;, &#x27;return import(specifier)&#x27;)(specifier)</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="MCP_SERVER_PATH"></a>
+                    <span class="name">
+                        <span ><b>MCP_SERVER_PATH</b></span>
+                        <a href="#MCP_SERVER_PATH"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>join(__dirname, &#x27;../../../mcp-server/build/index.js&#x27;)</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>test/fixtures/test-repositories.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="INVALID_REPO"></a>
+                    <span class="name">
+                        <span ><b>INVALID_REPO</b></span>
+                        <a href="#INVALID_REPO"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../interfaces/TestRepository.html" target="_self" >TestRepository</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+  name: &#x27;invalid-test&#x27;,
+  url: &#x27;https://github.com/nonexistent-org-12345/nonexistent-repo-67890&#x27;,
+  description: &#x27;Non-existent repository for error testing&#x27;,
+  expectedFileCount: { min: 0, max: 0 },
+  expectedFileTypes: [],
+}</code>
+                    </td>
+                </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-description"><p>Invalid repository URL for error testing.
+This repository should not exist.</p>
+</div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="LARGE_REPO"></a>
+                    <span class="name">
+                        <span ><b>LARGE_REPO</b></span>
+                        <a href="#LARGE_REPO"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../interfaces/TestRepository.html" target="_self" >TestRepository</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+  name: &#x27;large-test&#x27;,
+  url: &#x27;https://github.com/date-fns/date-fns&#x27;,
+  description: &#x27;Large JavaScript/TypeScript utility library with 100+ files&#x27;,
+  expectedFileCount: { min: 100, max: 2000 },
+  expectedFileTypes: [&#x27;typescript&#x27;, &#x27;javascript&#x27;],
+}</code>
+                    </td>
+                </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-description"><p>Large repository for performance testing.
+date-fns has many utility functions across multiple files.</p>
+</div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="MALFORMED_URL_REPO"></a>
+                    <span class="name">
+                        <span ><b>MALFORMED_URL_REPO</b></span>
+                        <a href="#MALFORMED_URL_REPO"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../interfaces/TestRepository.html" target="_self" >TestRepository</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+  name: &#x27;malformed-url-test&#x27;,
+  url: &#x27;not-a-valid-url&#x27;,
+  description: &#x27;Malformed URL for error testing&#x27;,
+  expectedFileCount: { min: 0, max: 0 },
+  expectedFileTypes: [],
+}</code>
+                    </td>
+                </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-description"><p>Malformed URL for error testing.</p>
+</div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="MIXED_LANG_REPO"></a>
+                    <span class="name">
+                        <span ><b>MIXED_LANG_REPO</b></span>
+                        <a href="#MIXED_LANG_REPO"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../interfaces/TestRepository.html" target="_self" >TestRepository</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+  name: &#x27;mixed-lang-test&#x27;,
+  url: &#x27;https://github.com/chalk/chalk&#x27;,
+  description: &#x27;Repository with mixed JavaScript and TypeScript files&#x27;,
+  expectedFileCount: { min: 3, max: 50 },
+  expectedFileTypes: [&#x27;javascript&#x27;, &#x27;typescript&#x27;],
+}</code>
+                    </td>
+                </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-description"><p>Medium-sized repository with mixed JS/TS files.
+chalk is a popular terminal string styling library.</p>
+</div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="SMALL_TS_REPO"></a>
+                    <span class="name">
+                        <span ><b>SMALL_TS_REPO</b></span>
+                        <a href="#SMALL_TS_REPO"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../interfaces/TestRepository.html" target="_self" >TestRepository</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+  name: &#x27;small-ts-test&#x27;,
+  url: &#x27;https://github.com/jonschlinkert/is-number&#x27;,
+  description: &#x27;Small TypeScript/JavaScript package for testing basic analysis&#x27;,
+  expectedFileCount: { min: 1, max: 15 },
+  expectedFileTypes: [&#x27;typescript&#x27;, &#x27;javascript&#x27;],
+}</code>
+                    </td>
+                </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-description"><p>Small TypeScript/JavaScript repository for basic testing.
+is-number is a simple, stable package with few files.</p>
+</div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="SMALL_TS_REPO_ALT"></a>
+                    <span class="name">
+                        <span ><b>SMALL_TS_REPO_ALT</b></span>
+                        <a href="#SMALL_TS_REPO_ALT"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../interfaces/TestRepository.html" target="_self" >TestRepository</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>{
+  name: &#x27;small-ts-alt-test&#x27;,
+  url: &#x27;https://github.com/jonschlinkert/kind-of&#x27;,
+  description: &#x27;Small JavaScript package for concurrent testing&#x27;,
+  expectedFileCount: { min: 1, max: 15 },
+  expectedFileTypes: [&#x27;javascript&#x27;],
+}</code>
+                    </td>
+                </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-description"><p>Alternative small repo for concurrent testing.
+kind-of is another simple utility package.</p>
+</div>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+</section>
+    <h3>test/helpers/polling-helper.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="TERMINAL_STATUSES"></a>
+                    <span class="name">
+                        <span ><b>TERMINAL_STATUSES</b></span>
+                        <a href="#TERMINAL_STATUSES"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="../miscellaneous/typealiases.html#AnalysisStatus" target="_self" >AnalysisStatus[]</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>[&#x27;COMPLETED&#x27;, &#x27;FAILED&#x27;]</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/repositories/services/repository-file.service.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="UUID_PATTERN"></a>
+                    <span class="name">
+                        <span ><b>UUID_PATTERN</b></span>
+                        <a href="#UUID_PATTERN"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'miscellaneous-variables';
+            var COMPODOC_CURRENT_PAGE_URL = 'variables.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

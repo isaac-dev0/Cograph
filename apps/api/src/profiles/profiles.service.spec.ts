@@ -13,7 +13,7 @@ const mockPrismaService = {
   },
 };
 
-const baseProfile = {
+const profile = {
   id: 'profile-1',
   userId: 'supabase-uid-1',
   email: 'alice@example.com',
@@ -52,7 +52,7 @@ describe('ProfileService', () => {
     });
 
     it('upserts the profile using the correct create payload including the default avatar', async () => {
-      mockPrismaService.profile.upsert.mockResolvedValue(baseProfile);
+      mockPrismaService.profile.upsert.mockResolvedValue(profile);
 
       const result = await service.syncProfile({
         userId: 'supabase-uid-1',
@@ -79,7 +79,7 @@ describe('ProfileService', () => {
     });
 
     it('returns the profile when it exists', async () => {
-      mockPrismaService.profile.findUnique.mockResolvedValue(baseProfile);
+      mockPrismaService.profile.findUnique.mockResolvedValue(profile);
 
       const result = await service.findById('profile-1');
 
@@ -95,7 +95,7 @@ describe('ProfileService', () => {
     });
 
     it('returns the profile when a matching Supabase UID is found', async () => {
-      mockPrismaService.profile.findUnique.mockResolvedValue(baseProfile);
+      mockPrismaService.profile.findUnique.mockResolvedValue(profile);
 
       const result = await service.findByUserId('supabase-uid-1');
 
@@ -105,7 +105,7 @@ describe('ProfileService', () => {
 
   describe('findAll', () => {
     it('returns profiles ordered alphabetically by display name', async () => {
-      mockPrismaService.profile.findMany.mockResolvedValue([baseProfile]);
+      mockPrismaService.profile.findMany.mockResolvedValue([profile]);
 
       await service.findAll();
 
@@ -117,7 +117,7 @@ describe('ProfileService', () => {
 
   describe('searchByEmail', () => {
     it('trims whitespace and lowercases the query before searching', async () => {
-      mockPrismaService.profile.findUnique.mockResolvedValue(baseProfile);
+      mockPrismaService.profile.findUnique.mockResolvedValue(profile);
 
       await service.searchByEmail('  Alice@Example.COM  ');
 
@@ -152,7 +152,7 @@ describe('ProfileService', () => {
     });
 
     it('returns the updated profile on success', async () => {
-      mockPrismaService.profile.update.mockResolvedValue({ ...baseProfile, job: 'Engineer' });
+      mockPrismaService.profile.update.mockResolvedValue({ ...profile, job: 'Engineer' });
 
       const result = await service.update('profile-1', { job: 'Engineer' });
 

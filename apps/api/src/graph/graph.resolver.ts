@@ -11,10 +11,7 @@ import { TraversalDepth } from '../common/shared/graph.interfaces';
 export class GraphResolver {
   constructor(private readonly graphQueryService: GraphQueryService) {}
 
-  @Query(() => DependencyGraph, {
-    name: 'repositoryGraph',
-    description: 'Returns the complete dependency graph for a repository with all nodes and edges. Supports pagination and filtering.',
-  })
+  @Query(() => DependencyGraph, { name: 'repositoryGraph' })
   async repositoryGraph(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
     @Args('options', { type: () => GraphOptionsInput, nullable: true }) options?: GraphOptionsInput,
@@ -27,10 +24,7 @@ export class GraphResolver {
     return this.convertToGraphQLFormat(result);
   }
 
-  @Query(() => DependencyGraph, {
-    name: 'fileDependencies',
-    description: 'Returns all files that the specified file depends on (imports). Supports depth control for N-hop traversal.',
-  })
+  @Query(() => DependencyGraph, { name: 'fileDependencies' })
   async fileDependencies(
     @Args('fileId', { type: () => ID }) fileId: string,
     @Args('options', { type: () => GraphOptionsInput, nullable: true }) options?: GraphOptionsInput,
@@ -41,10 +35,7 @@ export class GraphResolver {
     return this.convertToGraphQLFormat(result);
   }
 
-  @Query(() => DependencyGraph, {
-    name: 'fileDependents',
-    description: 'Returns all files that depend on (import) the specified file. Supports depth control for N-hop traversal.',
-  })
+  @Query(() => DependencyGraph, { name: 'fileDependents' })
   async fileDependents(
     @Args('fileId', { type: () => ID }) fileId: string,
     @Args('options', { type: () => GraphOptionsInput, nullable: true }) options?: GraphOptionsInput,
@@ -55,30 +46,21 @@ export class GraphResolver {
     return this.convertToGraphQLFormat(result);
   }
 
-  @Query(() => Number, {
-    name: 'repositoryNodeCount',
-    description: 'Returns the total number of file nodes in the repository.',
-  })
+  @Query(() => Number, { name: 'repositoryNodeCount' })
   async repositoryNodeCount(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
   ): Promise<number> {
     return this.graphQueryService.getRepositoryNodeCount(repositoryId);
   }
 
-  @Query(() => [CircularDependency], {
-    name: 'circularDependencies',
-    description: 'Detects and returns all circular dependencies (import cycles) in the repository. Limited to 100 results.',
-  })
+  @Query(() => [CircularDependency], { name: 'circularDependencies' })
   async circularDependencies(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
   ): Promise<CircularDependency[]> {
     return this.graphQueryService.findCircularDependencies(repositoryId);
   }
 
-  @Query(() => DependencyGraph, {
-    name: 'filesByType',
-    description: 'Returns files filtered by extension (e.g., "ts", "tsx", "js") with their dependencies.',
-  })
+  @Query(() => DependencyGraph, { name: 'filesByType' })
   async filesByType(
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
     @Args('fileType', { type: () => String }) fileType: string,
@@ -92,18 +74,26 @@ export class GraphResolver {
     return this.convertToGraphQLFormat(result);
   }
 
-  /**
-   * Helper to convert service response to GraphQL format
-   * Maps lowercase type strings to uppercase enum values
-   * Stringifies data objects to JSON strings
-   */
   private convertToGraphQLFormat(
     serviceResult: Awaited<ReturnType<typeof this.graphQueryService.getRepositoryGraph>>,
   ): DependencyGraph {
+    const NODE_TYPE: Record<string, NodeType> = {
+      file: NodeType.FILE,
+      function: NodeType.FUNCTION,
+      class: NodeType.CLASS,
+      interface: NodeType.INTERFACE,
+    };
+
+    const EDGE_TYPE: Record<string, EdgeType> = {
+      imports: EdgeType.IMPORTS,
+      exports: EdgeType.EXPORTS,
+      contains: EdgeType.CONTAINS,
+    };
+
     const nodes: GraphNode[] = serviceResult.nodes.map((node) => ({
       id: node.id,
       label: node.label,
-      type: this.mapNodeType(node.type),
+      type: NODE_TYPE[node.type.toLowerCase()] ?? NodeType.FILE,
       data: JSON.stringify(node.data),
     }));
 
@@ -111,50 +101,13 @@ export class GraphResolver {
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      type: this.mapEdgeType(edge.type),
+      type: EDGE_TYPE[edge.type.toLowerCase()] ?? EdgeType.IMPORTS,
       data: edge.data ? JSON.stringify(edge.data) : undefined,
     }));
 
     return { nodes, edges };
   }
 
-  /**
-   * Map lowercase node type to GraphQL enum
-   */
-  private mapNodeType(type: string): NodeType {
-    switch (type.toLowerCase()) {
-      case 'file':
-        return NodeType.FILE;
-      case 'function':
-        return NodeType.FUNCTION;
-      case 'class':
-        return NodeType.CLASS;
-      case 'interface':
-        return NodeType.INTERFACE;
-      default:
-        return NodeType.FILE;
-    }
-  }
-
-  /**
-   * Map lowercase edge type to GraphQL enum
-   */
-  private mapEdgeType(type: string): EdgeType {
-    switch (type.toLowerCase()) {
-      case 'imports':
-        return EdgeType.IMPORTS;
-      case 'exports':
-        return EdgeType.EXPORTS;
-      case 'contains':
-        return EdgeType.CONTAINS;
-      default:
-        return EdgeType.IMPORTS;
-    }
-  }
-
-  /**
-   * Parse and validate traversal depth from options
-   */
   private parseDepth(maxDepth?: number): TraversalDepth {
     if (maxDepth === undefined || maxDepth === null) {
       return 1;

@@ -1,0 +1,1684 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>api documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+          <script>
+              // --- Iframe navigation tracking for Template Playground ---
+              function sendCurrentUrlToParent() {
+                  if (window.parent && window.parent !== window) {
+                      window.parent.postMessage({
+                          type: 'compodoc-iframe-navigate',
+                          url: window.location.pathname + window.location.hash
+                      }, '*');
+                  }
+              }
+              window.addEventListener('hashchange', sendCurrentUrlToParent, false);
+              window.addEventListener('popstate', sendCurrentUrlToParent, false);
+              window.addEventListener('DOMContentLoaded', sendCurrentUrlToParent, false);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">api documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content injectable">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Injectables</li>
+  <li class="breadcrumb-item" >Neo4jGraphService</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" 
+                class="nav-link"
+                class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" 
+                class="nav-link"
+                
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info">
+        <p class="comment">
+            <h3>File</h3>
+        </p>
+        <p class="comment">
+            <code>src/graph/services/neo4j-graph.service.ts</code>
+        </p>
+
+
+
+
+
+            <section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Properties</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Readonly</span>
+                                <a href="#logger" >logger</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Static</span>
+                                    <span class="modifier">Readonly</span>
+                                <a href="#VALID_ENTITY_TYPES" >VALID_ENTITY_TYPES</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Methods</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#bulkCreateFileNodes" >bulkCreateFileNodes</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#bulkCreateImportRelationships" >bulkCreateImportRelationships</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#createEntityNode" >createEntityNode</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#createExportRelationship" >createExportRelationship</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#createFileNode" >createFileNode</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#createImportRelationship" >createImportRelationship</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#deleteRepositoryGraph" >deleteRepositoryGraph</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#ensureIndexes" >ensureIndexes</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getFileNode" >getFileNode</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getRepositoryGraph" >getRepositoryGraph</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#onModuleInit" >onModuleInit</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+            <section data-compodoc="block-constructor">
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(neo4jService: Neo4jService)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="7" class="link-to-prism">src/graph/services/neo4j-graph.service.ts:7</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>neo4jService</td>
+                                                  
+                                                        <td>
+                                                                    <code>Neo4jService</code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
+
+            <section data-compodoc="block-methods">
+    
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="bulkCreateFileNodes"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>bulkCreateFileNodes</b></span>
+                        <a href="#bulkCreateFileNodes"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>bulkCreateFileNodes(files: <a href="../interfaces/FileNodeData.html" target="_self">FileNodeData[]</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="348"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:348</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Bulk creates file nodes for better performance when creating many files.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>files</td>
+                                            <td>
+                                                            <code><a href="../interfaces/FileNodeData.html" target="_self" >FileNodeData[]</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>Array of file node data</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;number&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>Number of files created</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="bulkCreateImportRelationships"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>bulkCreateImportRelationships</b></span>
+                        <a href="#bulkCreateImportRelationships"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>bulkCreateImportRelationships(imports: <a href="../interfaces/ImportRelationshipData.html" target="_self">ImportRelationshipData[]</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="382"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:382</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Bulk creates import relationships for better performance.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>imports</td>
+                                            <td>
+                                                            <code><a href="../interfaces/ImportRelationshipData.html" target="_self" >ImportRelationshipData[]</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>Array of import relationship data</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;number&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>Number of relationships created</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createEntityNode"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>createEntityNode</b></span>
+                        <a href="#createEntityNode"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createEntityNode(data: <a href="../interfaces/EntityNodeData.html" target="_self">EntityNodeData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="99"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:99</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates an Entity node (Function, Class, or Interface) in Neo4j and links it to a file.
+Creates a CONTAINS relationship from the file to the entity.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>data</td>
+                                            <td>
+                                                            <code><a href="../interfaces/EntityNodeData.html" target="_self" >EntityNodeData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>Entity node data including id, fileId, name, type, startLine, and endLine</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>The created entity node</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createExportRelationship"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>createExportRelationship</b></span>
+                        <a href="#createExportRelationship"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createExportRelationship(fileId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, entityId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="311"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:311</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates an EXPORTS relationship from a file to an entity it exports.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>fileId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>The file ID</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                                <td>entityId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>The entity ID being exported</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>The created relationship</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createFileNode"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>createFileNode</b></span>
+                        <a href="#createFileNode"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createFileNode(data: <a href="../interfaces/FileNodeData.html" target="_self">FileNodeData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="49"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:49</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates a File node in Neo4j with the specified properties.
+Uses parameterised queries to prevent Cypher injection.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>data</td>
+                                            <td>
+                                                            <code><a href="../interfaces/FileNodeData.html" target="_self" >FileNodeData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>File node data including id, repositoryId, path, name, type, and linesOfCode</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>The created file node</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createImportRelationship"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>createImportRelationship</b></span>
+                        <a href="#createImportRelationship"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>createImportRelationship(data: <a href="../interfaces/ImportRelationshipData.html" target="_self">ImportRelationshipData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="153"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:153</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates an IMPORTS relationship between two files with import specifiers.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>data</td>
+                                            <td>
+                                                            <code><a href="../interfaces/ImportRelationshipData.html" target="_self" >ImportRelationshipData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>Import relationship data including sourceFileId, targetFileId, and specifiers</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>The created relationship</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="deleteRepositoryGraph"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>deleteRepositoryGraph</b></span>
+                        <a href="#deleteRepositoryGraph"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>deleteRepositoryGraph(repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="198"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:198</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Deletes all nodes and relationships for a specific repository.
+This is useful for cleanup or re-analysis of a repository.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>The repository ID to delete</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;number&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>The number of nodes deleted</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="ensureIndexes"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>ensureIndexes</b></span>
+                        <a href="#ensureIndexes"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>ensureIndexes()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="20"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:20</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Creates indexes on repositoryId and id properties for performance.
+This is called automatically when the module initialises.</p>
+</div>
+
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getFileNode"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getFileNode</b></span>
+                        <a href="#getFileNode"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getFileNode(fileId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="230"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:230</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Retrieves a single file node by its ID, including all connected entities.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>fileId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>The file ID to retrieve</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../interfaces/FileNodeData.html" target="_self" >Promise&lt;FileNodeData | null&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>The file node with its entities, or null if not found</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getRepositoryGraph"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getRepositoryGraph</b></span>
+                        <a href="#getRepositoryGraph"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getRepositoryGraph(repositoryId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="265"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:265</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Retrieves all file nodes for a repository, including their relationships.</p>
+</div>
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Description</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>repositoryId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                            <td>
+                                                    <ul>
+<li>The repository ID</li>
+</ul>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../interfaces/FileNodeData.html" target="_self" >Promise&lt;FileNodeData[]&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                <p>Array of file nodes</p>
+
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="onModuleInit"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>onModuleInit</b></span>
+                        <a href="#onModuleInit"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>onModuleInit()</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="12"
+                                    class="link-to-prism">src/graph/services/neo4j-graph.service.ts:12</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>Runs Neo4j index creation on application startup to ensure query performance.</p>
+</div>
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+            <section data-compodoc="block-properties">
+    
+    <h3 id="inputs">
+        Properties
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="logger"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Readonly</span>
+                        <span ><b>logger</b></span>
+                        <a href="#logger"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>new Logger(Neo4jGraphService.name)</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="7" class="link-to-prism">src/graph/services/neo4j-graph.service.ts:7</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="VALID_ENTITY_TYPES"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Static</span>
+                            <span class="modifier">Readonly</span>
+                        <span ><b>VALID_ENTITY_TYPES</b></span>
+                        <a href="#VALID_ENTITY_TYPES"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>    <code>unknown</code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>new Set&lt;EntityNodeData[&#x27;type&#x27;]&gt;([
+    &#x27;Function&#x27;,
+    &#x27;Class&#x27;,
+    &#x27;Interface&#x27;,
+  ])</code>
+                    </td>
+                </tr>
+                    <tr>
+                        <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="86" class="link-to-prism">src/graph/services/neo4j-graph.service.ts:86</a></div>
+                        </td>
+                    </tr>
+
+
+        </tbody>
+    </table>
+</section>
+
+    </div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, OnModuleInit } from &#x27;@nestjs/common&#x27;;
+import { Neo4jService } from &#x27;nest-neo4j&#x27;;
+import { FileNodeData, EntityNodeData, ImportRelationshipData } from &#x27;../../common/shared/graph.interfaces&#x27;;
+
+@Injectable()
+export class Neo4jGraphService implements OnModuleInit {
+  private readonly logger &#x3D; new Logger(Neo4jGraphService.name);
+
+  constructor(private readonly neo4jService: Neo4jService) {}
+
+  /** Runs Neo4j index creation on application startup to ensure query performance. */
+  async onModuleInit() {
+    await this.ensureIndexes();
+  }
+
+  /**
+   * Creates indexes on repositoryId and id properties for performance.
+   * This is called automatically when the module initialises.
+   */
+  private async ensureIndexes(): Promise&lt;void&gt; {
+    try {
+      const indexQueries &#x3D; [
+        &#x27;CREATE INDEX file_repository_id IF NOT EXISTS FOR (f:File) ON (f.repositoryId)&#x27;,
+        &#x27;CREATE INDEX file_id IF NOT EXISTS FOR (f:File) ON (f.id)&#x27;,
+        &#x27;CREATE INDEX function_id IF NOT EXISTS FOR (fn:Function) ON (fn.id)&#x27;,
+        &#x27;CREATE INDEX class_id IF NOT EXISTS FOR (c:Class) ON (c.id)&#x27;,
+        &#x27;CREATE INDEX interface_id IF NOT EXISTS FOR (i:Interface) ON (i.id)&#x27;,
+      ];
+
+      for (const query of indexQueries) {
+        await this.neo4jService.write(query);
+        this.logger.log(&#x60;Created index: ${query}&#x60;);
+      }
+
+      this.logger.log(&#x27;All indexes ensured&#x27;);
+    } catch (error) {
+      this.logger.error(&#x27;Failed to create indexes&#x27;, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Creates a File node in Neo4j with the specified properties.
+   * Uses parameterised queries to prevent Cypher injection.
+   *
+   * @param data - File node data including id, repositoryId, path, name, type, and linesOfCode
+   * @returns The created file node
+   */
+  async createFileNode(data: FileNodeData) {
+    const query &#x3D; &#x60;
+      CREATE (f:File {
+        id: $id,
+        repositoryId: $repositoryId,
+        path: $path,
+        name: $name,
+        type: $type,
+        linesOfCode: $linesOfCode,
+        createdAt: datetime()
+      })
+      RETURN f
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.write(query, {
+        id: data.id,
+        repositoryId: data.repositoryId,
+        path: data.path,
+        name: data.name,
+        type: data.type,
+        linesOfCode: data.linesOfCode,
+      });
+
+      const record &#x3D; result.records[0];
+      if (!record) {
+        throw new InternalServerErrorException(&#x27;Failed to create file node&#x27;);
+      }
+
+      this.logger.log(&#x60;Created File node: ${data.path}&#x60;);
+      return record.get(&#x27;f&#x27;).properties;
+    } catch (error) {
+      this.logger.error(&#x60;Failed to create file node: ${data.path}&#x60;, error);
+      throw error;
+    }
+  }
+
+  private static readonly VALID_ENTITY_TYPES &#x3D; new Set&lt;EntityNodeData[&#x27;type&#x27;]&gt;([
+    &#x27;Function&#x27;,
+    &#x27;Class&#x27;,
+    &#x27;Interface&#x27;,
+  ]);
+
+  /**
+   * Creates an Entity node (Function, Class, or Interface) in Neo4j and links it to a file.
+   * Creates a CONTAINS relationship from the file to the entity.
+   *
+   * @param data - Entity node data including id, fileId, name, type, startLine, and endLine
+   * @returns The created entity node
+   */
+  async createEntityNode(data: EntityNodeData) {
+    if (!Neo4jGraphService.VALID_ENTITY_TYPES.has(data.type)) {
+      throw new BadRequestException(
+        &#x60;Invalid entity type &quot;${data.type}&quot;. Must be one of: Function, Class, Interface.&#x60;,
+      );
+    }
+
+    const query &#x3D; &#x60;
+      MATCH (f:File {id: $fileId})
+      CREATE (e:${data.type} {
+        id: $id,
+        name: $name,
+        type: $type,
+        startLine: $startLine,
+        endLine: $endLine,
+        createdAt: datetime()
+      })
+      CREATE (f)-[:CONTAINS]-&gt;(e)
+      RETURN e
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.write(query, {
+        fileId: data.fileId,
+        id: data.id,
+        name: data.name,
+        type: data.type,
+        startLine: data.startLine,
+        endLine: data.endLine,
+      });
+
+      const record &#x3D; result.records[0];
+      if (!record) {
+        throw new NotFoundException(
+          &#x60;Failed to create entity node: file not found: ${data.fileId}&#x60;,
+        );
+      }
+
+      this.logger.log(
+        &#x60;Created ${data.type} node: ${data.name} in file ${data.fileId}&#x60;,
+      );
+      return record.get(&#x27;e&#x27;).properties;
+    } catch (error) {
+      this.logger.error(&#x60;Failed to create entity node: ${data.name}&#x60;, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Creates an IMPORTS relationship between two files with import specifiers.
+   *
+   * @param data - Import relationship data including sourceFileId, targetFileId, and specifiers
+   * @returns The created relationship
+   */
+  async createImportRelationship(data: ImportRelationshipData) {
+    const query &#x3D; &#x60;
+      MATCH (from:File {id: $sourceFileId})
+      MATCH (to:File {id: $targetFileId})
+      CREATE (from)-[r:IMPORTS {
+        specifiers: $specifiers,
+        createdAt: datetime()
+      }]-&gt;(to)
+      RETURN r
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.write(query, {
+        sourceFileId: data.sourceFileId,
+        targetFileId: data.targetFileId,
+        specifiers: data.specifiers,
+      });
+
+      const record &#x3D; result.records[0];
+      if (!record) {
+        throw new InternalServerErrorException(
+          &#x60;Failed to create import relationship: ${data.sourceFileId} -&gt; ${data.targetFileId}&#x60;,
+        );
+      }
+
+      this.logger.log(
+        &#x60;Created IMPORTS relationship: ${data.sourceFileId} -&gt; ${data.targetFileId}&#x60;,
+      );
+      return record.get(&#x27;r&#x27;).properties;
+    } catch (error) {
+      this.logger.error(
+        &#x60;Failed to create import relationship: ${data.sourceFileId} -&gt; ${data.targetFileId}&#x60;,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes all nodes and relationships for a specific repository.
+   * This is useful for cleanup or re-analysis of a repository.
+   *
+   * @param repositoryId - The repository ID to delete
+   * @returns The number of nodes deleted
+   */
+  async deleteRepositoryGraph(repositoryId: string): Promise&lt;number&gt; {
+    const query &#x3D; &#x60;
+      MATCH (f:File {repositoryId: $repositoryId})
+      OPTIONAL MATCH (f)-[:CONTAINS]-&gt;(e)
+      DETACH DELETE f, e
+      RETURN count(f) as deletedCount
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.write(query, { repositoryId });
+      const record &#x3D; result.records[0];
+      const deletedCount &#x3D; record ? record.get(&#x27;deletedCount&#x27;).toNumber() : 0;
+
+      this.logger.log(
+        &#x60;Deleted ${deletedCount} nodes for repository: ${repositoryId}&#x60;,
+      );
+      return deletedCount;
+    } catch (error) {
+      this.logger.error(
+        &#x60;Failed to delete repository graph: ${repositoryId}&#x60;,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves a single file node by its ID, including all connected entities.
+   *
+   * @param fileId - The file ID to retrieve
+   * @returns The file node with its entities, or null if not found
+   */
+  async getFileNode(fileId: string): Promise&lt;FileNodeData | null&gt; {
+    const query &#x3D; &#x60;
+      MATCH (f:File {id: $fileId})
+      OPTIONAL MATCH (f)-[:CONTAINS]-&gt;(e)
+      RETURN f, collect(e) as entities
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.read(query, { fileId });
+
+      if (result.records.length &#x3D;&#x3D;&#x3D; 0) {
+        this.logger.warn(&#x60;File node not found: ${fileId}&#x60;);
+        return null;
+      }
+
+      const record &#x3D; result.records[0];
+      const fileNode &#x3D; record.get(&#x27;f&#x27;);
+      const entities &#x3D; record.get(&#x27;entities&#x27;);
+
+      return {
+        ...fileNode.properties,
+        entities: entities.map((entity) &#x3D;&gt; entity?.properties).filter(Boolean),
+      };
+    } catch (error) {
+      this.logger.error(&#x60;Failed to get file node: ${fileId}&#x60;, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves all file nodes for a repository, including their relationships.
+   *
+   * @param repositoryId - The repository ID
+   * @returns Array of file nodes
+   */
+  async getRepositoryGraph(repositoryId: string): Promise&lt;FileNodeData[]&gt; {
+    const query &#x3D; &#x60;
+      MATCH (f:File {repositoryId: $repositoryId})
+      OPTIONAL MATCH (f)-[:CONTAINS]-&gt;(e)
+      OPTIONAL MATCH (f)-[r:IMPORTS]-&gt;(f2:File)
+      RETURN f, collect(DISTINCT e) as entities, collect(DISTINCT {file: f2, specifiers: r.specifiers}) as imports
+      ORDER BY f.path
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.read(query, { repositoryId });
+
+      return result.records.map((record) &#x3D;&gt; {
+        const fileNode &#x3D; record.get(&#x27;f&#x27;);
+        const entities &#x3D; record.get(&#x27;entities&#x27;);
+        const imports &#x3D; record.get(&#x27;imports&#x27;);
+
+        return {
+          ...fileNode.properties,
+          entities: entities
+            .map((entity) &#x3D;&gt; entity?.properties)
+            .filter(Boolean),
+          imports: imports
+            .filter((importData) &#x3D;&gt; importData.file)
+            .map((importData) &#x3D;&gt; ({
+              file: importData.file.properties,
+              specifiers: importData.specifiers,
+            })),
+        };
+      });
+    } catch (error) {
+      this.logger.error(
+        &#x60;Failed to get repository graph: ${repositoryId}&#x60;,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Creates an EXPORTS relationship from a file to an entity it exports.
+   *
+   * @param fileId - The file ID
+   * @param entityId - The entity ID being exported
+   * @returns The created relationship
+   */
+  async createExportRelationship(fileId: string, entityId: string) {
+    const query &#x3D; &#x60;
+      MATCH (f:File {id: $fileId})
+      MATCH (e {id: $entityId})
+      CREATE (f)-[r:EXPORTS {
+        createdAt: datetime()
+      }]-&gt;(e)
+      RETURN r
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.write(query, { fileId, entityId });
+
+      const record &#x3D; result.records[0];
+      if (!record) {
+        throw new InternalServerErrorException(
+          &#x60;Failed to create export relationship: ${fileId} -&gt; ${entityId}&#x60;,
+        );
+      }
+
+      this.logger.log(&#x60;Created EXPORTS relationship: ${fileId} -&gt; ${entityId}&#x60;);
+      return record.get(&#x27;r&#x27;).properties;
+    } catch (error) {
+      this.logger.error(
+        &#x60;Failed to create export relationship: ${fileId} -&gt; ${entityId}&#x60;,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Bulk creates file nodes for better performance when creating many files.
+   *
+   * @param files - Array of file node data
+   * @returns Number of files created
+   */
+  async bulkCreateFileNodes(files: FileNodeData[]): Promise&lt;number&gt; {
+    const query &#x3D; &#x60;
+      UNWIND $files AS file
+      CREATE (f:File {
+        id: file.id,
+        repositoryId: file.repositoryId,
+        path: file.path,
+        name: file.name,
+        type: file.type,
+        linesOfCode: file.linesOfCode,
+        createdAt: datetime()
+      })
+      RETURN count(f) as createdCount
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.write(query, { files });
+      const record &#x3D; result.records[0];
+      const createdCount &#x3D; record ? record.get(&#x27;createdCount&#x27;).toNumber() : 0;
+
+      this.logger.log(&#x60;Bulk created ${createdCount} file nodes&#x60;);
+      return createdCount;
+    } catch (error) {
+      this.logger.error(&#x27;Failed to bulk create file nodes&#x27;, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Bulk creates import relationships for better performance.
+   *
+   * @param imports - Array of import relationship data
+   * @returns Number of relationships created
+   */
+  async bulkCreateImportRelationships(
+    imports: ImportRelationshipData[],
+  ): Promise&lt;number&gt; {
+    const query &#x3D; &#x60;
+      UNWIND $imports AS imp
+      MATCH (from:File {id: imp.sourceFileId})
+      MATCH (to:File {id: imp.targetFileId})
+      CREATE (from)-[r:IMPORTS {
+        specifiers: imp.specifiers,
+        createdAt: datetime()
+      }]-&gt;(to)
+      RETURN count(r) as createdCount
+    &#x60;;
+
+    try {
+      const result &#x3D; await this.neo4jService.write(query, { imports });
+      const record &#x3D; result.records[0];
+      const createdCount &#x3D; record ? record.get(&#x27;createdCount&#x27;).toNumber() : 0;
+
+      this.logger.log(&#x60;Bulk created ${createdCount} import relationships&#x60;);
+      return createdCount;
+    } catch (error) {
+      this.logger.error(&#x27;Failed to bulk create import relationships&#x27;, error);
+      throw error;
+    }
+  }
+
+}
+</code></pre>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
+            var COMPODOC_CURRENT_PAGE_URL = 'Neo4jGraphService.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>
