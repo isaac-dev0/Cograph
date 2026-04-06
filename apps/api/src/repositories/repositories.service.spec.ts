@@ -12,11 +12,6 @@ const mockPrismaService = {
     update: jest.fn(),
     groupBy: jest.fn(),
   },
-  projectRepository: {
-    findMany: jest.fn(),
-    createMany: jest.fn(),
-    delete: jest.fn(),
-  },
   repositorySyncHistory: {
     create: jest.fn(),
     findUnique: jest.fn(),
@@ -137,38 +132,6 @@ describe('RepositoriesService', () => {
 
       const callArgs = mockPrismaService.repository.findMany.mock.calls[0][0];
       expect(callArgs.where).not.toHaveProperty('isArchived');
-    });
-  });
-
-  describe('addRepositoriesToProject', () => {
-    it('does not call createMany when all repositories are already linked to the project', async () => {
-      mockPrismaService.projectRepository.findMany.mockResolvedValue([{ repositoryId: 'repo-1' }]);
-
-      await service.addRepositoriesToProject('proj-1', ['repo-1']);
-
-      expect(mockPrismaService.projectRepository.createMany).not.toHaveBeenCalled();
-    });
-
-    it('only creates links for repositories that are not already in the project', async () => {
-      mockPrismaService.projectRepository.findMany.mockResolvedValue([{ repositoryId: 'repo-1' }]);
-
-      await service.addRepositoriesToProject('proj-1', ['repo-1', 'repo-2']);
-
-      expect(mockPrismaService.projectRepository.createMany).toHaveBeenCalledWith({
-        data: [{ projectId: 'proj-1', repositoryId: 'repo-2' }],
-      });
-    });
-  });
-
-  describe('removeRepositoryFromProject', () => {
-    it('deletes the project-repository link by composite key', async () => {
-      mockPrismaService.projectRepository.delete.mockResolvedValue(undefined);
-
-      await service.removeRepositoryFromProject('proj-1', 'repo-1');
-
-      expect(mockPrismaService.projectRepository.delete).toHaveBeenCalledWith({
-        where: { projectId_repositoryId: { projectId: 'proj-1', repositoryId: 'repo-1' } },
-      });
     });
   });
 

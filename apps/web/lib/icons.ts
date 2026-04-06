@@ -5,13 +5,6 @@ const iconMap: Record<string, LucideIcon> = {
   braces: Braces,
 };
 
-export function getProjectIcon(iconName?: string): LucideIcon {
-  if (!iconName || !iconMap[iconName]) {
-    return Folder;
-  }
-  return iconMap[iconName];
-}
-
 export function getRepositoryIcon(iconName?: string): LucideIcon {
   if (!iconName || !iconMap[iconName]) {
     return Braces;

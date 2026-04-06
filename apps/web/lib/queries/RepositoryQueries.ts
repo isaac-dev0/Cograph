@@ -1,26 +1,3 @@
-export const FIND_REPOSITORIES_BY_PROJECT_QUERY = `
-  query FindRepositoriesByProjectId($projectId: ID!) {
-    findRepositoriesByProjectId(projectId: $projectId) {
-      id
-      name
-      fullName
-      description
-      visibility
-      repositoryUrl
-      icon
-      ownerLogin
-      ownerAvatarUrl
-      lastSyncedAt
-      syncStatus
-      syncError
-      isPrivate
-      githubCreatedAt
-      githubUpdatedAt
-      githubPushedAt
-    }
-  }
-`;
-
 export const FIND_ALL_USER_REPOSITORIES = `
 query FindAllRepositories {
     findAllRepositories {
@@ -55,18 +32,6 @@ query FindAllRepositories {
 export const SYNC_REPOSITORIES_FROM_GITHUB = `
   mutation SyncRepositoriesFromGitHub($githubToken: String!) {
     syncRepositoriesFromGitHub(input: { githubToken: $githubToken })
-  }
-`;
-
-export const ADD_REPOSITORIES_TO_PROJECT = `
-  mutation AddRepositoriesToProject($projectId: ID!, $repositoryIds: [ID!]!) {
-    addRepositoriesToProject(projectId: $projectId, repositoryIds: $repositoryIds)
-  }
-`;
-
-export const REMOVE_REPOSITORY_FROM_PROJECT = `
-  mutation RemoveRepositoryFromProject($projectId: ID!, $repositoryId: ID!) {
-    removeRepositoryFromProject(projectId: $projectId, repositoryId: $repositoryId)
   }
 `;
 

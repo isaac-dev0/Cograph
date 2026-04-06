@@ -72,10 +72,10 @@ export function RepositoryView({ repository }: RepositoryViewProps) {
 
   const syncColor =
     repository.syncStatus === "completed"
-      ? "text-emerald-400"
+      ? "text-success-foreground"
       : repository.syncStatus === "failed"
-        ? "text-red-400"
-        : "text-yellow-400";
+        ? "text-error-foreground"
+        : "text-warning-foreground";
 
   return (
     <div className="max-w-4xl mx-auto px-8 py-10 space-y-10 animate-fade-in">
@@ -208,7 +208,7 @@ function StatCard({
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border/50 bg-card/50 p-5 space-y-3">
+    <div className="rounded-xl border border-border/50 bg-card p-5 space-y-3">
       <div className="flex items-center gap-2 text-muted-foreground">
         <Icon className="h-4 w-4" />
         <span className="text-xs uppercase tracking-wider font-medium">{label}</span>
@@ -230,7 +230,7 @@ function TimelineItem({
   relative: string;
 }) {
   return (
-    <div className="flex items-start gap-4 rounded-xl border border-border/50 bg-card/50 p-5">
+    <div className="flex items-start gap-4 rounded-xl border border-border/50 bg-card p-5">
       <div className="flex size-10 items-center justify-center rounded-lg bg-muted shrink-0">
         <Icon className="size-4 text-muted-foreground" />
       </div>

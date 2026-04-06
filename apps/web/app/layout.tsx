@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/hooks/providers/UserProvider";
 import { createClient } from "@/lib/supabase/server";
-import { ProjectProvider } from "@/hooks/providers/ProjectProvider";
 import "./globals.css";
 import { RepositoryProvider } from "@/hooks/providers/RepositoryProvider";
 
@@ -79,9 +78,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <UserProvider user={user}>
-            <ProjectProvider>
-              <RepositoryProvider>{children}</RepositoryProvider>
-            </ProjectProvider>
+            <RepositoryProvider>{children}</RepositoryProvider>
           </UserProvider>
         </ThemeProvider>
       </body>

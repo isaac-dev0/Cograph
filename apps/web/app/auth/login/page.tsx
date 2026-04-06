@@ -3,7 +3,7 @@ import { GitGraph } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--glow)_0%,transparent_70%)]" />
 
       <div className="relative z-10 flex w-full max-w-sm flex-col items-center gap-10 px-6 animate-slide-up">

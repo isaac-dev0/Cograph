@@ -14,16 +14,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useProject } from "@/hooks/providers/ProjectProvider";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
 import { getRepositoryIcon } from "@/lib/icons";
-import { ArrowLeft, ChevronsUpDown, Import, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronsUpDown, Loader2 } from "lucide-react";
 
 export function RepositorySwitcher() {
   const { isMobile } = useSidebar();
   const { currentRepository, repositories, setCurrentRepository, isLoading } =
     useRepository();
-  const { currentProject, setCurrentProject } = useProject();
 
   if (isLoading) {
     return (
@@ -38,7 +36,7 @@ export function RepositorySwitcher() {
     );
   }
 
-  if (!currentRepository || !currentProject) return null;
+  if (!currentRepository) return null;
 
   const ActiveIcon = getRepositoryIcon(currentRepository.icon ?? undefined);
 
@@ -55,8 +53,8 @@ export function RepositorySwitcher() {
                 <span className="truncate font-medium">
                   {currentRepository.name}
                 </span>
-                <span className="truncate text-xs capitalize">
-                  {currentProject.name}
+                <span className="truncate text-xs text-muted-foreground">
+                  {currentRepository.ownerLogin}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
@@ -73,7 +71,7 @@ export function RepositorySwitcher() {
               className="gap-2 p-2 font-medium"
             >
               <ArrowLeft className="size-4" />
-              Back to {currentProject.name}
+              Back to Repositories
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-muted-foreground text-xs">
@@ -99,15 +97,6 @@ export function RepositorySwitcher() {
                 </DropdownMenuItem>
               );
             })}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
-              <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                <Import className="size-4" />
-              </div>
-              <div className="text-muted-foreground font-medium">
-                Import Repository
-              </div>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

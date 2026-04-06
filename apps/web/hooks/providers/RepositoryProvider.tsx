@@ -2,14 +2,11 @@
 
 import { Repository } from "@/lib/interfaces/repository.interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
-import { useProject } from "./ProjectProvider";
 import { graphqlRequest } from "@/lib/graphql/client";
 import { createClient } from "@/lib/supabase/client";
 import {
-  FIND_REPOSITORIES_BY_PROJECT_QUERY,
   FIND_ALL_USER_REPOSITORIES,
   SYNC_REPOSITORIES_FROM_GITHUB,
-  REMOVE_REPOSITORY_FROM_PROJECT,
   ARCHIVE_REPOSITORY,
 } from "@/lib/queries/RepositoryQueries";
 import { useUser } from "./UserProvider";
@@ -17,14 +14,11 @@ import { useUser } from "./UserProvider";
 interface RepositoryContextType {
   currentRepository: Repository | null;
   repositories: Repository[];
-  accountRepositories: Repository[];
   setCurrentRepository: (repository: Repository | null) => void;
   isLoading: boolean;
   error: string | null;
   refreshRepositories: () => Promise<void>;
-  refreshAccountRepositories: () => Promise<void>;
   syncRepositoriesFromGitHub: () => Promise<void>;
-  removeRepositoryFromProject: (repositoryId: string) => Promise<void>;
   archiveRepository: (repositoryId: string) => Promise<void>;
 }
 
@@ -38,38 +32,32 @@ export function RepositoryProvider({
   children: React.ReactNode;
 }) {
   const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [accountRepositories, setAccountRepositories] = useState<Repository[]>(
-    [],
-  );
   const [currentRepository, setCurrentRepository] = useState<Repository | null>(
     null,
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { currentProject } = useProject();
   const { user } = useUser();
 
   const loadRepositories = async () => {
-    if (!currentProject) {
+    if (!user) {
       setRepositories([]);
-      setCurrentRepository(null);
       return;
     }
 
     try {
       setIsLoading(true);
 
-      const data = await graphqlRequest<{
-        findRepositoriesByProjectId: Repository[];
-      }>(FIND_REPOSITORIES_BY_PROJECT_QUERY, { projectId: currentProject.id });
+      const data = await graphqlRequest<{ findAllRepositories: Repository[] }>(
+        FIND_ALL_USER_REPOSITORIES,
+        {},
+      );
 
-      const fetchedRepositories = data.findRepositoriesByProjectId || [];
+      const fetchedRepositories = data.findAllRepositories || [];
       setRepositories(fetchedRepositories);
 
-      const savedRepositoryId = localStorage.getItem(
-        `currentRepositoryId-${currentProject.id}`,
-      );
+      const savedRepositoryId = localStorage.getItem("currentRepositoryId");
       const savedRepository = fetchedRepositories.find(
         (repository: Repository) => repository.id === savedRepositoryId,
       );
@@ -87,35 +75,7 @@ export function RepositoryProvider({
 
   useEffect(() => {
     loadRepositories();
-  }, [currentProject?.id]);
-
-  useEffect(() => {
-    setCurrentRepository(null);
-  }, [currentProject?.id]);
-
-  const loadAccountRepositories = async () => {
-    if (!user) {
-      setAccountRepositories([]);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      const data = await graphqlRequest<{ findAllRepositories: Repository[] }>(
-        FIND_ALL_USER_REPOSITORIES,
-        {},
-      );
-
-      const fetchedRepositories = data.findAllRepositories || [];
-      setAccountRepositories(fetchedRepositories);
-    } catch (error) {
-      console.error("Failed to load account repositories:", error);
-      setError("Failed to load account repositories, please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [user?.id]);
 
   const syncRepositoriesFromGitHub = async () => {
     if (!user) {
@@ -152,7 +112,7 @@ export function RepositoryProvider({
       }
 
       await graphqlRequest(SYNC_REPOSITORIES_FROM_GITHUB, { githubToken });
-      await loadAccountRepositories();
+      await loadRepositories();
     } catch (error) {
       console.error("Failed to sync repositories:", error);
       setError(
@@ -173,9 +133,7 @@ export function RepositoryProvider({
 
       if (currentRepository?.id === repositoryId) {
         setCurrentRepository(null);
-        if (currentProject) {
-          localStorage.removeItem(`currentRepositoryId-${currentProject.id}`);
-        }
+        localStorage.removeItem("currentRepositoryId");
       }
 
       await loadRepositories();
@@ -193,44 +151,10 @@ export function RepositoryProvider({
   const handleSetCurrentRepository = (repository: Repository | null) => {
     setCurrentRepository(repository);
 
-    if (repository && currentProject) {
-      localStorage.setItem(
-        `currentRepositoryId-${currentProject.id}`,
-        repository.id,
-      );
-    } else if (currentProject) {
-      localStorage.removeItem(`currentRepositoryId-${currentProject.id}`);
-    }
-  };
-
-  const removeRepositoryFromProject = async (repositoryId: string) => {
-    if (!currentProject) {
-      throw new Error("No project selected");
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      await graphqlRequest(REMOVE_REPOSITORY_FROM_PROJECT, {
-        projectId: currentProject.id,
-        repositoryId,
-      });
-
-      if (currentRepository?.id === repositoryId) {
-        setCurrentRepository(null);
-        localStorage.removeItem(`currentRepositoryId-${currentProject.id}`);
-      }
-
-      await loadRepositories();
-    } catch (error) {
-      console.error("Failed to remove repository from project:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to remove repository",
-      );
-      throw error;
-    } finally {
-      setIsLoading(false);
+    if (repository) {
+      localStorage.setItem("currentRepositoryId", repository.id);
+    } else {
+      localStorage.removeItem("currentRepositoryId");
     }
   };
 
@@ -239,14 +163,11 @@ export function RepositoryProvider({
       value={{
         currentRepository,
         repositories,
-        accountRepositories,
         setCurrentRepository: handleSetCurrentRepository,
         isLoading,
         error,
         refreshRepositories: loadRepositories,
-        refreshAccountRepositories: loadAccountRepositories,
         syncRepositoriesFromGitHub,
-        removeRepositoryFromProject,
         archiveRepository,
       }}
     >

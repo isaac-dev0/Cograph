@@ -1,10 +1,9 @@
 "use client";
 
-import { ProjectEmptyView } from "@/components/project/view/ProjectEmptyView";
-import { ProjectSidebar } from "@/components/project/sidebar/ProjectSidebar";
+import { RepositoryEmptyView } from "@/components/repository/view/RepositoryEmptyView";
+import { MainSidebar } from "@/components/sidebar/MainSidebar";
 import { RepositorySidebar } from "@/components/repository/sidebar/RepositorySidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useProject } from "@/hooks/providers/ProjectProvider";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
 import { Toaster } from "sonner";
 
@@ -13,17 +12,16 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const { projects } = useProject();
-  const { currentRepository } = useRepository();
+  const { currentRepository, repositories, isLoading } = useRepository();
 
   return (
     <>
       <Toaster position="top-right" richColors />
-      {projects.length === 0 ? (
-        <ProjectEmptyView />
+      {!isLoading && repositories.length === 0 ? (
+        <RepositoryEmptyView />
       ) : (
         <SidebarProvider>
-          {currentRepository ? <RepositorySidebar /> : <ProjectSidebar />}
+          {currentRepository ? <RepositorySidebar /> : <MainSidebar />}
           <SidebarInset className="flex flex-col overflow-hidden">
             {children}
           </SidebarInset>

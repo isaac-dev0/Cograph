@@ -1,29 +1,19 @@
 "use client";
 
-import { ProjectView } from "@/components/project/view/ProjectView";
+import { RepositoryListView } from "@/components/repository/view/RepositoryListView";
 import { RepositoryView } from "@/components/repository/view/RepositoryView";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useProject } from "@/hooks/providers/ProjectProvider";
 import { useRepository } from "@/hooks/providers/RepositoryProvider";
 import { Loader2 } from "lucide-react";
 
 export default function AppPage() {
-  const { currentProject, isLoading: projectsLoading } = useProject();
-  const { currentRepository } = useRepository();
+  const { currentRepository, isLoading } = useRepository();
 
-  if (projectsLoading) {
+  if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!currentProject) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-muted-foreground">No project selected</p>
       </div>
     );
   }
@@ -41,7 +31,7 @@ export default function AppPage() {
         {currentRepository ? (
           <RepositoryView repository={currentRepository} />
         ) : (
-          <ProjectView project={currentProject} />
+          <RepositoryListView />
         )}
       </div>
     </>

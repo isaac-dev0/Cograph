@@ -15,16 +15,6 @@ export class RepositoriesResolver {
     private readonly repositoriesService: RepositoriesService,
   ) {}
 
-  @Query(() => [RepositoryModel], { name: 'findRepositoriesByProjectId' })
-  async findByProjectId(
-    @Args('projectId', { type: () => ID }) projectId: string,
-  ) {
-    return this.repositoriesService.findByProjectId(projectId, {
-      includeArchived: false,
-      includePrivate: true,
-    });
-  }
-
   @Query(() => [RepositoryModel], { name: 'findAllRepositories' })
   async findAll(
     @Args('options', { nullable: true, type: () => FindRepositoriesInput })
@@ -67,27 +57,4 @@ export class RepositoriesResolver {
     return this.repositoriesService.archiveRepository(repositoryId);
   }
 
-  @Mutation(() => Boolean, { name: 'addRepositoriesToProject' })
-  async addRepositoriesToProject(
-    @Args('projectId', { type: () => ID }) projectId: string,
-    @Args('repositoryIds', { type: () => [ID] }) repositoryIds: string[],
-  ) {
-    await this.repositoriesService.addRepositoriesToProject(
-      projectId,
-      repositoryIds,
-    );
-    return true;
-  }
-
-  @Mutation(() => Boolean, { name: 'removeRepositoryFromProject' })
-  async removeRepositoryFromProject(
-    @Args('projectId', { type: () => ID }) projectId: string,
-    @Args('repositoryId', { type: () => ID }) repositoryId: string,
-  ) {
-    await this.repositoriesService.removeRepositoryFromProject(
-      projectId,
-      repositoryId,
-    );
-    return true;
-  }
 }

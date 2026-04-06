@@ -83,7 +83,7 @@ export function GraphStatsWidget({
       role="region"
       aria-label="Graph statistics"
     >
-      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
         <Activity className="h-3.5 w-3.5" aria-hidden="true" />
         Graph Statistics
       </h3>
@@ -135,7 +135,7 @@ function StatItem({
     <div className="space-y-1">
       <div className="flex items-center gap-1.5 text-muted-foreground/60">
         <Icon className="h-3 w-3" aria-hidden="true" />
-        <span className="text-[10px] uppercase tracking-wider font-medium">
+        <span className="text-xs uppercase tracking-wider font-medium">
           {label}
         </span>
       </div>
@@ -160,7 +160,7 @@ function HotspotItem({
 }) {
   return (
     <div className="flex items-center gap-2 text-xs">
-      <span className="shrink-0 text-xs" role="img" aria-label={`Rank ${rank}`}>
+      <span className="shrink-0 text-xs text-muted-foreground/60 font-mono" aria-hidden="true">
         {rank}
       </span>
       <span className="truncate flex-1 font-medium" title={name}>

@@ -1,4 +1,3 @@
-import { ProjectSwitcher } from "@/components/project/sidebar/ProjectSwitcher";
 import {
   Sidebar,
   SidebarContent,

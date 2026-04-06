@@ -8,18 +8,6 @@ datasource db {
     directUrl = env("DIRECT_URL")
 }
 
-enum ProjectRole {
-    OWNER
-    ADMIN
-    MEMBER
-    GUEST
-}
-
-enum ProjectStatus {
-    ACTIVE
-    ARCHIVED
-}
-
 enum SyncStatus {
     PENDING
     SYNCING
@@ -46,45 +34,9 @@ model Profile {
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
-    projectsOwned      Project[]       @relation("ProjectsOwned")
-    projectMemberships ProjectMember[]
-    annotations        Annotation[]
+    annotations Annotation[]
 
     @@map("profiles")
-}
-
-model Project {
-    id          String        @id @default(uuid()) @db.Uuid
-    name        String
-    description String?
-    icon        String?       @map("logo_url")
-    ownerId     String        @map("owner_profile_id") @db.Uuid
-    status      ProjectStatus @default(ACTIVE)
-    createdAt   DateTime      @default(now()) @map("created_at")
-    updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at")
-    archivedAt  DateTime?     @map("archived_at")
-
-    owner        Profile             @relation("ProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
-    members      ProjectMember[]
-    repositories ProjectRepository[]
-
-    @@map("projects")
-}
-
-model ProjectMember {
-    profileId String      @map("profile_id") @db.Uuid
-    projectId String      @map("project_id") @db.Uuid
-    role      ProjectRole @default(MEMBER)
-    createdAt DateTime    @default(now()) @map("created_at")
-    updatedAt DateTime    @default(now()) @updatedAt @map("updated_at")
-
-    profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-    project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-    @@id([profileId, projectId])
-    @@index([profileId])
-    @@index([projectId, role])
-    @@map("project_members")
 }
 
 model Repository {
@@ -114,7 +66,6 @@ model Repository {
     updatedAt       DateTime   @default(now()) @updatedAt @map("updated_at")
     archivedAt      DateTime?  @map("archived_at")
     syncHistory     RepositorySyncHistory[]
-    projects        ProjectRepository[]
     repositoryFiles RepositoryFile[]
     analysisJobs    AnalysisJob[]
 
@@ -144,21 +95,6 @@ model RepositorySyncHistory {
     @@index([syncStartedAt])
     @@index([repositoryId, syncStartedAt])
     @@map("repository_sync_history")
-}
-
-model ProjectRepository {
-    projectId    String   @map("project_id") @db.Uuid
-    repositoryId String   @map("repository_id") @db.Uuid
-    createdAt    DateTime @default(now()) @map("created_at")
-    updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
-
-    project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-    repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-
-    @@id([projectId, repositoryId])
-    @@index([projectId])
-    @@index([repositoryId])
-    @@map("project_repositories")
 }
 
 model RepositoryFile {

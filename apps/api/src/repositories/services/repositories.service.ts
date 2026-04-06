@@ -82,14 +82,11 @@ export class RepositoriesService {
     includeArchived?: boolean;
     includePrivate?: boolean;
     owner?: string;
-    projectId?: string;
   }) {
     const where: Prisma.RepositoryWhereInput = {};
     if (options?.includeArchived === false) where.isArchived = false;
     if (options?.includePrivate === false) where.isPrivate = false;
     if (options?.owner) where.ownerLogin = options.owner;
-    if (options?.projectId) where.projects = { some: { projectId: options.projectId } };
-
     return this.prisma.repository.findMany({
       where,
       orderBy: { githubUpdatedAt: 'desc' },
@@ -100,77 +97,6 @@ export class RepositoriesService {
         },
       },
     });
-  }
-
-  async findByProjectId(
-    projectId: string,
-    options?: {
-      includeArchived?: boolean;
-      includePrivate?: boolean;
-    },
-  ) {
-    const where: Prisma.RepositoryWhereInput = { projects: { some: { projectId } } };
-    if (options?.includeArchived === false) where.isArchived = false;
-    if (options?.includePrivate === false) where.isPrivate = false;
-
-    return this.prisma.repository.findMany({
-      where,
-      orderBy: { githubUpdatedAt: 'desc' },
-      include: {
-        syncHistory: {
-          take: 1,
-          orderBy: { syncStartedAt: 'desc' },
-        },
-      },
-    });
-  }
-
-  async addRepositoriesToProject(
-    projectId: string,
-    repositoryIds: string[],
-  ): Promise<void> {
-    const existing = await this.prisma.projectRepository.findMany({
-      where: {
-        projectId,
-        repositoryId: { in: repositoryIds },
-      },
-      select: { repositoryId: true },
-    });
-
-    const newIds = repositoryIds.filter(
-      (id) => !existing.some((project) => project.repositoryId === id),
-    );
-
-    if (newIds.length > 0) {
-      await this.prisma.projectRepository.createMany({
-        data: newIds.map((repositoryId) => ({
-          projectId,
-          repositoryId,
-        })),
-      });
-
-      this.logger.log(
-        `Added ${newIds.length} repository(ies) to project ${projectId}`,
-      );
-    }
-  }
-
-  async removeRepositoryFromProject(
-    projectId: string,
-    repositoryId: string,
-  ): Promise<void> {
-    await this.prisma.projectRepository.delete({
-      where: {
-        projectId_repositoryId: {
-          projectId,
-          repositoryId,
-        },
-      },
-    });
-
-    this.logger.log(
-      `Removed repository ${repositoryId} from project ${projectId}`,
-    );
   }
 
   async findByGithubId(githubId: number) {
